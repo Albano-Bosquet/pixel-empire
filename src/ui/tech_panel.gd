@@ -6,7 +6,11 @@ extends PanelContainer
 ## Read-only: research is started from the building's command panel.
 
 var _game: Game
+## Space kept free above and below the panel (top bar, selection panel edge).
+const FIT_MARGIN := 110.0
+
 var _grid: GridContainer
+var _scroll: ScrollContainer
 var _refresh_timer := 0.0
 
 
@@ -29,20 +33,38 @@ func setup(game: Game) -> void:
 	close.pressed.connect(toggle)
 	head.add_child(close)
 	v.add_child(head)
+	# The list is taller than most windows: it scrolls inside a panel that
+	# always fits the viewport (see _fit).
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	v.add_child(_scroll)
 	_grid = GridContainer.new()
 	_grid.columns = 2
 	_grid.add_theme_constant_override("h_separation", 14)
 	_grid.add_theme_constant_override("v_separation", 8)
-	v.add_child(_grid)
+	_scroll.add_child(_grid)
 	EventBus.tech_researched.connect(func(_p: int, _t: String) -> void: _rebuild())
 	EventBus.age_changed.connect(func(_p: int, _a: int) -> void: _rebuild())
+	get_viewport().size_changed.connect(func() -> void:
+		if visible:
+			_fit())
 
 
 func toggle() -> void:
 	visible = not visible
 	if visible:
 		_rebuild()
-		position = (get_viewport_rect().size - size) * 0.5
+		_fit.call_deferred()
+
+
+## Sizes the scroll area to the content, capped to the window height, and
+## centres the panel.
+func _fit() -> void:
+	var view := get_viewport_rect().size
+	var avail := maxf(160.0, view.y - FIT_MARGIN - 70.0)
+	_scroll.custom_minimum_size = Vector2(_grid.get_combined_minimum_size().x + 12, minf(_grid.get_combined_minimum_size().y, avail))
+	reset_size()
+	position = ((view - size) * 0.5).floor()
 
 
 func _process(delta: float) -> void:

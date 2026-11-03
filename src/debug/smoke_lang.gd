@@ -17,6 +17,10 @@ func run_mode(game: Game, _mode: String) -> void:
 	_run_lang.call_deferred()
 
 
+func _inside_view(c: Control) -> bool:
+	return Rect2(Vector2.ZERO, c.get_viewport_rect().size).encloses(c.get_global_rect())
+
+
 func _run_lang() -> void:
 	await _frames(10)
 	Loc.set_language("es")
@@ -37,8 +41,37 @@ func _run_lang() -> void:
 	await _shot("lang_01_es_hud")
 	hud.tech_panel.toggle()
 	await _frames(3)
+	_check(_inside_view(hud.tech_panel), "tech panel fits the window")
 	await _shot("lang_01b_es_tech")
 	hud.tech_panel.toggle()
+	var win := DisplayServer.window_get_size()
+	DisplayServer.window_set_size(Vector2i(1280, 720))
+	await _frames(5)
+	hud.tech_panel.toggle()
+	await _frames(3)
+	_check(_inside_view(hud.tech_panel), "tech panel fits a 1280x720 window")
+	await _shot("lang_01c_es_tech_small")
+	hud.tech_panel.toggle()
+	DisplayServer.window_set_size(win)
+	await _frames(5)
+
+	# A gathering villager: the activity has its own line and is not cut.
+	var vil: Unit = null
+	for u in _game.unit_system.units:
+		if u.owner_id == 1 and u.is_worker:
+			vil = u
+	var food := _game.economy.find_node("food", vil.grid_pos, 30, 1)
+	var one: Array[Unit] = [vil]
+	_game.economy.order_gather(one, food)
+	_game.selection.set_selection([vil])
+	_game.camera.focus_world(vil.position)
+	await _frames(5)
+	_check(hud._task_label.visible and hud._task_label.text == "Recolectando Comida", "activity on its own line (%s)" % hud._task_label.text)
+	var box: Rect2 = hud._task_label.get_global_rect()
+	var font := hud._task_label.get_theme_font("font")
+	var need := font.get_string_size(hud._task_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, hud._task_label.get_theme_font_size("font_size")).x
+	_check(need <= box.size.x and box.end.x <= hud._commands.get_global_rect().position.x, "activity text fits beside the command panel")
+	await _shot("lang_01d_es_villager")
 
 	_main.open_pause()
 	await _frames(3)
@@ -49,7 +82,7 @@ func _run_lang() -> void:
 	_check(_main._pause != null and is_instance_valid(_main._pause), "pause menu reopened after the switch")
 	_check(get_tree().paused, "match stays paused")
 	_check(hud._age_label.text == "Dark Age", "HUD rebuilt in English (%s)" % hud._age_label.text)
-	_check(hud._name_label.text.begins_with("Town Center"), "selection kept and shown in English (%s)" % hud._name_label.text)
+	_check(hud._name_label.text.begins_with("Villager"), "selection kept and shown in English (%s)" % hud._name_label.text)
 	await _shot("lang_03_en_pause")
 	_main._close_pause()
 	EventBus.notify.emit(1, Loc.msg("%s completed", ["House"]))

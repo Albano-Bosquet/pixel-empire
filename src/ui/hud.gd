@@ -29,6 +29,7 @@ var _name_label: Label
 var _hp_bar: ProgressBar
 var _hp_label: Label
 var _stats_label: Label
+var _task_label: Label
 var _progress_bar: ProgressBar
 var _queue_row: HBoxContainer
 var _multi_grid: GridContainer
@@ -368,6 +369,13 @@ func _build_bottom_panel() -> void:
 	_single_box.add_child(hp_row)
 	_stats_label = _label("", 14, TEXT_DIM)
 	_single_box.add_child(_stats_label)
+	# What a unit is doing gets its own line: translated text is longer.
+	_task_label = _label("", 14, TEXT_DIM)
+	_single_box.add_child(_task_label)
+	# Never push under the command panel: cut with "…" if a line is too long.
+	for l in [_name_label, _stats_label, _task_label]:
+		l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		l.custom_minimum_size.x = 1
 	_progress_bar = _bar(Color("#d9a922"), 200, 10)
 	_single_box.add_child(_progress_bar)
 	_queue_row = HBoxContainer.new()
@@ -430,6 +438,7 @@ func _refresh_single(e: Entity) -> void:
 	_name_label.text = "%s  ·  %s" % [tr(e.display_name()), owner_name]
 	_progress_bar.visible = false
 	_queue_row.visible = false
+	_task_label.visible = false
 	if e is ResourceNode:
 		_hp_bar.visible = false
 		_hp_label.text = ""
@@ -443,11 +452,13 @@ func _refresh_single(e: Entity) -> void:
 		var task := ""
 		if not e.task.is_empty():
 			var tt: String = e.task["type"]
-			task = "   ·   " + (tr("Gathering %s") % tr(String(e.task.get("kind", "")).capitalize()) if tt == "gather" else tr({"build": "Building", "repair": "Repairing", "drop": "Dropping off"}.get(tt, "")))
-		var carry := "   ·   %s: %d" % [tr("Carrying"), floori(e.carry_amount)] if e.carry_amount >= 1.0 else ""
+			task = tr("Gathering %s") % tr(String(e.task.get("kind", "")).capitalize()) if tt == "gather" else tr({"build": "Building", "repair": "Repairing", "drop": "Dropping off"}.get(tt, ""))
+		var carry := "%s: %d" % [tr("Carrying"), floori(e.carry_amount)] if e.carry_amount >= 1.0 else ""
 		var arm: Dictionary = e.def.get("armor", {})
 		var rng := "   " + tr("Range %d") % int(e.attack_range()) if e.attack_range() >= 1.0 else ""
-		_stats_label.text = tr("Attack %d   Armor %d/%d   Speed %.1f") % [int(e.def.get("attack_damage", 0)), int(arm.get("melee", 0)), int(arm.get("pierce", 0)), e.speed] + rng + task + carry
+		_stats_label.text = tr("Attack %d   Armor %d/%d   Speed %.1f") % [int(e.def.get("attack_damage", 0)), int(arm.get("melee", 0)), int(arm.get("pierce", 0)), e.speed] + rng
+		_task_label.text = task + ("   ·   " if task != "" and carry != "" else "") + carry
+		_task_label.visible = _task_label.text != ""
 	elif e is Building:
 		var b: Building = e
 		if not b.is_complete():
