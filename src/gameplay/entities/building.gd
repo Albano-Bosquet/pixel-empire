@@ -23,8 +23,11 @@ const FLAG_FRAMES := 4
 const FLAG_FPS := 6.0
 const SAIL_FRAMES := 8
 ## Wall pieces ("wall": true) connect to neighbours with half-tile arm sprites
-## `<id>_arm_<key>`; nx/ny point away from the camera and draw behind the post.
-const WALL_ARMS := {"px": Vector2i(1, 0), "nx": Vector2i(-1, 0), "py": Vector2i(0, 1), "ny": Vector2i(0, -1)}
+## `<id>_arm_<key>`; arms pointing at the camera (px, py, pxpy) draw in front
+## of the post, the rest behind it. Diagonal arms only link pieces that touch at a corner and
+## share no orthogonal neighbour (BuildingSystem.refresh_wall_links).
+const WALL_ARMS := {"px": Vector2i(1, 0), "nx": Vector2i(-1, 0), "py": Vector2i(0, 1), "ny": Vector2i(0, -1),
+		"pxpy": Vector2i(1, 1), "nxny": Vector2i(-1, -1), "pxny": Vector2i(1, -1), "nxpy": Vector2i(-1, 1)}
 const SAIL_FPS := 7.0
 
 static var _atlas: Dictionary = {}
@@ -55,6 +58,8 @@ var _foundation := Sprite2D.new()
 var _stages := 8
 var _stage_shown := -1
 var _arms: Dictionary = {}
+## Holder of the x-ray silhouettes (child of _body; created on first use).
+var _xray: Node2D
 var _dust: CPUParticles2D
 var _puff: CPUParticles2D
 ## Seconds of "builders are working" left (refreshed by add_progress).
@@ -301,7 +306,7 @@ func set_wall_links(links: Dictionary) -> void:
 		if want and not _arms.has(key):
 			var sp := Sprite2D.new()
 			_add_sprite(sp, "%s_arm_%s" % [type_id, key])
-			if key == "nx" or key == "ny":
+			if key not in ["px", "py", "pxpy"]:
 				move_child(sp, _foundation.get_index() + 1)
 			_arms[key] = sp
 		elif not want and _arms.has(key):
@@ -313,6 +318,50 @@ func set_wall_links(links: Dictionary) -> void:
 func _update_arms() -> void:
 	for key in _arms:
 		_arms[key].visible = state == State.COMPLETE
+
+
+## Screen-space (world) rectangle of the body sprite, or an empty rect while
+## only the foundation shows.
+func body_rect() -> Rect2:
+	if not _body.visible:
+		return Rect2()
+	return Rect2(position + _body.offset, _body.region_rect.size)
+
+
+## Shows silhouettes of the bodies behind this building (OcclusionXray), each
+## {"sprite": Sprite2D, "at": world position of that sprite's node, "tint": Color}.
+## They live under the body sprite, which clips them to its opaque pixels.
+func set_xray(items: Array, material: Material) -> void:
+	if items.is_empty() and _xray == null:
+		return
+	if _xray == null:
+		_xray = Node2D.new()
+		_body.add_child(_xray)
+	var pool := _xray.get_children()
+	for i in items.size():
+		var sp: Sprite2D
+		if i < pool.size():
+			sp = pool[i]
+		else:
+			sp = Sprite2D.new()
+			sp.centered = false
+			sp.material = material
+			_xray.add_child(sp)
+		var src: Sprite2D = items[i]["sprite"]
+		sp.texture = src.texture
+		sp.region_enabled = src.region_enabled
+		sp.region_rect = src.region_rect
+		sp.hframes = src.hframes
+		sp.vframes = src.vframes
+		sp.frame = src.frame
+		sp.flip_h = src.flip_h
+		sp.offset = src.offset
+		sp.position = items[i]["at"] + src.position - position
+		sp.modulate = items[i]["tint"]
+		sp.visible = true
+	for i in range(items.size(), pool.size()):
+		pool[i].visible = false
+	_body.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW if not items.is_empty() else CanvasItem.CLIP_CHILDREN_DISABLED
 
 
 ## Farm harvesting API (mirrors ResourceNode).

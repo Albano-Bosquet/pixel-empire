@@ -221,13 +221,16 @@ func die() -> void:
 	play_once("die")
 	anim_lock = INF
 	shadow_sprite = ""
-	z_index = -1
+	var back := Entity.corpse_sort_back()
 	if altitude > 0.0:
 		# Shot down: the wreck falls to the ground while the crash frames play.
-		z_index = 30
 		var tw := create_tween()
-		tw.tween_property(_sprite, "position:y", 0.0, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		tw.tween_callback(func() -> void: z_index = -1)
+		tw.tween_property(_sprite, "position:y", back, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.tween_callback(func() -> void:
+			z_index = 0
+			position.y -= back)
+	else:
+		sort_back(_sprite, back)
 	queue_redraw()
 
 

@@ -193,21 +193,37 @@ func _on_completed(b: Building) -> void:
 
 
 ## Wall pieces (walls and gates) show connecting arms towards same-owner
-## neighbours; refreshes `b` (unless it is being removed) and the four around it.
+## neighbours; refreshes `b` (unless it is being removed) and the eight around it.
 func refresh_wall_links(b: Building, removing: bool = false) -> void:
 	var around: Array[Building] = []
 	if not removing:
 		around.append(b)
-	for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-		var n := wall_at(b.origin + d, b.owner_id)
+	for key in Building.WALL_ARMS:
+		var n := wall_at(b.origin + Building.WALL_ARMS[key], b.owner_id)
 		if n != null and n != b:
 			around.append(n)
+	var skip: Building = b if removing else null
 	for w in around:
 		var links := {}
 		for key in Building.WALL_ARMS:
-			var n2 := wall_at(w.origin + Building.WALL_ARMS[key], w.owner_id)
-			links[key] = n2 != null and n2 != b if removing else n2 != null
+			links[key] = wall_links_to(w, Building.WALL_ARMS[key], skip)
 		w.set_wall_links(links)
+
+
+## True if `w` joins its neighbour at offset `d`. A diagonal neighbour only
+## joins when neither shared orthogonal tile holds a wall (otherwise the corner
+## is already closed through that piece). `ignore` is a piece being removed.
+func wall_links_to(w: Building, d: Vector2i, ignore: Building = null) -> bool:
+	var n := wall_at(w.origin + d, w.owner_id)
+	if n == null or n == ignore:
+		return false
+	if d.x == 0 or d.y == 0:
+		return true
+	for side in [Vector2i(d.x, 0), Vector2i(0, d.y)]:
+		var o := wall_at(w.origin + side, w.owner_id)
+		if o != null and o != ignore:
+			return false
+	return true
 
 
 ## The wall piece of `owner` standing on tile `t`, or null.

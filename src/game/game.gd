@@ -19,6 +19,9 @@ var decor: DecorLayer
 var ground_fx: GroundFx
 var entities_root: Node2D
 var overlay: SelectionOverlay
+var xray: OcclusionXray
+## Food carcasses on the map (pruned of freed ones by OcclusionXray).
+var carcasses: Array = []
 var camera: RtsCamera
 var systems: Node
 var unit_system: UnitSystem
@@ -206,6 +209,10 @@ func _build_scene() -> void:
 	overlay.name = "Overlay"
 	world.add_child(overlay)
 	overlay.setup(self)
+	xray = OcclusionXray.new()
+	xray.name = "OcclusionXray"
+	add_child(xray)
+	xray.setup(self, GameData.sprites.get("xray", {}))
 
 	camera = RtsCamera.new()
 	camera.name = "Camera"
@@ -389,7 +396,7 @@ func spawn_unit(unit_id: String, player_id: int, at: Vector2, id: int = 0) -> Un
 func kill_unit(u: Unit) -> void:
 	u.die()
 	economy.clear_task(u)
-	unit_system.retire(u, float(GameData.combat.get("corpse_seconds", 6.0)))
+	unit_system.retire(u, float(GameData.combat.get("corpse_seconds", 5.0)), float(GameData.combat.get("corpse_fade_seconds", 5.0)))
 	selection.prune.call_deferred()
 
 
@@ -445,6 +452,7 @@ func spawn_carcass(animal: Unit, amount: float, id: int = 0) -> ResourceNode:
 	node.setup_carcass(animal, amount)
 	register_entity(node)
 	entities_root.add_child(node)
+	carcasses.append(node)
 	var t := node.tile()
 	if not _static_at.has(t):
 		_static_at[t] = node
@@ -521,7 +529,16 @@ func _on_resource_depleted(node: ResourceNode) -> void:
 		EventBus.sound_at.emit("tree_fall", node.position)
 		add_stump(node.grid_pos)
 	EventBus.entity_removed.emit(node)
-	node.queue_free()
+	if node.def.get("carcass", false):
+		# The last scraps fade away instead of vanishing.
+		node.selectable = false
+		node.selected = false
+		node.dead = true
+		var tw := node.create_tween()
+		tw.tween_property(node, "modulate:a", 0.0, float(GameData.combat.get("carcass_fade_seconds", 1.5)))
+		tw.tween_callback(node.queue_free)
+	else:
+		node.queue_free()
 	selection.prune.call_deferred()
 
 

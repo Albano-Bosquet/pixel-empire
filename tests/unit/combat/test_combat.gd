@@ -135,3 +135,12 @@ func test_distance_to_segment_for_bolt_lines() -> void:
 	assert_near(CombatSystem.distance_to_segment(Vector2(2, 0.3), a, b), 0.3, 0.0001, "beside the middle")
 	assert_near(CombatSystem.distance_to_segment(Vector2(5, 0), a, b), 1.0, 0.0001, "past the end clamps to b")
 	assert_near(CombatSystem.distance_to_segment(Vector2(1, 1), a, a), sqrt(2.0), 0.0001, "degenerate segment")
+
+
+func test_corpse_lies_then_fades_gradually() -> void:
+	assert_near(UnitSystem.corpse_alpha(8.0, 5.0), 1.0, 0.001, "fully visible while it lies")
+	assert_near(UnitSystem.corpse_alpha(5.0, 5.0), 1.0, 0.001, "fade starts at full opacity")
+	var mid := UnitSystem.corpse_alpha(2.5, 5.0)
+	assert_true(mid > 0.2 and mid < 0.8, "half way through the fade it is half transparent (%.2f)" % mid)
+	assert_true(UnitSystem.corpse_alpha(1.0, 5.0) < UnitSystem.corpse_alpha(2.0, 5.0), "keeps fading")
+	assert_near(UnitSystem.corpse_alpha(0.0, 5.0), 0.0, 0.001, "gone at the end")

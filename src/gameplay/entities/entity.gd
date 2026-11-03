@@ -37,6 +37,8 @@ var attack_bonus := 0
 var armor_bonus := {"melee": 0, "pierce": 0}
 ## Seconds since the last hit (drives temporary health bars).
 var since_damaged := INF
+## Where the feet are drawn relative to `position` (moved by sort_back).
+var feet_offset := Vector2.ZERO
 
 
 func set_grid_pos(g: Vector2) -> void:
@@ -77,6 +79,23 @@ func take_damage(amount: int, attacker: Entity) -> bool:
 	return false
 
 
+## Pixels a lying body sorts behind its feet (render_sprites.json "corpses").
+static func corpse_sort_back() -> float:
+	return float(GameData.sprites.get("corpses", {}).get("sort_back_px", 8.0))
+
+
+## Lying bodies stay in the y-sort (so buildings and trees in front still
+## cover them, and they cover what is behind) but sort `px` further back than
+## their feet, so units walking over them draw on top. The node moves up and
+## `body` down by the same amount: nothing moves on screen.
+func sort_back(body: Node2D, px: float) -> void:
+	z_index = 0
+	position.y -= px
+	body.position.y += px
+	pick_rect.position.y += px
+	feet_offset.y += px
+
+
 func display_name() -> String:
 	return String(def.get("display_name", type_id))
 
@@ -92,6 +111,6 @@ func hit_test(world: Vector2) -> bool:
 
 func _draw() -> void:
 	if shadow_sprite != "":
-		SpriteLibrary.draw_prop(self, shadow_sprite, Vector2.ZERO)
+		SpriteLibrary.draw_prop(self, shadow_sprite, feet_offset)
 	if selected and ring_sprite != "":
-		SpriteLibrary.draw_prop(self, ring_sprite, Vector2.ZERO, ring_color)
+		SpriteLibrary.draw_prop(self, ring_sprite, feet_offset, ring_color)

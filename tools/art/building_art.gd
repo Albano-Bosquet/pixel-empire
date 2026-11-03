@@ -66,7 +66,7 @@ static func build_all(defs: Dictionary, construction: Dictionary = {}) -> Dictio
 		out[id] = {"canvas": body.c, "anchor": Vector2i(roundi(body.cx), roundi(body.cy)), "meta": body.meta}
 		if defs[id].get("wall", false):
 			# Half-tile arms joining a wall piece to each neighbour (Building.WALL_ARMS).
-			for key in ["px", "nx", "py", "ny"]:
+			for key in ["px", "nx", "py", "ny", "pxpy", "nxny", "pxny", "nxpy"]:
 				var arm = script.new()
 				arm._begin(s, h)
 				arm._paint_wall_arm("logs" if style == "palisade_wall" else "stone", key)
@@ -864,6 +864,9 @@ func _log_post(x: float, y: float, w: float, h: float) -> void:
 ## Half-tile wall arm from the tile centre towards one neighbour.
 ## kind: "logs" (palisade posts) or "stone" (crenellated stone wall).
 func _paint_wall_arm(kind: String, key: String) -> void:
+	if key.length() == 4:
+		_paint_wall_arm_diagonal(kind, key)
+		return
 	var along_x := key == "px" or key == "nx"
 	var a := 0.5
 	var b := 1.02 if key in ["px", "py"] else -0.02
@@ -884,6 +887,29 @@ func _paint_wall_arm(kind: String, key: String) -> void:
 	else:
 		box(0.34, lo, 0.66, hi, 0, 30, "stone", "stone")
 		battlements(0.34, lo, 0.66, hi, 30, "stone", 0.12, 5)
+
+
+## Diagonal arm ("pxpy", "nxny", "pxny", "nxpy") from the tile centre to the
+## shared corner with a diagonal neighbour. Boxes cannot rotate, so the stone
+## run is a staircase of overlapping blocks that reads as one slanted wall.
+func _paint_wall_arm_diagonal(kind: String, key: String) -> void:
+	var dir := Vector2(1.0 if key.substr(0, 2) == "px" else -1.0, 1.0 if key.substr(2, 2) == "py" else -1.0)
+	var from := Vector2(0.5, 0.5)
+	var to := from + dir * 0.52
+	if kind == "logs":
+		var n := 5
+		for i in n:
+			var p := from.lerp(to, (i + 0.5) / n)
+			_log_post(p.x, p.y, 0.065, 26.0 + float(i % 2) * 3.0)
+		return
+	var steps := 6
+	var half := 0.16
+	for i in steps:
+		var p := from.lerp(to, (i + 0.5) / steps)
+		box(p.x - half, p.y - half, p.x + half, p.y + half, 0, 30, "stone", "stone")
+	for i in range(0, steps, 2):
+		var p := from.lerp(to, (i + 0.5) / steps)
+		box(p.x - 0.06, p.y - 0.06, p.x + 0.06, p.y + 0.06, 30, 35, "stone", "stone")
 
 
 func _paint_palisade_wall() -> void:

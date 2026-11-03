@@ -323,15 +323,15 @@
     },
     "pikeman": {
       "frame_size": [
-        48,
+        60,
         48
       ],
       "anchor": [
-        24,
+        30,
         44
       ],
       "portrait_rect": [
-        14,
+        20,
         8,
         20,
         26
@@ -359,15 +359,15 @@
     },
     "greatsword": {
       "frame_size": [
-        48,
+        60,
         48
       ],
       "anchor": [
-        24,
+        30,
         44
       ],
       "portrait_rect": [
-        14,
+        20,
         8,
         20,
         26
@@ -1193,15 +1193,15 @@
     },
     "musketeer": {
       "frame_size": [
-        48,
+        60,
         48
       ],
       "anchor": [
-        24,
+        30,
         44
       ],
       "portrait_rect": [
-        14,
+        20,
         8,
         20,
         26
@@ -2129,5 +2129,13 @@
     "fade_start": 0.55,
     "dust_seconds": 0.35,
     "stage_puff_particles": 14
+  },
+  "corpses": {
+    "sort_back_px": 8
+  },
+  "xray": {
+    "alpha": 0.6,
+    "lighten": 0.2,
+    "neutral_color": "#f2e3a0"
   }
 }

@@ -40,10 +40,20 @@ func unregister(u: Unit) -> void:
 
 
 ## Removes a dead unit from the simulation (deferred, so it is safe to call
-## while systems iterate `units`) and frees it after `corpse_seconds`.
-func retire(u: Unit, corpse_seconds: float) -> void:
-	corpses.append({"unit": u, "time": corpse_seconds})
+## while systems iterate `units`). The body lies for `hold_seconds`, then fades
+## out gradually over `fade_seconds` and is freed (combat_settings.json
+## corpse_seconds / corpse_fade_seconds).
+func retire(u: Unit, hold_seconds: float, fade_seconds: float = 0.0) -> void:
+	corpses.append({"unit": u, "time": hold_seconds + fade_seconds, "fade": fade_seconds})
 	unregister.call_deferred(u)
+
+
+## Opacity of a corpse with `time_left` seconds to go: 1 while it lies, then an
+## eased ramp to 0 across the last `fade` seconds.
+static func corpse_alpha(time_left: float, fade: float) -> float:
+	if fade <= 0.0:
+		return 1.0 if time_left > 0.0 else 0.0
+	return smoothstep(0.0, 1.0, clampf(time_left / fade, 0.0, 1.0))
 
 
 ## Queues a path search; the unit is MOVING (waiting) until it is served.
@@ -103,8 +113,7 @@ func _process(delta: float) -> void:
 		var cu: Unit = c["unit"]
 		cu.animate(delta)
 		c["time"] -= delta
-		if c["time"] < 1.0:
-			cu.modulate.a = maxf(0.0, c["time"])
+		cu.modulate.a = corpse_alpha(c["time"], c.get("fade", 1.0))
 		if c["time"] <= 0.0:
 			cu.queue_free()
 	corpses = corpses.filter(func(c): return c["time"] > 0.0 and is_instance_valid(c["unit"]))

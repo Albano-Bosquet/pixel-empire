@@ -36,11 +36,28 @@ func test_gate_closing_is_temporary() -> void:
 	assert_true(pf.is_walkable(Vector2i(6, 2)), "shared grid keeps the gate open after an enemy search")
 
 
-func test_wall_line_is_four_connected() -> void:
+func test_wall_line_is_eight_connected() -> void:
 	var line := PlacementController.line_tiles(Vector2i(0, 0), Vector2i(4, 2))
 	assert_eq(line[0], Vector2i(0, 0), "starts at the press tile")
 	assert_eq(line[line.size() - 1], Vector2i(4, 2), "ends at the release tile")
-	assert_eq(line.size(), 7, "|dx| + |dy| + 1 pieces")
+	assert_eq(line.size(), 5, "max(|dx|, |dy|) + 1 pieces")
 	for i in range(1, line.size()):
 		var d := line[i] - line[i - 1]
-		assert_eq(absi(d.x) + absi(d.y), 1, "step %d is orthogonal" % i)
+		assert_true(maxi(absi(d.x), absi(d.y)) == 1, "step %d touches the previous piece" % i)
+
+
+func test_wall_line_pure_diagonal() -> void:
+	var line := PlacementController.line_tiles(Vector2i(5, 5), Vector2i(2, 8))
+	assert_eq(line.size(), 4, "one piece per diagonal step")
+	for i in line.size():
+		assert_eq(line[i], Vector2i(5 - i, 5 + i), "piece %d on the diagonal" % i)
+
+
+func test_diagonal_wall_blocks_paths() -> void:
+	# Diagonal wall from (0, 4) to (4, 0): nothing may slip through its corners.
+	var m := MapData.new(8, 8, 1)
+	for t in PlacementController.line_tiles(Vector2i(0, 4), Vector2i(4, 0)):
+		m.set_blocked(t, true)
+	var pf := Pathfinder.new(m)
+	var path := pf.find_path(Vector2(0.5, 0.5), Vector2(6.5, 6.5), 1)
+	assert_true(path.is_empty() or path[path.size() - 1].distance_to(Vector2(6.5, 6.5)) > 1.0, "the corner gaps are closed")

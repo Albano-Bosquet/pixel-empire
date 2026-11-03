@@ -109,7 +109,8 @@ func _click(screen_pos: Vector2, additive: bool, same_type: bool = false) -> voi
 		set_selection([e])
 
 
-## Front-most selectable entity under the screen position (units preferred).
+## Front-most selectable entity under the screen position. Units win, then
+## carcasses (small and often half behind a building), then everything else.
 func pick(screen_pos: Vector2) -> Entity:
 	var world := _game.world_from_screen(screen_pos)
 	var g := Iso.world_to_grid(world)
@@ -122,12 +123,18 @@ func pick(screen_pos: Vector2) -> Entity:
 	if best != null:
 		return best
 	var t := Iso.tile_of(g)
+	var carcass: Entity = null
 	for dy in range(-1, 6):
 		for dx in range(-1, 6):
 			var e: Entity = _game.static_entity_at(t + Vector2i(dx, dy))
-			if e != null and e.selectable and e.visible and e.hit_test(world) and (best == null or e.position.y > best.position.y):
+			if e == null or not e.selectable or not e.visible or not e.hit_test(world):
+				continue
+			if e.def.get("carcass", false):
+				if carcass == null or e.position.y > carcass.position.y:
+					carcass = e
+			elif best == null or e.position.y > best.position.y:
 				best = e
-	return best
+	return carcass if carcass != null else best
 
 
 func set_selection(list: Array) -> void:

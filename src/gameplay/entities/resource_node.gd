@@ -64,8 +64,12 @@ func setup_carcass(animal: Unit, food: float) -> void:
 	carcass_facing = animal.facing
 	add_child(_sprite)
 	pick_rect = Rect2(-12, -16, 24, 18)
-	z_index = -1
 	set_grid_pos(animal.grid_pos)
+	sort_back(_sprite, Entity.corpse_sort_back())
+
+
+func body_sprite() -> Sprite2D:
+	return _sprite
 
 
 func is_depleted() -> bool:

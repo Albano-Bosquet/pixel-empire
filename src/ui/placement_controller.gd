@@ -4,8 +4,8 @@ extends Node2D
 ## the grid, tinted green/red by validity. Left click places (Shift keeps the
 ## mode for another), right click or Esc cancels. Placement itself goes through
 ## BuildingSystem.try_place (UI never mutates game state directly).
-## "line_build" buildings (walls): press, drag and release to lay a 4-connected
-## line of pieces; the selected workers start on the first and chain along it.
+## "line_build" buildings (walls): press, drag and release to lay an 8-connected
+## line of pieces (straight or diagonal); the selected workers start on the first and chain along it.
 
 signal mode_changed(active: bool)
 
@@ -17,26 +17,16 @@ var _mouse_screen := Vector2(-1, -1)
 var _drag_start := Vector2i(-1, -1)
 
 
-## 4-connected tiles from `a` to `b` (inclusive): walls drawn with it never
-## touch only at a corner, so every piece can join its neighbours.
+## 8-connected tiles from `a` to `b` (inclusive), one piece per step along the
+## longer axis, so walls can run diagonally. Pieces that touch only at a corner
+## join with diagonal arms and still block the path (no corner cutting).
 static func line_tiles(a: Vector2i, b: Vector2i) -> Array[Vector2i]:
-	var out: Array[Vector2i] = [a]
-	var cur := a
-	var total := absi(b.x - a.x) + absi(b.y - a.y)
-	for i in total:
-		var done_x := absi(cur.x - a.x)
-		var done_y := absi(cur.y - a.y)
-		var need_x := absi(b.x - a.x)
-		var need_y := absi(b.y - a.y)
-		# Step along the axis that lags behind the straight line the most.
-		var step_x := need_y == 0 or (need_x > 0 and float(done_x + 0.5) / need_x <= float(done_y + 0.5) / need_y)
-		if step_x and done_x < need_x:
-			cur.x += signi(b.x - a.x)
-		elif done_y < need_y:
-			cur.y += signi(b.y - a.y)
-		else:
-			cur.x += signi(b.x - a.x)
-		out.append(cur)
+	var out: Array[Vector2i] = []
+	var d := b - a
+	var steps := maxi(absi(d.x), absi(d.y))
+	for i in steps + 1:
+		var f := float(i) / float(maxi(steps, 1))
+		out.append(Vector2i(a.x + roundi(d.x * f), a.y + roundi(d.y * f)))
 	return out
 
 

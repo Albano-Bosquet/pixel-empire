@@ -2,7 +2,9 @@
   "scan_interval": 0.4,
   "leash_extra": 4.0,
   "guard_return_distance": 1.5,
-  "corpse_seconds": 6.0,
+  "corpse_seconds": 5.0,
+  "corpse_fade_seconds": 5.0,
+  "carcass_fade_seconds": 1.5,
   "rubble_seconds": 20.0,
   "projectile_speeds": {
     "arrow": 9.0,
