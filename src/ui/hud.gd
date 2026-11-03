@@ -5,7 +5,7 @@ extends CanvasLayer
 ## multi-select grid, command panel), notifications, drag rectangle and a
 ## debug readout (F3). Reads state through EventBus and the Game API only.
 
-const AGE_NAMES: Array[String] = ["Dark Age", "Feudal Age", "Castle Age", "Imperial Age", "Gunpowder Age", "Industrial Age"]
+const AGE_NAMES: Array[String] = ["Dark Age", "Feudal Age", "Castle Age", "Imperial Age", "Gunpowder Age", "Industrial Age", "Military Age"]
 const PANEL_BG := Color(0.11, 0.10, 0.09, 0.93)
 const PANEL_BORDER := Color("#8a6d3b")
 const TEXT := Color("#f1e6cf")

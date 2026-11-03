@@ -13,6 +13,7 @@ const SiegeArt := preload("res://tools/art/siege_art.gd")
 const SheetBuilder := preload("res://tools/art/sheet_builder.gd")
 const ShipArt := preload("res://tools/art/ship_art.gd")
 const AirArt := preload("res://tools/art/air_art.gd")
+const VehicleArt := preload("res://tools/art/vehicle_art.gd")
 
 const OUT := "res://assets/sprites/"
 const PREVIEW := "res://production/qa/screenshots/art_preview.png"
@@ -59,6 +60,14 @@ const UNIT_LOOKS := {
 	"biplane_bomber": {"painter": "air", "model": "biplane_bomber"},
 	"observation_balloon": {"painter": "air", "model": "observation_balloon"},
 	"ironclad": {"painter": "ship", "model": "ironclad"},
+	"infantryman": {"painter": "humanoid", "weapon": "assault_rifle", "helmet": "steel", "pants": "#5d6644", "boots": "#2a2420", "belt": "#4a4a30", "hair": "#3a2a1c"},
+	"machine_gunner": {"painter": "humanoid", "weapon": "machine_gun", "helmet": "steel", "pants": "#5d6644", "boots": "#2a2420", "belt": "#c9a24a", "skin": "#d39a6c"},
+	"bazooka_trooper": {"painter": "humanoid", "weapon": "bazooka", "helmet": "steel", "pants": "#5d6644", "boots": "#2a2420", "belt": "#4a4a30", "skin": "#c98e62"},
+	"light_tank": {"painter": "vehicle", "model": "light_tank"},
+	"heavy_tank": {"painter": "vehicle", "model": "heavy_tank"},
+	"self_propelled_gun": {"painter": "vehicle", "model": "self_propelled_gun"},
+	"jet_fighter": {"painter": "air", "model": "jet_fighter"},
+	"jet_bomber": {"painter": "air", "model": "jet_bomber"},
 	"monk": {"painter": "humanoid", "robe": "#7a5a3a", "weapon": "staff", "skin": "#d9a37a", "boots": "#4a3426"},
 	"petard": {"painter": "humanoid", "weapon": "petard", "helmet": "kettle", "pants": "#4a4034", "hair": "#2a1d14"},
 	"camel_rider": {"painter": "cavalry", "coat": "#c79a5e", "mount": "camel", "weapon": "sword", "hair": "#2e2218", "skin": "#c98e62"},
@@ -121,6 +130,8 @@ func _initialize() -> void:
 					sheet = ShipArt.build_sheet(layout, params)
 				"air":
 					sheet = AirArt.build_sheet(layout, params)
+				"vehicle":
+					sheet = VehicleArt.build_sheet(layout, params)
 				_:
 					sheet = HumanoidArt.build_sheet(layout, params)
 			_save(sheet, OUT + "units/%s_p%d.png" % [unit_id, slot])

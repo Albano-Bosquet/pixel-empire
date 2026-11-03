@@ -84,7 +84,16 @@ func _draw() -> void:
 			"shot", "flak":
 				for k in 3:
 					draw_rect(Rect2(pos.round() + Vector2((k - 1) * 2, (k % 2) * 2), Vector2(1, 1)), Color("#2a2d33") if pr["kind"] == "shot" else Color("#ffd35a"))
-			"grenade", "mortar_shell", "bomb":
+			"shell":
+				var dsh: Vector2 = pr["screen_dir"]
+				draw_line((pos - dsh * 9.0).round(), pos.round(), Color(1.0, 0.85, 0.45, 0.6), 1.5)
+				draw_circle(pos.round(), 1.5, Color("#3a3d42"))
+			"rocket":
+				var dr: Vector2 = pr["screen_dir"]
+				draw_line((pos - dr * 12.0).round(), (pos - dr * 4.0).round(), Color(0.85, 0.85, 0.86, 0.6), 2.0)
+				draw_line((pos - dr * 4.0).round(), pos.round(), Color("#55603e"), 2.0)
+				draw_rect(Rect2((pos - dr * 5.0).round() - Vector2(1, 1), Vector2(2, 2)), Color("#ffb04a"))
+			"grenade", "mortar_shell", "bomb", "artillery_shell":
 				var rr := 2.0 if pr["kind"] == "grenade" else 3.0
 				draw_circle(pos.round(), rr, Color("#2a2d33"))
 				draw_rect(Rect2(pos.round() + Vector2(0, -rr - 1), Vector2(1, 1)), Color("#ffd35a"))

@@ -36,12 +36,12 @@ static func conversion_time(target_def: Dictionary, cfg: Dictionary) -> float:
 			float(cfg.get("convert_max_seconds", 9.0)))
 
 
-## True if `target` can ever be converted (units only, no siege, no monks).
+## True if `target` can ever be converted (units only, no siege or vehicles, no monks).
 static func convertible(target: Entity) -> bool:
 	if not (target is Unit):
 		return false
 	var cls: Array = target.classes()
-	return not cls.has("siege") and not cls.has("monk")
+	return not cls.has("siege") and not cls.has("vehicle") and not cls.has("monk")
 
 
 static func is_monk(u: Unit) -> bool:
@@ -144,7 +144,7 @@ func _heal_all() -> void:
 		var best: Unit = null
 		var worst := 1.0
 		for o in _near:
-			if o == u or o.dead or o.owner_id != u.owner_id or o.classes().has("siege") or o.hp >= o.max_hp:
+			if o == u or o.dead or o.owner_id != u.owner_id or o.classes().has("siege") or o.classes().has("vehicle") or o.hp >= o.max_hp:
 				continue
 			var frac := float(o.hp) / maxf(1.0, o.max_hp)
 			if frac < worst and o.grid_pos.distance_to(u.grid_pos) <= rng:

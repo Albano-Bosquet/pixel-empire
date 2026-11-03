@@ -18,7 +18,10 @@
     "grenade": 6.5,
     "mortar_shell": 5.0,
     "bomb": 4.0,
-    "flak": 16.0
+    "flak": 16.0,
+    "shell": 18.0,
+    "rocket": 11.0,
+    "artillery_shell": 6.0
   },
   "arc_height_px": {
     "arrow": 10,
@@ -34,7 +37,10 @@
     "grenade": 22,
     "mortar_shell": 80,
     "bomb": 0,
-    "flak": 2
+    "flak": 2,
+    "shell": 2,
+    "rocket": 4,
+    "artillery_shell": 90
   },
   "melee_hit_delay": 0.35,
   "retaliate": true,

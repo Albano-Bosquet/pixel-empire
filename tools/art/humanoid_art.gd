@@ -7,6 +7,8 @@ extends RefCounted
 ## "robe" (Color: ankle-length habit with hood; the team colour becomes the sash).
 ## Gunpowder era: weapons "blunderbuss", "musket", "rifle" (aim + muzzle flash),
 ## "grenade" (overarm throw); helmets "tricorn", "shako", "cap" are cloth hats.
+## Military age: weapons "assault_rifle", "machine_gun" (rapid flashes), "bazooka"
+## (shoulder tube with backblast); helmet "steel" (olive dome with a brim).
 ## Animations: idle, walk, chop, mine, forage, build, carry_<res>, attack.
 ## "die" is derived by SheetBuilder.
 
@@ -29,9 +31,11 @@ const THROW := [70, 120, 150, 160, 90, 20, -10, 30]
 const XBOW_KICK := [0.0, 0.0, 0.0, 2.0, 1.0, 0.0]
 const GUN_FLASH := [0.0, 0.0, 0.0, 3.0, 2.0, 0.6, 0.0, 0.0, 0.0, 0.0]
 ## Firearms that aim at chest height and flash (tool drawn by _tool).
-const FIREARMS := ["gun", "blunderbuss", "musket", "rifle"]
+const FIREARMS := ["gun", "blunderbuss", "musket", "rifle", "assault_rifle", "machine_gun", "bazooka"]
+## Machine gun: a flash on every other frame of the attack cycle.
+const MG_FLASH := [3.0, 0.0, 2.6, 0.0, 3.0, 0.0, 2.6, 0.0, 3.0, 0.0]
 ## Hat colours for the cloth headgear.
-const HATS := {"tricorn": "#2a2420", "shako": "#1f2430", "cap": "#6b6a4a"}
+const HATS := {"tricorn": "#2a2420", "shako": "#1f2430", "cap": "#6b6a4a", "steel": "#55603e"}
 ## Spear thrust: arm angle and extra reach per frame.
 const THRUST := [[15, 1.0], [10, 0.0], [5, -1.5], [0, 5.0], [0, 7.0], [10, 3.0]]
 ## Bow: string pull (px) per frame.
@@ -100,10 +104,14 @@ static func paint(c: PixelCanvas, p: Dictionary, dir: int, anim: String, frame: 
 				"petard":
 					tool = "petard"
 					theta = deg_to_rad(SheetBuilder.sample([60, 80, 100, 110, 80, 40], frame, frames))
-				"crossbow", "gun", "blunderbuss", "musket", "rifle":
+				"crossbow", "gun", "blunderbuss", "musket", "rifle", "assault_rifle", "bazooka":
 					tool = weapon
 					theta = 0.0
 					pull = SheetBuilder.sample(XBOW_KICK if weapon == "crossbow" else GUN_FLASH, frame, frames)
+				"machine_gun":
+					tool = weapon
+					theta = 0.0
+					pull = float(MG_FLASH[frame % MG_FLASH.size()])
 				"grenade":
 					tool = "grenade"
 					theta = deg_to_rad(SheetBuilder.sample(THROW, frame, frames))
@@ -125,8 +133,16 @@ static func paint(c: PixelCanvas, p: Dictionary, dir: int, anim: String, frame: 
 			"crossbow":
 				theta = deg_to_rad(-35.0)
 				pull = 0.0
-			"gun", "musket", "rifle", "blunderbuss":
+			"gun", "musket", "rifle", "blunderbuss", "assault_rifle":
 				theta = deg_to_rad(65.0)
+				pull = 0.0
+			"machine_gun":
+				# Heavy gun carried low at the hip.
+				theta = deg_to_rad(-20.0)
+				pull = 0.0
+			"bazooka":
+				# Tube rides on the shoulder, pointing forward.
+				theta = deg_to_rad(12.0)
 				pull = 0.0
 			"grenade":
 				theta = deg_to_rad(-60.0)
@@ -288,6 +304,13 @@ static func paint(c: PixelCanvas, p: Dictionary, dir: int, anim: String, frame: 
 			"cap":
 				c.rect(roundi(hx - 4), roundi(hy - 5), 8, 2, hat[1])
 				c.rect(roundi(hx - 1 + side * 3.0), roundi(hy - 3), 5, 1, hat[0])
+			"steel":
+				# Rounded combat helmet: dome over the hairline, brim all round, chin strap.
+				c.shaded_blob(hx, hy - 2.2, 5.2, 3.6, hat)
+				c.rect(roundi(hx - 6), roundi(hy - 1), 12, 1, hat[0])
+				c.put(roundi(hx - 1.5), roundi(hy - 4), hat[2])
+				if front > 0.3:
+					c.put(roundi(hx - 3.0 + side * 2.0), roundi(hy + 2), hat[0])
 	elif helmet == "kettle":
 		for x in range(roundi(hx - 6), roundi(hx + 6)):
 			c.put(x, roundi(hy - 0.5), mail[1])
@@ -311,7 +334,7 @@ static func paint(c: PixelCanvas, p: Dictionary, dir: int, anim: String, frame: 
 		if not behind:
 			_tool(c, hand, dir_v, tool, pull)
 		_arm_to(c, near_shoulder, hand, tunic[1] if not has_mail else mail[2], skin[2])
-		var two_handed := tool in ["axe", "pick", "hammer", "greatsword", "pike", "crossbow", "gun", "petard", "blunderbuss", "musket", "rifle"] or (tool == "bow" and pull > 0.0)
+		var two_handed := tool in ["axe", "pick", "hammer", "greatsword", "pike", "crossbow", "gun", "petard", "blunderbuss", "musket", "rifle", "assault_rifle", "machine_gun", "bazooka"] or (tool == "bow" and pull > 0.0)
 		if side < 0.3 and two_handed and not shield:
 			var other := hand + Vector2(-1, 1)
 			if tool == "bow":
@@ -443,6 +466,37 @@ static func _tool(c: PixelCanvas, hand: Vector2, dir: Vector2, tool: String, pul
 				var g := hand + d * 1.5
 				c.ellipse(g.x, g.y, 2.0, 2.0, Color("#2a2d33"))
 				c.put(roundi(g.x + 1), roundi(g.y - 2), Color("#ffd35a"))
+		"assault_rifle", "machine_gun":
+			var mg := tool == "machine_gun"
+			var butt3 := hand - d * (4.0 if not mg else 5.0)
+			var muzzle3 := hand + d * (11.0 if not mg else 13.0)
+			c.thick_line(butt3.x, butt3.y, hand.x, hand.y, 2.2, Color("#3a3d33") if mg else Color("#5b4a32"))
+			c.thick_line(hand.x, hand.y, muzzle3.x, muzzle3.y, 2.0 if mg else 1.4, Color("#2f3238"))
+			# Magazine under the receiver (box mag / ammunition belt).
+			var mag := hand + d * 2.0
+			c.rect(roundi(mag.x), roundi(mag.y + 1), 2, 3 if not mg else 2, Color("#2a2d33"))
+			if mg:
+				var belt := mag + Vector2(-2, 2)
+				c.line(roundi(mag.x), roundi(mag.y + 2), roundi(belt.x), roundi(belt.y + 2), Color("#c9a24a"))
+				var bip := hand + d * 9.0
+				c.line(roundi(bip.x), roundi(bip.y), roundi(bip.x - 1), roundi(bip.y + 4), Color("#2a2d33"))
+				c.line(roundi(bip.x), roundi(bip.y), roundi(bip.x + 1), roundi(bip.y + 4), Color("#2a2d33"))
+			if pull > 0.5:
+				var fl3 := muzzle3 + d * 2.0
+				c.ellipse(fl3.x, fl3.y, 1.0 + pull * 0.7, 0.8 + pull * 0.5, Color("#ffd35a"))
+				c.ellipse(fl3.x, fl3.y, 0.5 + pull * 0.3, 0.5 + pull * 0.2, Color("#fff6c8"))
+		"bazooka":
+			var rear := hand - d * 8.0
+			var mouth := hand + d * 9.0
+			c.thick_line(rear.x, rear.y - 2.0, mouth.x, mouth.y - 2.0, 3.2, Color("#55603e"))
+			c.thick_line(rear.x, rear.y - 3.0, mouth.x, mouth.y - 3.0, 1.0, Color("#77845a"))
+			c.ellipse(mouth.x, mouth.y - 2.0, 1.8, 1.8, Color("#2a2d33"))
+			c.rect(roundi(hand.x), roundi(hand.y - 1), 1, 3, Color("#2a2d33"))
+			if pull > 0.5:
+				# Rocket leaves the tube; backblast smoke behind the shooter.
+				c.ellipse(mouth.x + d.x * 3.0, mouth.y - 2.0 + d.y * 3.0, 1.6 + pull * 0.6, 1.2 + pull * 0.4, Color("#ffd35a"))
+				c.ellipse(rear.x - d.x * 4.0, rear.y - 2.0 - d.y * 4.0, 2.5 + pull, 2.0 + pull * 0.6, Color(0.85, 0.85, 0.86, 0.8))
+				c.ellipse(rear.x - d.x * 2.0, rear.y - 2.0, 1.4, 1.2, Color("#f08a2a"))
 		"gun", "blunderbuss", "musket", "rifle":
 			var spec: Array = {"gun": [4.0, 11.0, 1.8], "blunderbuss": [4.0, 8.0, 2.0], "musket": [5.0, 14.0, 1.5], "rifle": [5.0, 13.0, 1.3]}[tool]
 			var butt2 := hand - d * float(spec[0])

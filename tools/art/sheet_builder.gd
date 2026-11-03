@@ -5,7 +5,8 @@ extends RefCounted
 ##   col = frame. West-facing directions are drawn by flipping at runtime.
 ## A "die" animation is derived generically: the first idle frame topples
 ## around the feet, sinks and leaves a dark stain - or, with layout
-## "die_style": "sink" (ships), tilts and slips below the waterline.
+## "die_style": "sink" (ships), tilts and slips below the waterline; "crash"
+## (aircraft) spins and burns; "wreck" (armoured vehicles) chars and smokes.
 ## Every frame gets a light pass (top-left rim highlight, bottom-right core
 ## shadow) before the selective outline, so all painters share one lighting look.
 
@@ -67,6 +68,8 @@ static func build(layout: Dictionary, params: Dictionary, painter: Callable) -> 
 						_sink(c, src, f, n, feet)
 					elif layout.get("die_style", "topple") == "crash":
 						_crash(c, src, f, n, feet)
+					elif layout.get("die_style", "topple") == "wreck":
+						_wreck(c, src, f, n, feet)
 					else:
 						_topple(c, src, f, n, feet, d)
 				else:
@@ -150,6 +153,33 @@ static func _crash(dst: PixelCanvas, src: PixelCanvas, frame: int, frames: int, 
 	if t > 0.5:
 		dst.ellipse(feet.x, feet.y - 2, 3.0, 2.0, Color("#f08a2a"))
 		dst.put(feet.x, feet.y - 4, Color("#ffd35a"))
+
+
+## Armoured vehicle death: a jolt from the hit, then the hull chars black while
+## flames lick out of it and a smoke column rises from the wreck.
+static func _wreck(dst: PixelCanvas, src: PixelCanvas, frame: int, frames: int, feet: Vector2i) -> void:
+	var t := float(frame) / float(maxi(frames - 1, 1))
+	var jolt := 1 if frame == 1 else 0
+	for y in dst.h:
+		for x in dst.w:
+			var col := src.get_px(x - jolt, y + jolt)
+			if col.a > 0.5:
+				var burnt := col.darkened(0.25 + t * 0.55)
+				burnt.h = lerpf(burnt.h, 0.07, t * 0.5)
+				dst.put(x, y, burnt)
+	var top := feet.y - 14
+	if t > 0.05 and t < 0.25:
+		dst.ellipse(feet.x, top + 4, 8.0 * (1.0 - t * 2.0) + 3.0, 5.0, Color("#ffd35a"))
+	var fire := 1.0 - absf(t - 0.55) * 1.4
+	if fire > 0.0:
+		for k in 3:
+			var fx := feet.x - 6 + k * 6 + (frame + k) % 3 - 1
+			dst.ellipse(fx, top + 2 - (frame + k * 2) % 3, 2.2 * fire + 0.8, 3.0 * fire + 1.0, Color("#f08a2a"))
+			dst.put(fx, top - 1 - (frame + k) % 2, Color("#ffd35a"))
+	for k in 4:
+		var sx := feet.x - 2 + k * 2 + int(t * 4.0)
+		var sy := top - 4 - k * 5 - int(t * 6.0)
+		dst.ellipse(sx, sy, 2.4 + k * 0.8 * t + 0.5, 1.8 + k * 0.5, Color(0.2, 0.2, 0.22, (0.7 - k * 0.13) * minf(1.0, t * 3.0)))
 
 
 static func _topple(dst: PixelCanvas, src: PixelCanvas, frame: int, frames: int, feet: Vector2i, dir: int) -> void:

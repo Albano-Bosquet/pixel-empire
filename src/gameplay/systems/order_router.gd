@@ -12,6 +12,7 @@ extends Node
 ##   {"t": "stop" | "unload", "units": [id]}
 ##   {"t": "stance", "units": [id], "stance": String}  {"t": "formation", "f": String}
 ##   {"t": "attack_move", "units": [id], "grid": Vector2}
+##   {"t": "delete", "ids": [id]}                     (Delete key: own units/buildings die)
 ## Offline (and on the host) an order is applied at once for the local player.
 ## On a client `remote_submit` is set by the network session: the order is sent
 ## to the host, which calls apply() with the sender's player id.
@@ -120,4 +121,14 @@ func apply(pid: int, order: Dictionary) -> bool:
 		"attack_move":
 			_game.commands.attack_move(_own_units(pid, order.get("units", [])), order.get("grid", Vector2.ZERO))
 			return true
+		"delete":
+			var any_del := false
+			for id in order.get("ids", []):
+				var e: Entity = _game.entity(int(id))
+				if e != null and e.owner_id == pid and not e.dead and (e is Unit or e is Building):
+					# Lethal damage with no attacker: the normal death path runs
+					# (animation/rubble, stats, network kill event), no retaliation.
+					e.take_damage(e.hp, null)
+					any_del = true
+			return any_del
 	return false

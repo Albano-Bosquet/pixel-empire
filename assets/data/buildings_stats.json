@@ -49,7 +49,8 @@
       "treadmill_crane",
       "masonry",
       "gunpowder_age",
-      "industrial_age"
+      "industrial_age",
+      "military_age"
     ]
   },
   "house": {
@@ -925,5 +926,103 @@
         "air"
       ]
     }
+  },
+  "military_base": {
+    "display_name": "Military Base",
+    "age": 6,
+    "size": 3,
+    "max_hp": 2600,
+    "build_time": 60,
+    "cost": {
+      "wood": 300,
+      "stone": 150
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [
+      "infantryman",
+      "machine_gunner",
+      "bazooka_trooper"
+    ],
+    "sight": 5,
+    "hotkey": "I",
+    "category": "military",
+    "description": "Trains modern infantry: riflemen, machine gunners and bazooka troopers.",
+    "art": {
+      "style": "military_base"
+    },
+    "armor": {
+      "melee": 2,
+      "pierce": 7
+    },
+    "classes": [
+      "building"
+    ]
+  },
+  "tank_factory": {
+    "display_name": "Tank Factory",
+    "age": 6,
+    "size": 4,
+    "max_hp": 3200,
+    "build_time": 90,
+    "cost": {
+      "wood": 350,
+      "stone": 250,
+      "gold": 100
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [
+      "light_tank",
+      "heavy_tank",
+      "self_propelled_gun"
+    ],
+    "sight": 5,
+    "hotkey": "H",
+    "category": "military",
+    "description": "Assembles light and heavy tanks and self-propelled guns.",
+    "art": {
+      "style": "tank_factory"
+    },
+    "armor": {
+      "melee": 2,
+      "pierce": 8
+    },
+    "classes": [
+      "building"
+    ]
+  },
+  "air_base": {
+    "display_name": "Air Base",
+    "age": 6,
+    "size": 4,
+    "max_hp": 3000,
+    "build_time": 90,
+    "cost": {
+      "wood": 300,
+      "stone": 300,
+      "gold": 150
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [
+      "jet_fighter",
+      "jet_bomber"
+    ],
+    "sight": 5,
+    "hotkey": "U",
+    "category": "military",
+    "description": "Builds jet fighters and bombers and rearms all aircraft.",
+    "art": {
+      "style": "air_base"
+    },
+    "armor": {
+      "melee": 2,
+      "pierce": 8
+    },
+    "classes": [
+      "building"
+    ],
+    "rearms_air": true
   }
 }

@@ -409,10 +409,12 @@ func _update_reveal() -> void:
 		if _stage_shown >= 0 and idx > _stage_shown and _puff:
 			_puff.restart()
 		_stage_shown = idx
-		_body.visible = idx > 0
 		if idx > 0:
 			_show_region(_body, "%s_stage_%d" % [type_id, idx])
 		_show_region(_stage_next, "%s_stage_%d" % [type_id, mini(idx + 1, _stages)])
+	# Set every update: _set_state shows the body on FOUNDATION -> CONSTRUCTING
+	# while it still holds the finished sprite, before stage 1 is reached.
+	_body.visible = idx > 0
 	var fade: float = st["fade"]
 	_stage_next.visible = fade > 0.0
 	_stage_next.modulate.a = fade

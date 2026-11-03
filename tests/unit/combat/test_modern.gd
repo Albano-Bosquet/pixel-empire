@@ -13,7 +13,7 @@ func test_two_new_ages_follow_the_imperial_age() -> void:
 	assert_eq(int(GameData.ages["gunpowder_age"]["sets_age"]), 4, "Gunpowder Age is age 4")
 	assert_eq(int(GameData.ages["gunpowder_age"]["requires_age"]), 3, "it follows the Imperial Age")
 	assert_eq(int(GameData.ages["industrial_age"]["requires_age"]), 4, "Industrial follows Gunpowder")
-	assert_eq(Hud.AGE_NAMES.size(), 6, "six age names for the HUD")
+	assert_eq(Hud.AGE_NAMES.size(), 7, "seven age names for the HUD")
 	assert_true(GameData.building("town_center")["researches"].has("industrial_age"), "the town center researches it")
 
 

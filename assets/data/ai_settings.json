@@ -18,6 +18,7 @@
         99,
         99,
         99,
+        99,
         99
       ],
       "reaction_radius": 10,
@@ -36,7 +37,7 @@
     },
     "normal": {
       "gather_multiplier": 1.0,
-      "villager_target": 22,
+      "villager_target": 34,
       "army_attack_size": 4,
       "first_attack_minute": 10,
       "military_buildings": 2,
@@ -44,6 +45,7 @@
         20,
         26,
         34,
+        99,
         99,
         99
       ],
@@ -73,7 +75,7 @@
     },
     "hard": {
       "gather_multiplier": 1.2,
-      "villager_target": 30,
+      "villager_target": 48,
       "army_attack_size": 4,
       "first_attack_minute": 8,
       "military_buildings": 3,
@@ -82,7 +84,8 @@
         26,
         30,
         36,
-        42
+        42,
+        46
       ],
       "reaction_radius": 18,
       "max_army": 40,
@@ -114,7 +117,15 @@
         "field_cannon": 1,
         "mortar": 1,
         "biplane_fighter": 2,
-        "biplane_bomber": 1
+        "biplane_bomber": 1,
+        "infantryman": 4,
+        "machine_gunner": 2,
+        "bazooka_trooper": 2,
+        "light_tank": 2,
+        "heavy_tank": 2,
+        "self_propelled_gun": 1,
+        "jet_fighter": 2,
+        "jet_bomber": 1
       },
       "max_techs": 99,
       "fishing_ships": 5,
@@ -161,6 +172,9 @@
   "modern_buildings": [
     "foundry",
     "airfield",
-    "flak_fort"
+    "flak_fort",
+    "military_base",
+    "tank_factory",
+    "air_base"
   ]
 }

@@ -195,6 +195,11 @@ func _key(event: InputEventKey) -> void:
 	if event.keycode == KEY_PERIOD:
 		select_idle_worker()
 		return
+	if event.keycode == KEY_DELETE:
+		var own := selected.filter(func(e): return is_instance_valid(e) and e.owner_id == _game.local_player)
+		if not own.is_empty():
+			_game.orders.submit({"t": "delete", "ids": OrderRouter.ids(own)})
+		return
 	var digit: int = event.keycode - KEY_0
 	if digit < 0 or digit > 9:
 		return

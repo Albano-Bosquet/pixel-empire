@@ -1499,5 +1499,318 @@
     "naval": true,
     "projectile": "cannonball",
     "sprite": "ironclad"
+  },
+  "infantryman": {
+    "display_name": "Infantryman",
+    "max_hp": 75,
+    "speed": 1.1,
+    "sight": 8,
+    "radius": 0.24,
+    "attack_damage": 14,
+    "attack_range": 8.0,
+    "attack_cooldown": 1.6,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 2,
+      "pierce": 3
+    },
+    "bonuses": {
+      "cavalry": 4
+    },
+    "classes": [
+      "infantry",
+      "gunpowder"
+    ],
+    "train_time": 24,
+    "cost": {
+      "food": 60,
+      "gold": 50
+    },
+    "hotkey": "Q",
+    "trained_at": "military_base",
+    "description": "Modern rifleman with a steel helmet and a semi-automatic rifle.",
+    "projectile": "bullet",
+    "min_range": 0.0,
+    "age": 6,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "infantryman"
+  },
+  "machine_gunner": {
+    "display_name": "Machine Gunner",
+    "max_hp": 70,
+    "speed": 0.85,
+    "sight": 8,
+    "radius": 0.26,
+    "attack_damage": 6,
+    "attack_range": 7.0,
+    "attack_cooldown": 0.35,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 1,
+      "pierce": 3
+    },
+    "bonuses": {
+      "infantry": 4,
+      "cavalry": 3
+    },
+    "classes": [
+      "infantry",
+      "gunpowder"
+    ],
+    "train_time": 30,
+    "cost": {
+      "food": 70,
+      "gold": 80
+    },
+    "hotkey": "E",
+    "trained_at": "military_base",
+    "description": "Sprays bullets from a heavy machine gun: shreds infantry, useless against armour.",
+    "projectile": "bullet",
+    "min_range": 0.0,
+    "age": 6,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "machine_gunner"
+  },
+  "bazooka_trooper": {
+    "display_name": "Bazooka Trooper",
+    "max_hp": 65,
+    "speed": 1.0,
+    "sight": 8,
+    "radius": 0.24,
+    "attack_damage": 20,
+    "attack_range": 7.0,
+    "min_range": 1.0,
+    "attack_cooldown": 4.0,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 1,
+      "pierce": 2
+    },
+    "bonuses": {
+      "armored": 60,
+      "building": 25
+    },
+    "classes": [
+      "infantry",
+      "gunpowder"
+    ],
+    "train_time": 30,
+    "cost": {
+      "food": 70,
+      "gold": 90
+    },
+    "hotkey": "R",
+    "trained_at": "military_base",
+    "description": "Fires anti-tank rockets: the counter to tanks. Cannot hit aircraft.",
+    "projectile": "rocket",
+    "ground_only": true,
+    "age": 6,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "bazooka_trooper"
+  },
+  "light_tank": {
+    "display_name": "Light Tank",
+    "max_hp": 320,
+    "speed": 1.5,
+    "sight": 8,
+    "radius": 0.45,
+    "attack_damage": 22,
+    "attack_range": 6.0,
+    "attack_cooldown": 2.2,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 8,
+      "pierce": 8
+    },
+    "bonuses": {
+      "infantry": 6,
+      "building": 20
+    },
+    "classes": [
+      "vehicle",
+      "armored"
+    ],
+    "train_time": 38,
+    "cost": {
+      "wood": 120,
+      "gold": 200
+    },
+    "hotkey": "Q",
+    "trained_at": "tank_factory",
+    "description": "Fast tank for raids and hunting infantry. Cannot hit aircraft.",
+    "projectile": "shell",
+    "area_radius": 0.5,
+    "ground_only": true,
+    "min_range": 0.0,
+    "age": 6,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "light_tank"
+  },
+  "heavy_tank": {
+    "display_name": "Heavy Tank",
+    "max_hp": 650,
+    "speed": 0.95,
+    "sight": 8,
+    "radius": 0.55,
+    "attack_damage": 45,
+    "attack_range": 7.0,
+    "attack_cooldown": 3.5,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 12,
+      "pierce": 14
+    },
+    "bonuses": {
+      "building": 60,
+      "armored": 25,
+      "infantry": 6
+    },
+    "classes": [
+      "vehicle",
+      "armored"
+    ],
+    "train_time": 55,
+    "cost": {
+      "wood": 200,
+      "gold": 350
+    },
+    "hotkey": "E",
+    "trained_at": "tank_factory",
+    "description": "Slow, heavily armoured tank that breaks lines and buildings. Cannot hit aircraft.",
+    "projectile": "shell",
+    "area_radius": 0.8,
+    "ground_only": true,
+    "min_range": 0.0,
+    "age": 6,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "heavy_tank"
+  },
+  "self_propelled_gun": {
+    "display_name": "Self-Propelled Gun",
+    "max_hp": 260,
+    "speed": 1.1,
+    "sight": 10,
+    "radius": 0.5,
+    "attack_damage": 55,
+    "attack_range": 14.0,
+    "min_range": 4.0,
+    "attack_cooldown": 7.0,
+    "attack_type": "siege",
+    "armor": {
+      "melee": 6,
+      "pierce": 8
+    },
+    "bonuses": {
+      "building": 100,
+      "infantry": 10
+    },
+    "classes": [
+      "vehicle",
+      "armored",
+      "artillery"
+    ],
+    "train_time": 50,
+    "cost": {
+      "wood": 220,
+      "gold": 280
+    },
+    "hotkey": "R",
+    "trained_at": "tank_factory",
+    "description": "Long-range artillery on tracks: shells burst over a wide area.",
+    "projectile": "artillery_shell",
+    "area_radius": 1.5,
+    "ground_only": true,
+    "age": 6,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "self_propelled_gun"
+  },
+  "jet_fighter": {
+    "display_name": "Jet Fighter",
+    "max_hp": 160,
+    "speed": 5.0,
+    "sight": 11,
+    "radius": 0.42,
+    "attack_damage": 14,
+    "attack_range": 4.0,
+    "attack_cooldown": 0.45,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 0,
+      "pierce": 4
+    },
+    "bonuses": {
+      "air": 12
+    },
+    "classes": [
+      "air"
+    ],
+    "train_time": 45,
+    "cost": {
+      "wood": 200,
+      "gold": 260
+    },
+    "hotkey": "Q",
+    "trained_at": "air_base",
+    "description": "Very fast jet with cannons that rules the sky. Out of ammunition it flies home to rearm.",
+    "air": true,
+    "altitude": 58.0,
+    "ammo": 40,
+    "rearm_seconds": 6.0,
+    "loiter": true,
+    "projectile": "bullet",
+    "min_range": 0.0,
+    "age": 6,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "jet_fighter"
+  },
+  "jet_bomber": {
+    "display_name": "Jet Bomber",
+    "max_hp": 280,
+    "speed": 3.6,
+    "sight": 9,
+    "radius": 0.6,
+    "attack_damage": 120,
+    "attack_range": 1.4,
+    "attack_cooldown": 2.5,
+    "attack_type": "siege",
+    "armor": {
+      "melee": 0,
+      "pierce": 5
+    },
+    "bonuses": {
+      "building": 200,
+      "armored": 40
+    },
+    "classes": [
+      "air"
+    ],
+    "train_time": 60,
+    "cost": {
+      "wood": 300,
+      "gold": 400
+    },
+    "hotkey": "E",
+    "trained_at": "air_base",
+    "description": "Carpet-bombs buildings, tanks and troops. Cannot fight other aircraft.",
+    "air": true,
+    "altitude": 64.0,
+    "ammo": 6,
+    "rearm_seconds": 10.0,
+    "loiter": true,
+    "ground_only": true,
+    "projectile": "bomb",
+    "area_radius": 2.0,
+    "min_range": 0.0,
+    "age": 6,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "jet_bomber"
   }
 }

@@ -58,5 +58,18 @@
     "research_time": 220,
     "hotkey": "R",
     "description": "Riflemen, ironclads, the airfield with early aircraft, and flak forts."
+  },
+  "military_age": {
+    "display_name": "Military Age",
+    "sets_age": 6,
+    "requires_age": 5,
+    "cost": {
+      "food": 2000,
+      "gold": 2000,
+      "stone": 500
+    },
+    "research_time": 240,
+    "hotkey": "R",
+    "description": "Modern warfare: infantry squads, machine gunners, bazookas, tanks and jet aircraft."
   }
 }

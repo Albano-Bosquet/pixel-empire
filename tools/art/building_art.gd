@@ -25,7 +25,8 @@ const RAMPS := {
 	"door": ["#57381f", 4], "glass": ["#22303f", 3], "pad": ["#8d7556", 4], "hay": ["#d8b75a", 4],
 	"awning": ["#e8dcc0", 5], "awning_dark": ["#b8402e", 5], "gold_ore": ["#d9a82a", 4],
 	"roof_gold": ["#d9a82a", 6], "logs": ["#7a5232", 5], "brick": ["#9a5040", 6], "concrete": ["#a29f94", 6],
-	"runway": ["#7d8a5a", 4],
+	"runway": ["#7d8a5a", 4], "steel": ["#7c848a", 6], "olive": ["#66704a", 5], "sandbag": ["#b8a070", 4],
+	"tarmac": ["#5f6366", 4],
 }
 
 var c: PixelCanvas
@@ -99,7 +100,7 @@ static func _height_for(style: String) -> int:
 		"archery_range": 70, "stable": 74, "blacksmith": 90, "tower": 150, "castle": 150, "siege_workshop": 84, "lumber_camp": 60, "mining_camp": 60,
 		"market": 110, "university": 130, "outpost": 110, "bombard_tower": 130, "monastery": 130,
 		"wonder": 200, "palisade_wall": 50, "stone_wall": 60, "gate": 70, "dock": 70, "foundry": 130, "airfield": 90,
-		"flak_fort": 60}.get(style, 90)
+		"flak_fort": 60, "military_base": 96, "tank_factory": 130, "air_base": 100}.get(style, 90)
 
 
 func _begin(s: int, height: int) -> void:
@@ -199,6 +200,11 @@ func wall_mat(kind: String, axis: String, lum: float) -> Callable:
 				tex = (_hash(brow, floorf((u + boff) / 6.0)) - 0.5) * 0.18
 				if fposmod(v, 3.0) < 0.8 or fposmod(u + boff, 6.0) < 0.8:
 					tex -= 0.22
+			"steel", "olive":
+				# Corrugated sheet: vertical ribs.
+				tex = (_hash(floorf(u / 3.0), floorf(v / 9.0)) - 0.5) * 0.06
+				if fposmod(u, 3.0) < 1.0:
+					tex -= 0.16
 			"concrete":
 				tex = (_hash(floorf(u / 2.0), floorf(v / 2.0)) - 0.5) * 0.08
 				if fposmod(v, 14.0) < 0.8:
@@ -246,6 +252,10 @@ func roof_mat(kind: String, lum: float) -> Callable:
 					tex -= 0.3
 				elif fposmod(along + off, 6.0) < 1.0:
 					tex -= 0.12
+			"steel", "olive":
+				tex = (_hash(floorf(along / 3.0), 1.0) - 0.5) * 0.06
+				if fposmod(along, 3.0) < 1.0:
+					tex -= 0.18
 			"roof_thatch":
 				tex = (_hash(floorf(along / 2.0), floorf(z / 7.0)) - 0.5) * 0.3
 				if fposmod(z, 7.0) < 1.0:
@@ -994,6 +1004,85 @@ func _paint_flak_fort() -> void:
 			c.thick_line(a.x, a.y, b.x, b.y, 1.6, Color("#2a2d33"))
 	door_l(1.8, 0.8, 1.2, 0, 12)
 	flag_at(Vector3(1.6, 0.4, 40))
+
+
+## Military base: concrete headquarters with a radio mast, a corrugated-steel
+## barracks hut and a sandbag line in the yard.
+func _paint_military_base() -> void:
+	pad()
+	box(0.3, 0.35, 1.85, 1.65, 0, 42, "concrete", "concrete")
+	main_box = {"x0": 0.3, "y0": 0.35, "x1": 1.85, "y1": 1.65, "h": 42}
+	battlements(0.3, 0.35, 1.85, 1.65, 42, "concrete", 0.3, 3)
+	door_l(1.65, 0.85, 1.25, 0, 18)
+	for u in [0.45, 1.45]:
+		window_l(1.65, u, u + 0.22, 10, 7)
+	for u2 in [0.45, 0.9, 1.35]:
+		window_l(1.65, u2, u2 + 0.22, 28, 7)
+	for v in [0.55, 1.05]:
+		window_r(1.85, v, v + 0.22, 10, 7)
+		window_r(1.85, v, v + 0.22, 28, 7)
+	# Radio mast: plain lines ignore z_cap, so it only goes up on the finished roof.
+	if z_cap > 86.0:
+		var m0 := scr(Vector3(0.55, 0.6, 44))
+		var m1 := scr(Vector3(0.55, 0.6, 86))
+		c.line(roundi(m0.x), roundi(m0.y), roundi(m1.x), roundi(m1.y), Color("#3a3d42"))
+		for k in 3:
+			var cr := scr(Vector3(0.55, 0.6, 56 + k * 10))
+			c.line(roundi(cr.x - 3 + k), roundi(cr.y), roundi(cr.x + 3 - k), roundi(cr.y), Color("#3a3d42"))
+	box(2.1, 0.3, 2.75, 2.55, 0, 20, "olive")
+	roof(2.1, 0.3, 2.75, 2.55, 20, 12, "olive", "y", 0.05, true, "olive")
+	door_r(2.75, 1.25, 1.6, 0, 13)
+	window_r(2.75, 0.55, 0.8, 8, 6)
+	window_r(2.75, 2.0, 2.25, 8, 6)
+	battlements(0.3, 1.95, 1.9, 2.7, 0, "sandbag", 0.12, 5)
+	flag_at(Vector3(1.6, 0.5, 74))
+
+
+## Tank factory: brick assembly hall under a saw-tooth steel roof, a tall
+## chimney, a wide vehicle door and a concrete apron with oil drums.
+func _paint_tank_factory() -> void:
+	var s := float(size)
+	quad(Vector3(0.05, 0.05, 0), Vector3(s - 0.05, 0.05, 0), Vector3(s - 0.05, s - 0.05, 0), Vector3(0.05, s - 0.05, 0), flat_mat("concrete", 0.5, 0.12))
+	box(0.3, 0.3, 3.1, 2.5, 0, 46, "brick")
+	main_box = {"x0": 0.3, "y0": 0.3, "x1": 3.1, "y1": 2.5, "h": 46}
+	for i in 3:
+		var x0 := 0.3 + i * (2.8 / 3.0)
+		roof(x0, 0.3, x0 + 2.8 / 3.0, 2.5, 46, 18, "steel", "y", 0.03, true, "brick")
+	door_l(2.5, 1.0, 2.3, 0, 32)
+	for u in [0.45, 2.55]:
+		window_l(2.5, u, u + 0.3, 24, 10)
+	for v in [0.6, 1.2, 1.8]:
+		window_r(3.1, v, v + 0.3, 24, 10)
+	box(3.3, 0.45, 3.6, 0.75, 0, 112, "brick", "brick")
+	smoke_at(Vector3(3.45, 0.6, 114))
+	for d in [Vector2(3.3, 2.9), Vector2(3.55, 3.05), Vector2(3.35, 3.25)]:
+		box(d.x, d.y, d.x + 0.16, d.y + 0.16, 0, 9, "olive", "stone_dark")
+	box(0.4, 2.9, 0.9, 3.5, 0, 7, "planks", "planks")
+	flag_at(Vector3(0.6, 0.5, 86))
+
+
+## Air base: tarmac with a marked runway, a corrugated hangar and a concrete
+## control tower with a glazed cab.
+func _paint_air_base() -> void:
+	var s := float(size)
+	quad(Vector3(0.05, 0.05, 0), Vector3(s - 0.05, 0.05, 0), Vector3(s - 0.05, s - 0.05, 0), Vector3(0.05, s - 0.05, 0), flat_mat("tarmac", 0.6, 0.08))
+	quad(Vector3(0.15, 2.45, 0.5), Vector3(s - 0.1, 2.45, 0.5), Vector3(s - 0.1, 3.55, 0.5), Vector3(0.15, 3.55, 0.5), func(p: Vector3, x: int, y: int) -> Color:
+		if absf(p.y - 3.0) < 0.035 and fposmod(p.x * 4.0, 1.0) < 0.5:
+			return _shade("plaster", 0.98, x, y)
+		if absf(p.y - 2.5) < 0.025 or absf(p.y - 3.5) < 0.025:
+			return _shade("sandbag", 0.9, x, y)
+		return _shade("tarmac", 0.4 + (_hash(floorf(p.x * 10.0), floorf(p.y * 10.0)) - 0.5) * 0.1, x, y))
+	box(0.3, 0.3, 2.5, 2.0, 0, 28, "steel")
+	main_box = {"x0": 0.3, "y0": 0.3, "x1": 2.5, "y1": 2.0, "h": 28}
+	roof(0.3, 0.3, 2.5, 2.0, 28, 20, "steel", "y", 0.06, true, "steel")
+	door_l(2.0, 0.55, 2.25, 0, 24)
+	box(2.95, 0.4, 3.5, 0.95, 0, 54, "concrete", "concrete")
+	box(2.88, 0.33, 3.57, 1.02, 54, 64, "concrete")
+	window_l(1.02, 2.92, 3.53, 56, 6)
+	window_r(3.57, 0.37, 0.98, 56, 6)
+	box(2.84, 0.29, 3.61, 1.06, 64, 66, "concrete", "concrete")
+	window_r(3.5, 0.55, 0.8, 30, 8)
+	flag_at(Vector3(3.7, 1.7, 44))
 
 
 func _paint_farm() -> void:
