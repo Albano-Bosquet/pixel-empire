@@ -66,8 +66,10 @@ tus amigos por red local.
 | Edad Industrial: aeródromo, artillería y fusileros | Árbol tecnológico (F2) |
 | ![Pantalla de victoria](docs/screenshots/08_victoria.png) | ![Animaciones de unidades](docs/screenshots/09_unidades.png) |
 | Estadísticas al final de la partida | Algunas animaciones de unidades en 16 direcciones |
-| ![Edad Militar](docs/screenshots/10_era_militar.png) | |
-| Edad Militar: fábrica de tanques, tanques, reactores e infantería moderna | |
+| ![Edad Militar](docs/screenshots/10_era_militar.png) | ![La aldea de noche](docs/screenshots/11_noche.png) |
+| Edad Militar: fábrica de tanques, tanques, reactores e infantería moderna | De noche: luces en las ventanas, faroles y ovejas del rebaño |
+| ![Partida a medida](docs/screenshots/12_partida.png) | |
+| Partida de un jugador: hasta 8 jugadores, equipos y opciones | |
 
 ## Instalar
 
