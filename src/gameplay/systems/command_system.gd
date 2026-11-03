@@ -35,9 +35,21 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		_game.orders.submit({"t": "issue", "units": OrderRouter.ids(units), "buildings": OrderRouter.ids(blds),
 			"grid": Iso.world_to_grid(world), "target": target.entity_id if target != null else 0, "queue": event.shift_pressed})
-		_game.ground_fx.add_move_marker(world)
+		if target != null and target.visible:
+			_game.ground_fx.add_target_marker(target, _hostile_to(target))
+		else:
+			_game.ground_fx.add_move_marker(world)
 		EventBus.local_order.emit(units)
 		get_viewport().set_input_as_handled()
+
+
+## Whether a right-clicked target is something the local player fights (red ring).
+func _hostile_to(target: Entity) -> bool:
+	if Wildlife.is_hostile_animal(target):
+		return true
+	if target.owner_id == Entity.GAIA:
+		return false
+	return not CombatSystem.are_allies(_game.local_player, target.owner_id)
 
 
 ## Formation used for `pid`'s group moves.

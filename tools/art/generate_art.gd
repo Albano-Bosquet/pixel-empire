@@ -3,6 +3,7 @@ extends SceneTree
 ## Run: Godot --headless --path . -s res://tools/art/generate_art.gd [-- --units=sheep,wolf]
 ## Re-run after changing any painter; then run `--headless --import`.
 ## --units= only repaints those unit sheets (atlases and previews are skipped).
+## --buildings only repaints the buildings atlas and its preview.
 
 const PixelCanvas := preload("res://tools/art/pixel_canvas.gd")
 const TerrainArt := preload("res://tools/art/terrain_art.gd")
@@ -92,6 +93,11 @@ func _initialize() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if String(arg).begins_with("--units="):
 			only_units = Array(String(arg).get_slice("=", 1).split(","))
+	if "--buildings" in OS.get_cmdline_user_args():
+		_save_buildings_preview(_make_buildings(sprites, players))
+		print("Art (buildings only) generated in %d ms" % (Time.get_ticks_msec() - t0))
+		quit(0)
+		return
 	if not only_units.is_empty():
 		var picked := {}
 		for unit_id in only_units:
@@ -109,6 +115,28 @@ func _initialize() -> void:
 	_save(atlas, OUT + "terrain/terrain_atlas.png")
 	_save(TerrainArt.build_noise(), OUT + "terrain/terrain_noise.png")
 
+	var b_packed := _make_buildings(sprites, players)
+
+	var props := PropArt.all_props()
+	var packed := _pack(props, 512)
+	_save(packed["image"], OUT + "props/props_atlas.png")
+	var f := FileAccess.open(OUT + "props/props_atlas.json", FileAccess.WRITE)
+	f.store_string(JSON.stringify(packed["regions"], "  "))
+	f.close()
+
+	var unit_sheets := []
+	for unit_id in sprites["units"]:
+		unit_sheets.append_array(_paint_unit(unit_id, sprites, players))
+
+	_save(_preview(atlas, packed["image"], unit_sheets), PREVIEW)
+	_save(_unit_preview(sprites["units"]), "res://production/qa/screenshots/art_units.png")
+	_save_buildings_preview(b_packed)
+	print("Art generated in %d ms" % (Time.get_ticks_msec() - t0))
+	quit(0)
+
+
+## Paints and packs every building sprite into the buildings atlas (+ JSON regions).
+func _make_buildings(sprites: Dictionary, players: Dictionary) -> Dictionary:
 	var buildings_def: Dictionary = _json("res://assets/data/buildings_stats.json")
 	var b_items := BuildingArt.build_all(buildings_def, sprites.get("construction", {}))
 	b_items.merge(BuildingArt.flags(players["colors"]))
@@ -124,28 +152,16 @@ func _initialize() -> void:
 	var bf := FileAccess.open(OUT + "buildings/buildings_atlas.json", FileAccess.WRITE)
 	bf.store_string(JSON.stringify(b_packed["regions"], "  "))
 	bf.close()
+	return b_packed
 
-	var props := PropArt.all_props()
-	var packed := _pack(props, 512)
-	_save(packed["image"], OUT + "props/props_atlas.png")
-	var f := FileAccess.open(OUT + "props/props_atlas.json", FileAccess.WRITE)
-	f.store_string(JSON.stringify(packed["regions"], "  "))
-	f.close()
 
-	var unit_sheets := []
-	for unit_id in sprites["units"]:
-		unit_sheets.append_array(_paint_unit(unit_id, sprites, players))
-
-	_save(_preview(atlas, packed["image"], unit_sheets), PREVIEW)
-	_save(_unit_preview(sprites["units"]), "res://production/qa/screenshots/art_units.png")
+func _save_buildings_preview(b_packed: Dictionary) -> void:
 	var bprev: Image = b_packed["image"].duplicate()
 	var bg := Image.create_empty(bprev.get_width(), bprev.get_height(), false, Image.FORMAT_RGBA8)
 	bg.fill(Color("#5d9437"))
 	bg.blend_rect(bprev, Rect2i(Vector2i.ZERO, bprev.get_size()), Vector2i.ZERO)
 	bg.resize(bg.get_width() * 2, bg.get_height() * 2, Image.INTERPOLATE_NEAREST)
 	_save(bg, "res://production/qa/screenshots/art_buildings.png")
-	print("Art generated in %d ms" % (Time.get_ticks_msec() - t0))
-	quit(0)
 
 
 ## Paints every team-coloured sheet of one unit (one sheet for "neutral" layouts).

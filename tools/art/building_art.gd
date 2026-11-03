@@ -41,6 +41,9 @@ var z_cap := INF
 var sweep_cap := INF
 ## Highest geometry z painted (set by the full-body pass, drives stage caps).
 var max_z := 0.0
+## Per-pixel nearness (x + y + z / 16, larger = closer to the camera) of the
+## opaque geometry painted so far, so recipes need not be ordered back to front.
+var zbuf := PackedFloat32Array()
 
 
 ## Builds all buildings in buildings_stats.json. Returns
@@ -108,6 +111,8 @@ func _begin(s: int, height: int) -> void:
 	var w := s * 64 + 24
 	var hh := s * 32 + height + TOP_MARGIN + 12
 	c = PixelCanvas.new(w, hh)
+	zbuf.resize(w * hh)
+	zbuf.fill(-INF)
 	cx = w * 0.5
 	cy = TOP_MARGIN + height + s * 16
 	for k in RAMPS:
@@ -173,9 +178,18 @@ func tri(a: Vector3, b: Vector3, d: Vector3, mat: Callable) -> void:
 			var pp := a * w1 + b * w2 + d * w3
 			if capped and (pp.z > z_cap + 0.01 or pp.x + pp.y > sweep_cap):
 				continue
+			if not c.inside(x, y):
+				continue
+			# Coplanar decals (doors, windows, eave shadows) pass the small tolerance.
+			var depth := pp.x + pp.y + pp.z / 16.0
+			var zi := y * c.w + x
+			if depth < zbuf[zi] - 0.004:
+				continue
 			var col: Color = mat.call(pp, x, y)
 			if col.a > 0.0:
 				c.put(x, y, col)
+				if col.a >= 0.999:
+					zbuf[zi] = depth
 
 
 func quad(a: Vector3, b: Vector3, d: Vector3, e: Vector3, mat: Callable) -> void:
@@ -252,6 +266,18 @@ func roof_mat(kind: String, lum: float) -> Callable:
 					tex -= 0.3
 				elif fposmod(along + off, 6.0) < 1.0:
 					tex -= 0.12
+			"roof_gold":
+				# Gilded scale tiles with a bright glint on some of them.
+				var grow := floori(z / 5.0)
+				var goff := (grow % 2) * 2.5
+				var tile := _hash(grow, floorf((along + goff) / 5.0))
+				tex = (tile - 0.5) * 0.24
+				if fposmod(z, 5.0) < 1.0:
+					tex -= 0.32
+				elif fposmod(along + goff, 5.0) < 1.0:
+					tex -= 0.16
+				elif tile > 0.86 and fposmod(z, 5.0) > 3.0:
+					tex += 0.3
 			"steel", "olive":
 				tex = (_hash(floorf(along / 3.0), 1.0) - 0.5) * 0.06
 				if fposmod(along, 3.0) < 1.0:
@@ -275,7 +301,15 @@ func roof_mat(kind: String, lum: float) -> Callable:
 
 func flat_mat(kind: String, lum: float, noise: float = 0.1) -> Callable:
 	return func(p: Vector3, x: int, y: int) -> Color:
-		return _shade(kind, lum + (_hash(floorf(p.x * 9.0), floorf(p.y * 9.0)) - 0.5) * noise, x, y)
+		var tex := (_hash(floorf(p.x * 9.0), floorf(p.y * 9.0)) - 0.5) * noise
+		if noise > 0.0 and (kind == "stone" or kind == "stone_dark"):
+			# Paving slabs in staggered rows, so roofs and terraces are not flat fills.
+			var row := floori(p.y * 6.0)
+			var su := p.x * 4.0 + (row % 2) * 0.5
+			tex = (_hash(row, floorf(su)) - 0.5) * 0.2 - 0.06
+			if fposmod(p.y * 6.0, 1.0) < 0.14 or fposmod(su, 1.0) < 0.08:
+				tex -= 0.22
+		return _shade(kind, lum + tex, x, y)
 
 
 # --- primitives -----------------------------------------------------------------
@@ -646,18 +680,18 @@ func _paint_castle() -> void:
 	pad()
 	var k := "stone_dark"
 	# Back towers and back walls.
-	box(0.1, 0.1, 0.9, 0.9, 0, 66, k)
+	box(0.1, 0.1, 0.9, 0.9, 0, 66, k, k)
 	battlements(0.1, 0.1, 0.9, 0.9, 66, k, 0.16)
-	box(0.9, 0.3, 3.1, 0.7, 0, 46, k)
+	box(0.9, 0.3, 3.1, 0.7, 0, 46, k, k)
 	battlements(0.9, 0.3, 3.1, 0.7, 46, k, 0.2)
-	box(0.3, 0.9, 0.7, 3.1, 0, 46, k)
+	box(0.3, 0.9, 0.7, 3.1, 0, 46, k, k)
 	battlements(0.3, 0.9, 0.7, 3.1, 46, k, 0.2)
-	box(3.1, 0.1, 3.9, 0.9, 0, 66, k)
+	box(3.1, 0.1, 3.9, 0.9, 0, 66, k, k)
 	battlements(3.1, 0.1, 3.9, 0.9, 66, k, 0.16)
-	box(0.1, 3.1, 0.9, 3.9, 0, 66, k)
+	box(0.1, 3.1, 0.9, 3.9, 0, 66, k, k)
 	battlements(0.1, 3.1, 0.9, 3.9, 66, k, 0.16)
 	# Keep.
-	box(1.2, 1.2, 2.8, 2.8, 0, 96, k)
+	box(1.2, 1.2, 2.8, 2.8, 0, 96, k, k)
 	main_box = {"x0": 1.2, "y0": 1.2, "x1": 2.8, "y1": 2.8, "h": 96}
 	battlements(1.2, 1.2, 2.8, 2.8, 96, k, 0.2)
 	window_l(2.8, 1.7, 1.9, 60, 12)
@@ -666,12 +700,12 @@ func _paint_castle() -> void:
 	window_r(2.8, 2.2, 2.4, 60, 12)
 	flag_at(Vector3(2.0, 2.0, 128))
 	# Front walls and front tower.
-	box(0.9, 3.3, 3.1, 3.7, 0, 46, k)
+	box(0.9, 3.3, 3.1, 3.7, 0, 46, k, k)
 	battlements(0.9, 3.3, 3.1, 3.7, 46, k, 0.2)
 	door_l(3.7, 1.6, 2.4, 0, 30)
-	box(3.3, 0.9, 3.7, 3.1, 0, 46, k)
+	box(3.3, 0.9, 3.7, 3.1, 0, 46, k, k)
 	battlements(3.3, 0.9, 3.7, 3.1, 46, k, 0.2)
-	box(3.1, 3.1, 3.9, 3.9, 0, 66, k)
+	box(3.1, 3.1, 3.9, 3.9, 0, 66, k, k)
 	battlements(3.1, 3.1, 3.9, 3.9, 66, k, 0.16)
 	window_l(3.9, 3.4, 3.6, 40, 10)
 	window_r(3.9, 3.4, 3.6, 40, 10)
@@ -812,10 +846,12 @@ func _paint_bombard_tower() -> void:
 		window_l(0.9, 0.42, 0.58, z, 8)
 		window_r(0.9, 0.42, 0.58, z, 8)
 	door_l(0.9, 0.38, 0.62, 0, 16)
-	var muzzle := scr(Vector3(0.95, 0.95, 90))
-	var breech := scr(Vector3(0.55, 0.55, 88))
-	c.thick_line(breech.x, breech.y, muzzle.x, muzzle.y, 4.0, Color("#4b5058"))
-	c.ellipse(muzzle.x, muzzle.y, 2.2, 2.2, Color("#2a2d33"))
+	# Plain lines ignore z_cap: the cannon is only mounted once the parapet is laid.
+	if z_cap > 88.0:
+		var muzzle := scr(Vector3(0.95, 0.95, 90))
+		var breech := scr(Vector3(0.55, 0.55, 88))
+		c.thick_line(breech.x, breech.y, muzzle.x, muzzle.y, 4.0, Color("#4b5058"))
+		c.ellipse(muzzle.x, muzzle.y, 2.2, 2.2, Color("#2a2d33"))
 	flag_at(Vector3(0.3, 0.3, 112))
 
 
@@ -867,7 +903,7 @@ func _paint_stone_wall() -> void:
 ## Gatehouse: a tall stone block with a timber door on both visible faces.
 func _paint_gate() -> void:
 	pad(0.05)
-	box(0.12, 0.12, 0.88, 0.88, 0, 46, "stone")
+	box(0.12, 0.12, 0.88, 0.88, 0, 46, "stone", "stone")
 	main_box = {"x0": 0.12, "y0": 0.12, "x1": 0.88, "y1": 0.88, "h": 46}
 	battlements(0.1, 0.1, 0.9, 0.9, 46, "stone", 0.14, 6)
 	door_l(0.88, 0.3, 0.7, 0, 26)
@@ -905,29 +941,49 @@ func _paint_monastery() -> void:
 
 
 ## Wonder: three stepped stone terraces crowned by a golden pyramid, with
-## gold-capped towers at the four corners.
+## gold-capped towers at the four corners. Gilded cornices, pilasters and
+## front stairs break up the big flat faces.
 func _paint_wonder() -> void:
 	pad()
-	for p in [Vector2(0.15, 0.15), Vector2(4.15, 0.15), Vector2(0.15, 4.15)]:
+	for p in [Vector2(0.15, 0.15), Vector2(4.15, 0.15), Vector2(0.15, 4.15), Vector2(4.15, 4.15)]:
 		box(p.x, p.y, p.x + 0.7, p.y + 0.7, 0, 78, "stone")
+		_cornice(p.x, p.y, p.x + 0.7, p.y + 0.7, 78)
+		window_l(p.y + 0.7, p.x + 0.25, p.x + 0.45, 50, 12)
+		window_r(p.x + 0.7, p.y + 0.25, p.y + 0.45, 50, 12)
 		roof(p.x, p.y, p.x + 0.7, p.y + 0.7, 78, 30, "roof_gold", "x", 0.06)
 	box(0.6, 0.6, 4.4, 4.4, 0, 30, "stone", "stone")
-	window_l(4.4, 1.0, 1.25, 10, 12)
-	window_l(4.4, 3.75, 4.0, 10, 12)
-	window_r(4.4, 1.0, 1.25, 10, 12)
-	window_r(4.4, 3.75, 4.0, 10, 12)
-	box(1.2, 1.2, 3.8, 3.8, 30, 62, "plaster", "stone")
+	_cornice(0.6, 0.6, 4.4, 4.4, 30)
+	for u in [0.85, 1.55, 1.95, 3.05, 3.45]:
+		box(u, 4.4, u + 0.1, 4.46, 0, 27, "stone_dark", "stone_dark")
+		box(4.4, u, 4.46, u + 0.1, 0, 27, "stone_dark", "stone_dark")
+	window_l(4.4, 1.1, 1.35, 10, 12)
+	window_l(4.4, 3.65, 3.9, 10, 12)
+	window_r(4.4, 1.1, 1.35, 10, 12)
+	window_r(4.4, 3.65, 3.9, 10, 12)
+	box(1.2, 1.2, 3.8, 3.8, 30, 62, "stone_dark", "stone")
+	_cornice(1.2, 1.2, 3.8, 3.8, 62)
 	for u in [1.6, 2.2, 2.8, 3.3]:
 		window_l(3.8, u, u + 0.18, 40, 14)
 		window_r(3.8, u, u + 0.18, 40, 14)
 	box(1.8, 1.8, 3.2, 3.2, 62, 94, "stone")
+	_cornice(1.8, 1.8, 3.2, 3.2, 94)
+	window_l(3.2, 2.4, 2.6, 72, 12)
+	window_r(3.2, 2.4, 2.6, 72, 12)
 	main_box = {"x0": 0.6, "y0": 0.6, "x1": 4.4, "y1": 4.4, "h": 94}
-	door_l(4.4, 2.2, 2.8, 0, 24)
-	door_r(4.4, 2.2, 2.8, 0, 24)
+	# Front stairs up to both gates.
+	for i in 3:
+		var d := 0.22 - i * 0.07
+		box(2.05, 4.4, 2.95, 4.4 + d, 0, 2.0 + i * 2.0, "stone", "stone")
+		box(4.4, 2.05, 4.4 + d, 2.95, 0, 2.0 + i * 2.0, "stone", "stone")
+	door_l(4.4, 2.2, 2.8, 6, 22)
+	door_r(4.4, 2.2, 2.8, 6, 22)
 	roof(1.8, 1.8, 3.2, 3.2, 94, 60, "roof_gold", "x", 0.1)
 	flag_at(Vector3(2.5, 2.5, 156))
-	box(4.15, 4.15, 4.85, 4.85, 0, 78, "stone")
-	roof(4.15, 4.15, 4.85, 4.85, 78, 30, "roof_gold", "x", 0.06)
+
+
+## Gilded moulding just below a terrace's top edge.
+func _cornice(x0: float, y0: float, x1: float, y1: float, z: float) -> void:
+	box(x0 - 0.03, y0 - 0.03, x1 + 0.03, y1 + 0.03, z - 3.0, z, "roof_gold", "stone")
 
 
 ## Dock: plank deck on piles over the water, a net shed, a crane and barrels.
@@ -998,6 +1054,9 @@ func _paint_flak_fort() -> void:
 	battlements(0.2, 0.2, 1.8, 1.8, 18, "hay", 0.14, 4)
 	for g in [Vector2(0.65, 0.65), Vector2(1.35, 1.35)]:
 		box(g.x - 0.12, g.y - 0.12, g.x + 0.12, g.y + 0.12, 18, 24, "stone_dark", "stone_dark")
+		# Plain lines ignore z_cap: barrels go up only on a finished gun mount.
+		if z_cap < 24.0:
+			continue
 		for k in [-0.05, 0.05]:
 			var a := scr(Vector3(g.x + k, g.y - k, 24))
 			var b := scr(Vector3(g.x + 0.25 + k, g.y - 0.25 - k, 44))
@@ -1010,32 +1069,38 @@ func _paint_flak_fort() -> void:
 ## barracks hut and a sandbag line in the yard.
 func _paint_military_base() -> void:
 	pad()
-	box(0.3, 0.35, 1.85, 1.65, 0, 42, "concrete", "concrete")
-	main_box = {"x0": 0.3, "y0": 0.35, "x1": 1.85, "y1": 1.65, "h": 42}
-	battlements(0.3, 0.35, 1.85, 1.65, 42, "concrete", 0.3, 3)
-	door_l(1.65, 0.85, 1.25, 0, 18)
-	for u in [0.45, 1.45]:
-		window_l(1.65, u, u + 0.22, 10, 7)
-	for u2 in [0.45, 0.9, 1.35]:
-		window_l(1.65, u2, u2 + 0.22, 28, 7)
-	for v in [0.55, 1.05]:
-		window_r(1.85, v, v + 0.22, 10, 7)
-		window_r(1.85, v, v + 0.22, 28, 7)
+	# Headquarters on the left half, the hut on the back-right corner: kept
+	# apart on screen so the hut never covers the HQ facade.
+	var x0 := 0.25
+	var y0 := 0.85
+	var x1 := 1.5
+	var y1 := 2.1
+	box(x0, y0, x1, y1, 0, 42, "concrete", "concrete")
+	main_box = {"x0": x0, "y0": y0, "x1": x1, "y1": y1, "h": 42}
+	battlements(x0, y0, x1, y1, 42, "concrete", 0.3, 3)
+	door_l(y1, 0.7, 1.05, 0, 18)
+	for u in [0.38, 1.17]:
+		window_l(y1, u, u + 0.2, 10, 7)
+	for u2 in [0.38, 0.78, 1.17]:
+		window_l(y1, u2, u2 + 0.2, 28, 7)
+	for v in [1.05, 1.65]:
+		window_r(x1, v, v + 0.22, 10, 7)
+		window_r(x1, v, v + 0.22, 28, 7)
 	# Radio mast: plain lines ignore z_cap, so it only goes up on the finished roof.
 	if z_cap > 86.0:
-		var m0 := scr(Vector3(0.55, 0.6, 44))
-		var m1 := scr(Vector3(0.55, 0.6, 86))
+		var m0 := scr(Vector3(0.5, 1.1, 44))
+		var m1 := scr(Vector3(0.5, 1.1, 86))
 		c.line(roundi(m0.x), roundi(m0.y), roundi(m1.x), roundi(m1.y), Color("#3a3d42"))
 		for k in 3:
-			var cr := scr(Vector3(0.55, 0.6, 56 + k * 10))
+			var cr := scr(Vector3(0.5, 1.1, 56 + k * 10))
 			c.line(roundi(cr.x - 3 + k), roundi(cr.y), roundi(cr.x + 3 - k), roundi(cr.y), Color("#3a3d42"))
-	box(2.1, 0.3, 2.75, 2.55, 0, 20, "olive")
-	roof(2.1, 0.3, 2.75, 2.55, 20, 12, "olive", "y", 0.05, true, "olive")
-	door_r(2.75, 1.25, 1.6, 0, 13)
-	window_r(2.75, 0.55, 0.8, 8, 6)
-	window_r(2.75, 2.0, 2.25, 8, 6)
-	battlements(0.3, 1.95, 1.9, 2.7, 0, "sandbag", 0.12, 5)
-	flag_at(Vector3(1.6, 0.5, 74))
+	box(2.0, 0.25, 2.75, 1.4, 0, 18, "olive")
+	roof(2.0, 0.25, 2.75, 1.4, 18, 10, "olive", "y", 0.05, true, "olive")
+	door_r(2.75, 0.5, 0.85, 0, 12)
+	window_r(2.75, 1.05, 1.25, 7, 6)
+	window_l(1.4, 2.15, 2.4, 7, 6)
+	battlements(1.85, 1.85, 2.75, 2.75, 0, "sandbag", 0.12, 5)
+	flag_at(Vector3(1.3, 1.0, 74))
 
 
 ## Tank factory: brick assembly hall under a saw-tooth steel roof, a tall

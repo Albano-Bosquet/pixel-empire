@@ -86,7 +86,9 @@ func nearest_walkable(t: Vector2i, max_radius: int = 16, prefer_from: Vector2 = 
 ## the footprint. Returns Vector2.INF when the footprint is fully enclosed.
 ## With `spread` > 0 a random spot among those up to `spread` tiles farther than
 ## the best is chosen, so crowds (e.g. villagers dropping off) fan out.
-func approach(rect: Rect2i, from: Vector2, spread: float = 0.0) -> Vector2:
+## `pull` (0..1) moves each spot from the neighbour tile centre towards the rect
+## edge; workers use a larger pull so they stand right against trees and rocks.
+func approach(rect: Rect2i, from: Vector2, spread: float = 0.0, pull: float = 0.25) -> Vector2:
 	var spots: Array[Vector2] = []
 	var dists: Array[float] = []
 	var best_d := INF
@@ -99,7 +101,7 @@ func approach(rect: Rect2i, from: Vector2, spread: float = 0.0) -> Vector2:
 			var cpos := Iso.tile_center(t)
 			var d := cpos.distance_to(from)
 			var closest := Vector2(clampf(cpos.x, rect.position.x, rect.end.x), clampf(cpos.y, rect.position.y, rect.end.y))
-			spots.append(cpos + (closest - cpos) * 0.25)
+			spots.append(cpos + (closest - cpos) * pull)
 			dists.append(d)
 			best_d = minf(best_d, d)
 	if spots.is_empty():

@@ -14,6 +14,11 @@
     "stone": "mine"
   },
   "work_reach": 0.75,
+  "gather_reach": 0.12,
+  "gather_approach_pull": 0.55,
+  "farm_inset": 0.3,
+  "farm_rows": 3,
+  "farm_walk_speed": 0.32,
   "search_radius": 10,
   "builder_count_formula": "aoe",
   "repair_rate_hp_per_second": 25,

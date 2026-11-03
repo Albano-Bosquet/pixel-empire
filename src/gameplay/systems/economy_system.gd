@@ -19,6 +19,7 @@ const MAX_RETRIES := 3
 var _game: Game
 var _cfg: Dictionary
 var _reach := 0.75
+var _gather_reach := 0.12
 var _capacity := 10.0
 
 
@@ -26,6 +27,7 @@ func setup(game: Game, economy_cfg: Dictionary) -> void:
 	_game = game
 	_cfg = economy_cfg
 	_reach = float(_cfg.get("work_reach", 0.75))
+	_gather_reach = float(_cfg.get("gather_reach", 0.12))
 	_capacity = float(_cfg.get("carry_capacity", 10))
 
 
@@ -107,7 +109,7 @@ func _tick_gather(u: Unit, delta: float) -> void:
 				t["node"] = node
 				_move_to_target(u)
 				return
-			if _in_reach(u, _node_rect(node)):
+			if _at_node(u, node):
 				u.stop()
 				t["phase"] = "work"
 				if u.carry_type != node.resource_type:
@@ -122,7 +124,10 @@ func _tick_gather(u: Unit, delta: float) -> void:
 				_move_to_target(u)
 				return
 			u.work_anim = "build" if node is Building else String(_cfg.get("gather_animations", {}).get(node.resource_type, "forage"))
-			_face(u, node.grid_pos)
+			if node is Building:
+				_farm_walk(u, node, delta)
+			else:
+				_face(u, node.grid_pos)
 			# Units may override the per-resource rate (fishing ships: "gather_rate").
 			var rate := float(u.def.get("gather_rate", _cfg.get("gather_rates", {}).get(node.resource_type, 0.3))) * _game.gather_multiplier(u.owner_id, node.resource_type)
 			var cap := capacity(u.owner_id)
@@ -304,10 +309,40 @@ func _deposit(u: Unit) -> void:
 
 ## In reach of a footprint. A unit that has stopped (crowd-blocked near its
 ## goal) gets extra slack so busy drop sites never deadlock their workers.
-func _in_reach(u: Unit, rect: Rect2i) -> bool:
+func _in_reach(u: Unit, rect: Rect2i, reach: float = -1.0, allow_slack: bool = true) -> bool:
 	var closest := Vector2(clampf(u.grid_pos.x, rect.position.x, rect.end.x), clampf(u.grid_pos.y, rect.position.y, rect.end.y))
-	var slack := 0.6 if u.state == Unit.State.IDLE else 0.0
-	return u.grid_pos.distance_to(closest) <= _reach + u.radius + slack
+	var slack := 0.6 if allow_slack and u.state == Unit.State.IDLE else 0.0
+	return u.grid_pos.distance_to(closest) <= (_reach if reach < 0.0 else reach) + u.radius + slack
+
+
+## Arrived at a gather node: farmers must stand inside the field; other nodes
+## need the tight gather reach (crowd slack only once an approach has failed).
+func _at_node(u: Unit, node: Entity) -> bool:
+	var rect := _node_rect(node)
+	var retried := int(u.task.get("retries", 0)) > 0
+	if node is Building:
+		return Rect2(rect).grow(-0.1).has_point(u.grid_pos) or (retried and u.state == Unit.State.IDLE and _in_reach(u, rect))
+	return _in_reach(u, rect, _gather_reach, retried)
+
+
+## Farmer work: walks the field in a serpentine along `farm_rows` rows while
+## hoeing (AoE-style), instead of standing still at its edge.
+func _farm_walk(u: Unit, farm: Building, delta: float) -> void:
+	var t := u.task
+	var r := Rect2(farm.footprint()).grow(-float(_cfg.get("farm_inset", 0.3)))
+	var rows := maxi(1, int(_cfg.get("farm_rows", 3)))
+	var k := int(t.get("farm_k", 0))
+	var row := ((k + 1) / 2) % rows
+	var gx := r.end.x if (k / 2) % 2 == 0 else r.position.x
+	var goal := Vector2(gx, r.position.y + (row + 0.5) * r.size.y / rows)
+	var to := goal - u.grid_pos
+	var dist := to.length()
+	if dist < 0.04:
+		t["farm_k"] = k + 1
+		return
+	var step := minf(dist, float(_cfg.get("farm_walk_speed", 0.32)) * delta)
+	u.set_grid_pos(u.grid_pos + to / dist * step)
+	u.face(Iso.direction_index(to))
 
 
 func _target_rect(u: Unit) -> Rect2i:
@@ -334,15 +369,17 @@ func _move_to_target(u: Unit, spread: float = 0.0) -> void:
 	var rect := _target_rect(u)
 	if rect.size == Vector2i.ZERO:
 		return
-	if _in_reach(u, rect):
+	var node: Variant = t.get("node")
+	var to_node: bool = t["type"] == "gather" and t["phase"] == "to_node" and node is Entity
+	if (_at_node(u, node) if to_node else _in_reach(u, rect)):
 		u.stop()
 		return
-	var node: Variant = t.get("node")
-	if t["type"] == "gather" and t["phase"] == "to_node" and node is Building:
+	if to_node and node is Building:
 		# Farms are walkable: work standing on the field.
 		_game.unit_system.request_path(u, node.grid_pos + Vector2(randf_range(-0.6, 0.6), randf_range(-0.6, 0.6)))
 		return
-	var spot := _game.nav(u).approach(rect, u.grid_pos, spread)
+	var pull := float(_cfg.get("gather_approach_pull", 0.55)) if to_node else 0.25
+	var spot := _game.nav(u).approach(rect, u.grid_pos, spread, pull)
 	if spot == Vector2.INF:
 		clear_task(u)
 		return
