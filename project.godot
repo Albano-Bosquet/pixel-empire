@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Pixel Empire"
-config/version="0.6.1"
+config/version="0.7.0"
 config/description="Real-time strategy in HD pixel art."
 run/main_scene="res://src/game/main.tscn"
 config/icon="res://assets/icon.png"

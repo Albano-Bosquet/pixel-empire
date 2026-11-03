@@ -18,15 +18,16 @@
 
 Pixel Empire es un RTS clásico de construcción de imperios. Empiezas con un
 centro urbano y un puñado de aldeanos. Desde ahí recolectas comida, madera, oro
-y piedra, levantas tu ciudad, avanzas por seis edades y te enfrentas a la IA o a
+y piedra, levantas tu ciudad, avanzas por siete edades y te enfrentas a la IA o a
 tus amigos por red local.
 
-- **Seis edades**: Oscura, Feudal, de los Castillos, Imperial, de la Pólvora e
-  Industrial. Cada una desbloquea unidades, edificios y tecnologías nuevos.
-- **Más de 40 unidades**: infantería, arqueros, caballería, asedio, monjes,
-  barcos, armas de fuego, artillería y aviones biplanos.
-- **27 edificios**: desde la casa y el molino hasta castillos, murallas,
-  puertas, mercados, puertos, aeródromos y la Maravilla.
+- **Siete edades**: Oscura, Feudal, de los Castillos, Imperial, de la Pólvora,
+  Industrial y Militar. Cada una desbloquea unidades, edificios y tecnologías nuevos.
+- **50 unidades**: infantería, arqueros, caballería, asedio, monjes, barcos,
+  armas de fuego, artillería, biplanos y, en la Edad Militar, tanques, aviones a
+  reacción, ametralladoras y bazucas.
+- **30 edificios**: desde la casa y el molino hasta castillos, murallas,
+  puertas, mercados, puertos, aeródromos, fábricas de tanques y la Maravilla.
 - **Combate completo**: posturas, formaciones, armaduras y bonificaciones,
   proyectiles visibles, daño en área, edificios en llamas y conversión con monjes.
 - **Economía**: granjas, comercio entre mercados, compraventa de recursos y
@@ -51,6 +52,8 @@ tus amigos por red local.
 | Edad Industrial: aeródromo, artillería y fusileros | Árbol tecnológico (F2) |
 | ![Pantalla de victoria](docs/screenshots/08_victoria.png) | ![Animaciones de unidades](docs/screenshots/09_unidades.png) |
 | Estadísticas al final de la partida | Algunas animaciones de unidades en 16 direcciones |
+| ![Edad Militar](docs/screenshots/10_era_militar.png) | |
+| Edad Militar: fábrica de tanques, tanques, reactores e infantería moderna | |
 
 ## Instalar
 
@@ -72,6 +75,7 @@ Requisitos: Windows 10 u 11 de 64 bits.
 | Ordenar (mover, atacar, recolectar, construir) | Clic derecho |
 | Grupos de unidades | Ctrl + 0-9 para crear, 0-9 para seleccionar |
 | Siguiente aldeano ocioso | `.` |
+| Destruir lo seleccionado (unidades y edificios propios) | Supr |
 | Cambiar de página de edificios | Tab |
 | Árbol tecnológico | F2 |
 | Contador de FPS | F3 |
