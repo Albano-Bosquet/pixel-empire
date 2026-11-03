@@ -1,8 +1,9 @@
 class_name SelectionSystem
 extends Node
 ## Left-mouse selection: click, shift-click (toggle), drag rectangle,
-## double-click (all of that type on screen), control groups (Ctrl+0..9 to
-## assign, 0..9 to recall, double-tap to centre the camera), Esc to clear.
+## double-click or Ctrl+click (all of that type on screen), control groups
+## (Ctrl+0..9 to assign, Shift+0..9 to add, 0..9 to recall, double-tap to
+## centre the camera), Esc to clear.
 ## Emits EventBus.selection_changed.
 
 signal box_changed(screen_rect: Rect2, active: bool)
@@ -41,7 +42,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				box_changed.emit(Rect2(), false)
 				select_in_screen_rect(_rect(_press_pos, event.position), event.shift_pressed)
 			else:
-				_click(event.position, event.shift_pressed)
+				_click(event.position, event.shift_pressed, event.ctrl_pressed)
 			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion and _pressing:
 		if not _box_active and event.position.distance_to(_press_pos) > DRAG_THRESHOLD_PX:
@@ -62,6 +63,9 @@ func select_in_screen_rect(screen_rect: Rect2, additive: bool) -> void:
 	for u in _game.unit_system.units:
 		if u.owner_id == _game.local_player and screen_rect.has_point(_game.screen_from_world(u.position + Vector2(0, -14))):
 			found.append(u)
+	var people := found.filter(func(e): return not e.def.has("animal"))
+	if not people.is_empty():
+		found = people
 	if found.is_empty():
 		for b in _game.buildings.buildings:
 			if b.owner_id == _game.local_player and screen_rect.has_point(_game.screen_from_world(b.position)):
@@ -76,10 +80,10 @@ func select_in_screen_rect(screen_rect: Rect2, additive: bool) -> void:
 	set_selection(found)
 
 
-func _click(screen_pos: Vector2, additive: bool) -> void:
+func _click(screen_pos: Vector2, additive: bool, same_type: bool = false) -> void:
 	var e := pick(screen_pos)
 	var now := Time.get_ticks_msec()
-	var is_double := e != null and now - _last_click_ms < DOUBLE_CLICK_MS and _last_click_type == e.type_id
+	var is_double := e != null and (same_type or now - _last_click_ms < DOUBLE_CLICK_MS and _last_click_type == e.type_id)
 	_last_click_ms = now
 	_last_click_type = e.type_id if e != null else ""
 	if e == null:
@@ -205,6 +209,14 @@ func _key(event: InputEventKey) -> void:
 		return
 	if event.ctrl_pressed:
 		groups[digit] = selected.duplicate()
+		return
+	if event.shift_pressed:
+		var merged: Array = groups.get(digit, []).filter(func(e): return is_instance_valid(e))
+		for e in selected:
+			if not merged.has(e):
+				merged.append(e)
+		groups[digit] = merged
+		EventBus.notify.emit(_game.local_player, Loc.msg("Group %s: %s", [digit, merged.size()]))
 		return
 	if not groups.has(digit):
 		return

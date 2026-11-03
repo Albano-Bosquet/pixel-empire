@@ -54,7 +54,9 @@ func setup(game: Game) -> void:
 		EventBus.notify.connect(_on_notify)
 		EventBus.under_attack.connect(func(pid: int, pos: Vector2) -> void: _event(pid, ["ping", pos]))
 		EventBus.game_over.connect(func(w: Array) -> void: _event_all(["over", w]))
-		_game.fx.burst_emitted.connect(func(pos: Vector2, kind: String) -> void: _event_all(["fx", pos, kind]))
+		_game.fx.burst_emitted.connect(func(pos: Vector2, kind: String, sound: String) -> void: _event_all(["fx", pos, kind, sound]))
+		_game.wildlife.carcass_spawned.connect(func(n: ResourceNode, a: Unit) -> void:
+			_event_all(["carcass", n.entity_id, a.entity_id, a.type_id, a.grid_pos, n.amount, a.facing]))
 	else:
 		_game.orders.remote_submit = _client_submit
 
@@ -155,7 +157,7 @@ func build_snapshot(pid: int) -> Dictionary:
 		if not u.task.is_empty():
 			task = "%s:%s" % [u.task.get("type", ""), u.task.get("kind", "")]
 			var node: Variant = u.task.get("node")
-			if node is ResourceNode and is_instance_valid(node):
+			if is_instance_valid(node) and node is ResourceNode:
 				gathered[node.entity_id] = node
 		units.append([u.entity_id, _unit_types.find(u.type_id), u.owner_id, u.grid_pos.x, u.grid_pos.y, u.hp, u.max_hp,
 			u._anim, u.facing, u.carry_type, u.carry_amount, 1 if u.aboard != null else 0, u.ammo,
@@ -268,8 +270,10 @@ func _apply_unit(row: Array) -> void:
 		u = _game.spawn_replica_unit(id, _unit_types[int(row[1])], int(row[2]), pos)
 		if u == null:
 			return
+		if u.owner_id == _game.local_player and _game.victory.elapsed > 2.0:
+			EventBus.unit_trained.emit(u)
 	if u.owner_id != int(row[2]):
-		u.change_owner(int(row[2]), _game.player(int(row[2])).color_slot)
+		u.change_owner(int(row[2]), _game.color_slot_of(int(row[2])))
 	u.hp = int(row[5])
 	u.max_hp = int(row[6])
 	var anim: String = row[7]
@@ -279,6 +283,8 @@ func _apply_unit(row: Array) -> void:
 		else:
 			u.play(anim)
 	u.face(int(row[8]))
+	if u.carry_amount >= 1.0 and float(row[10]) < 1.0 and u.carry_type != "":
+		EventBus.sound_at.emit(String(GameData.audio.get("drop_sounds", {}).get(u.carry_type, "")), u.position)
 	u.carry_type = row[9]
 	u.carry_amount = float(row[10])
 	var aboard := int(row[11]) == 1
@@ -346,15 +352,28 @@ func receive_events(events: Array) -> void:
 					_game.buildings.remove(b)
 			"deplete":
 				var n: Entity = _game.entity(int(ev[1]))
-				if n is ResourceNode and is_instance_valid(n):
+				if is_instance_valid(n) and n is ResourceNode:
 					n.amount = 0.0
 					n.depleted.emit(n)
+			"carcass":
+				var animal: Unit = _game.entity(int(ev[2])) as Unit
+				var temp := false
+				if animal == null:
+					# The animal died out of this player's sight: build a stand-in for its sprite.
+					animal = Unit.new()
+					animal.setup(String(ev[3]), GameData.unit(String(ev[3])), Entity.GAIA, 0, ev[4])
+					animal.facing = int(ev[6])
+					temp = true
+				if _game.entity(int(ev[1])) == null:
+					_game.spawn_carcass(animal, float(ev[5]), int(ev[1]))
+				if temp:
+					animal.free()
 			"notify":
 				EventBus.notify.emit(_game.local_player, String(ev[1]))
 			"ping":
 				EventBus.under_attack.emit(_game.local_player, ev[1])
 			"fx":
-				_game.fx.burst(ev[1], String(ev[2]))
+				_game.fx.burst(ev[1], String(ev[2]), String(ev[3]) if ev.size() > 3 else "")
 			"over":
 				var w: Array[int] = []
 				for x in ev[1]:

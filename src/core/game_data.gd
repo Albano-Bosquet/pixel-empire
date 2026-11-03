@@ -18,6 +18,12 @@ var resource_nodes: Dictionary = {}
 var map_gen: Dictionary = {}
 var camera: Dictionary = {}
 var sprites: Dictionary = {}
+## Sound map and mixer settings (audio_settings.json).
+var audio: Dictionary = {}
+## Gaia animals: spawning, herding, wandering (wildlife_settings.json).
+var wildlife: Dictionary = {}
+## Day/night cycle and ambient life (ambience_settings.json).
+var ambience: Dictionary = {}
 
 var _errors: PackedStringArray = []
 
@@ -42,6 +48,9 @@ func reload() -> void:
 	map_gen = _load("map_generation.json")
 	camera = _load("camera_settings.json")
 	sprites = _load("render_sprites.json")
+	audio = _load("audio_settings.json")
+	wildlife = _load("wildlife_settings.json")
+	ambience = _load("ambience_settings.json")
 	_validate()
 	for e in _errors:
 		push_error("GameData: " + e)

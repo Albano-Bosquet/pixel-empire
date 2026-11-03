@@ -34,9 +34,23 @@ tus amigos por red local.
   más de 30 tecnologías.
 - **Mapas generados**: continental, costa o islas, en cinco tamaños, con
   niebla de guerra.
+- **Partidas a medida**: hasta 8 jugadores con equipos y alianzas (los aliados
+  comparten visión y ganan juntos), dificultad por cada IA, recursos y edad
+  iniciales, límite de población, velocidad, visibilidad del mapa, cantidad
+  de animales y ciclo de día y noche. Igual en solitario y en multijugador.
+- **Fauna**: ovejas y pavos que son de quien pase cerca, ciervos que huyen,
+  jabalíes que se defienden y lobos, tigres y osos que atacan. Los animales
+  cazados dejan comida.
+- **Sonido en todo**: música por edades que cambia durante las batallas,
+  voces de selección y órdenes, golpes, disparos, explosiones, trabajo de los
+  aldeanos, animales, ambiente de viento, agua, bosque y noche. Todo
+  sintetizado por el propio proyecto.
+- **Mundo vivo**: ciclo de día y noche con luces en las ventanas, pájaros,
+  sombras de nubes, mariposas y luciérnagas.
+- **Guardar y cargar** partidas, guardado rápido (F5) y autoguardado.
 - **IA** en tres dificultades: gestiona su economía, avanza de edad, ataca en
   oleadas e invade por mar.
-- **Multijugador** para hasta 4 jugadores por LAN o VPN (Radmin, ZeroTier,
+- **Multijugador** para hasta 8 jugadores por LAN o VPN (Radmin, ZeroTier,
   Hamachi…). La IA toma el control si alguien se desconecta.
 - **Español e inglés**: se elige en el menú principal o en el de pausa.
 
@@ -77,9 +91,21 @@ Requisitos: Windows 10 u 11 de 64 bits.
 | Siguiente aldeano ocioso | `.` |
 | Destruir lo seleccionado (unidades y edificios propios) | Supr |
 | Cambiar de página de edificios | Tab |
+| Seleccionar todos los de un tipo en pantalla | Doble clic o Ctrl + clic |
+| Añadir un punto de ruta | Mayús + clic derecho |
+| Añadir la selección a un grupo | Mayús + 0-9 |
+| Encolar cinco unidades | Mayús + clic en el botón de entrenar |
+| Siguiente unidad militar ociosa | `,` |
+| Seleccionar el centro urbano | Inicio |
+| Seleccionar todo el ejército | Ctrl + A |
+| Ir al último ataque | Espacio |
+| Centrar en la selección | Ctrl + Espacio |
+| Velocidad de juego (un jugador) | + / - |
 | Árbol tecnológico | F2 |
 | Contador de FPS | F3 |
-| Menú de pausa | F10 o Esc |
+| Guardado rápido | F5 |
+| Ayuda de controles | F1 |
+| Menú de pausa | F10, Esc o Pausa |
 | Chat (multijugador) | Intro |
 
 Los botones de construcción, entrenamiento y tecnologías muestran su tecla
@@ -105,7 +131,8 @@ Todo el juego (código, arte procedural en pixel art y datos) se ha creado con
 [Claude Code](https://claude.com/claude-code) usando el framework
 [Claude Code Game Studios](README-STUDIO.md), que organiza el trabajo en
 agentes especializados. El arte lo generan scripts propios
-(`tools/art/generate_art.gd`), sin recursos de otros juegos.
+(`tools/art/generate_art.gd`) y el sonido y la música se sintetizan
+(`tools/audio/generate_audio.gd`), sin recursos de otros juegos.
 
 ## Licencia
 

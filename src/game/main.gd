@@ -3,7 +3,7 @@ extends Node
 ## pause / end screens -> back to the title or a rematch.
 ## Command line (skips the menu):
 ##   -- --mode=sandbox|skirmish --difficulty=easy|normal|hard --size=small --map=continental|coast|islands
-##      --seed=123 --victory=conquest|town_center --nofog --smoke[=combat|ai|fx|stage4|naval|modern|military|lang] --lang=es|en
+##      --seed=123 --victory=conquest|town_center --nofog --smoke[=combat|ai|fx|stage4|naval|modern|military|lang|audio|features] --lang=es|en
 ##   multiplayer smoke: -- --mp=host --smoke=mp  /  -- --mp=client --smoke=mp
 
 var game: Game
@@ -64,6 +64,10 @@ func _start_smoke(mode: Variant) -> void:
 		script = "res://src/debug/smoke_military.gd"
 	if mode is String and mode == "lang":
 		script = "res://src/debug/smoke_lang.gd"
+	if mode is String and mode == "audio":
+		script = "res://src/debug/smoke_audio.gd"
+	if mode is String and mode == "features":
+		script = "res://src/debug/smoke_features.gd"
 	var smoke: Node = load(script).new()
 	smoke.name = "SmokeTest"
 	add_child(smoke)
@@ -83,6 +87,7 @@ func show_menu() -> void:
 	game.start({"mode": "sandbox", "size": "tiny", "seed": 20261102, "showcase": true, "fog": false})
 	_decorate_backdrop()
 	_make_menu()
+	Audio.play_playlist(GameData.audio.get("music", {}).get("menu", []), "menu")
 
 
 func _make_menu() -> void:
@@ -109,6 +114,7 @@ func _on_language_changed(_code: String) -> void:
 			open_pause()
 
 
+## Starts a match from a setup config, or from a save with {"save": data}.
 func start_game(cfg: Dictionary) -> void:
 	_clear()
 	_last_config = cfg.duplicate()
@@ -125,9 +131,11 @@ func open_pause() -> void:
 		Net.set_paused(true)  # everyone pauses; the overlay opens on net_paused
 		return
 	_pause = PauseMenu.new()
+	_pause.game = game
 	add_child(_pause)
 	get_tree().paused = true
 	_pause.resume_pressed.connect(_close_pause)
+	_pause.load_requested.connect(func(d: Dictionary) -> void: start_game({"save": d}))
 	_pause.restart_pressed.connect(func() -> void: start_game(_last_config))
 	_pause.menu_pressed.connect(show_menu)
 	_pause.quit_pressed.connect(func() -> void: get_tree().quit())

@@ -18,6 +18,11 @@ extends Node
 
 var projectiles: Array = []
 
+## Team of each player id (0 = no team). Set by Game.start from the match
+## config; players sharing a non-zero team are allies (no fighting, shared
+## vision, they win together).
+static var teams: Dictionary = {}
+
 var _game: Game
 var _cfg: Dictionary
 var _scan_timer := 0.0
@@ -67,8 +72,25 @@ static func distance_to_segment(p: Vector2, a: Vector2, b: Vector2) -> float:
 	return p.distance_to(a + ab * t)
 
 
+## Players `a` and `b` (ids) are on the same side.
+static func are_allies(a: int, b: int) -> bool:
+	if a == b:
+		return true
+	var ta := int(teams.get(a, 0))
+	return ta != 0 and ta == int(teams.get(b, 0))
+
+
 static func is_enemy(a: Entity, b: Entity) -> bool:
-	return a.owner_id != b.owner_id and a.owner_id != Entity.GAIA and b.owner_id != Entity.GAIA
+	if a.owner_id == Entity.GAIA or b.owner_id == Entity.GAIA:
+		return a.owner_id != b.owner_id and (Wildlife.is_hostile_animal(a) or Wildlife.is_hostile_animal(b))
+	return not are_allies(a.owner_id, b.owner_id)
+
+
+## Whether damage from player `owner` (splash, bolts) hurts entity `e`.
+static func hurts(owner: int, e: Entity) -> bool:
+	if e.owner_id == Entity.GAIA:
+		return owner != Entity.GAIA and Wildlife.is_animal(e)
+	return owner != Entity.GAIA and not are_allies(owner, e.owner_id)
 
 
 # --- Orders -------------------------------------------------------------------
@@ -138,7 +160,7 @@ func _fight(u: Unit) -> void:
 		_lose_target(u)
 		return
 	var t := u.target
-	if not is_instance_valid(t) or t.dead or not is_enemy(u, t) or not _game.fog.is_visible(u.owner_id, t) or not can_target(u.def, t):
+	if not is_instance_valid(t) or t.dead or not (is_enemy(u, t) or WildlifeSystem.is_hunting(u, t)) or not _game.fog.is_visible(u.owner_id, t) or not can_target(u.def, t):
 		_lose_target(u)
 		return
 	# Leash for auto-engaged units.
@@ -226,15 +248,15 @@ func _land_melee(u: Unit) -> void:
 		return
 	var dmg := compute_damage(_attack_of(u), u.def.get("attack_type", "melee"), u.def.get("bonuses", {}), t)
 	_apply(t, dmg, u)
-	_game.fx.burst(t.position + Vector2(0, -14), "blood" if t is Unit else "chips")
+	_game.fx.burst(t.position + Vector2(0, -14), "blood" if t is Unit else "chips", SoundRules.melee_hit_key(GameData.audio, u.type_id, u.def, t is Building))
 
 
 ## Petard blast: area damage to enemies (units and buildings) around `where`, then the sapper dies.
 func _explode(u: Unit, where: Vector2) -> void:
 	var dmg := _attack_of(u)
 	var area := float(u.def.get("area_radius", 1.0))
-	_game.fx.burst(Iso.grid_to_world(where) + Vector2(0, -8), "debris")
-	_game.fx.burst(Iso.grid_to_world(where) + Vector2(0, -8), "flash")
+	_game.fx.burst(Iso.grid_to_world(where) + Vector2(0, -8), "debris", "none")
+	_game.fx.burst(Iso.grid_to_world(where) + Vector2(0, -8), "flash", "explosion")
 	_area_damage(where, area, dmg, u.def.get("attack_type", "melee"), u.def.get("bonuses", {}), u.owner_id, u)
 	if u.is_alive():
 		u.take_damage(u.hp, null)
@@ -254,11 +276,13 @@ func _acquire(u: Unit) -> void:
 	for o in _near:
 		if o.dead or not is_enemy(u, o) or not _game.fog.is_visible(u.owner_id, o) or not can_target(u.def, o):
 			continue
+		if Wildlife.is_animal(o) and not Wildlife.is_predator(o):
+			continue  # soldiers never wander off chasing sheep and deer
 		var d: float = u.grid_pos.distance_to(o.grid_pos)
 		if d <= sight and d < best_d:
 			best_d = d
 			best = o
-	if best == null and u.is_military():
+	if best == null and u.is_military() and not Wildlife.is_animal(u):
 		for b in _game.buildings.buildings:
 			if b.dead or not is_enemy(u, b) or not _game.fog.is_visible(u.owner_id, b) or not can_target(u.def, b):
 				continue
@@ -348,6 +372,7 @@ func _buildings_fire(delta: float) -> void:
 		if best == null:
 			continue
 		b.attack_timer = float(atk.get("cooldown", 2.0))
+		EventBus.sound_at.emit(String(GameData.audio.get("attack_by_projectile", {}).get(atk.get("projectile", "arrow"), "bow")), b.position + b.top_offset())
 		for i in int(atk.get("arrows", 1)):
 			_spawn_projectile(b, best, String(atk.get("projectile", "arrow")), int(atk.get("damage", 3)) + b.attack_bonus, String(atk.get("type", "pierce")), atk.get("bonuses", {}), 0.0, Vector2(randf_range(-0.2, 0.2), randf_range(-0.2, 0.2)))
 
@@ -409,12 +434,12 @@ func _impact(pr: Dictionary) -> void:
 		_near.clear()
 		_game.unit_system.units_near((a + where) * 0.5, a.distance_to(where) * 0.5 + width, _near)
 		for o in _near:
-			if not o.dead and o.owner_id != pr["owner"] and o.owner_id != Entity.GAIA and distance_to_segment(o.grid_pos, a, where) <= width + o.radius:
+			if not o.dead and hurts(int(pr["owner"]), o) and distance_to_segment(o.grid_pos, a, where) <= width + o.radius:
 				_apply(o, compute_damage(pr["damage"], pr["type"], pr["bonuses"], o), src)
 				_game.fx.burst(o.position + Vector2(0, -12), "blood")
 		return
 	if pr["area"] > 0.0:
-		_game.fx.burst(Iso.grid_to_world(where), "dust")
+		_game.fx.burst(Iso.grid_to_world(where), "dust", SoundRules.impact_key(GameData.audio, String(pr["kind"])))
 		_area_damage(where, pr["area"], pr["damage"], pr["type"], pr["bonuses"], pr["owner"], src)
 		return
 	var t: Entity = Iso.alive(pr["target"])
@@ -427,10 +452,10 @@ func _area_damage(where: Vector2, area: float, dmg: int, attack_type: String, bo
 	_near.clear()
 	_game.unit_system.units_near(where, area + 0.5, _near)
 	for o in _near.duplicate():
-		if not o.dead and o.owner_id != owner and o.owner_id != Entity.GAIA and o.grid_pos.distance_to(where) <= area:
+		if not o.dead and hurts(owner, o) and o.grid_pos.distance_to(where) <= area:
 			_apply(o, compute_damage(dmg, attack_type, bonuses, o), src)
 	for b in _game.buildings.buildings.duplicate():
-		if not b.dead and b.owner_id != owner and b.owner_id != Entity.GAIA and b.closest_point(where).distance_to(where) <= area:
+		if not b.dead and hurts(owner, b) and b.closest_point(where).distance_to(where) <= area:
 			_apply(b, compute_damage(dmg, attack_type, bonuses, b), src)
 
 

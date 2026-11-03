@@ -5,7 +5,7 @@ extends Node
 ## UI and input never change game state directly: they build an order
 ## dictionary and call submit(). Orders carry entity ids, never node
 ## references, so they can cross the network:
-##   {"t": "issue", "units": [id], "buildings": [id], "grid": Vector2, "target": id (0 = none)}
+##   {"t": "issue", "units": [id], "buildings": [id], "grid": Vector2, "target": id (0 = none), "queue": bool (Shift waypoint)}
 ##   {"t": "place", "type": String, "origins": [Vector2i], "builders": [id]}
 ##   {"t": "enqueue", "b": id, "item": String}        {"t": "cancel", "b": id, "idx": int}
 ##   {"t": "market", "res": String, "buy": bool}
@@ -76,7 +76,7 @@ func apply(pid: int, order: Dictionary) -> bool:
 			var target: Entity = _game.entity(int(order.get("target", 0)))
 			if target != null and (target.dead or not _game.fog.is_visible(pid, target) and target.owner_id != pid and not (target is ResourceNode)):
 				target = null
-			return _game.commands.issue(units, blds, order.get("grid", Vector2.ZERO), target, pid)
+			return _game.commands.issue(units, blds, order.get("grid", Vector2.ZERO), target, pid, bool(order.get("queue", false)))
 		"place":
 			var builders := _own_units(pid, order.get("builders", []))
 			var none: Array[Unit] = []

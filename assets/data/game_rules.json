@@ -36,5 +36,86 @@
     "continental",
     "coast",
     "islands"
-  ]
+  ],
+  "max_players": 8,
+  "teams_menu": 4,
+  "starting_resources_menu": {
+    "low": {
+      "food": 100,
+      "wood": 100,
+      "gold": 0,
+      "stone": 50
+    },
+    "standard": {
+      "food": 200,
+      "wood": 200,
+      "gold": 100,
+      "stone": 200
+    },
+    "medium": {
+      "food": 500,
+      "wood": 500,
+      "gold": 300,
+      "stone": 300
+    },
+    "high": {
+      "food": 1000,
+      "wood": 1000,
+      "gold": 800,
+      "stone": 500
+    },
+    "very_high": {
+      "food": 2500,
+      "wood": 2500,
+      "gold": 2000,
+      "stone": 1500
+    },
+    "deathmatch": {
+      "food": 20000,
+      "wood": 20000,
+      "gold": 10000,
+      "stone": 5000
+    }
+  },
+  "default_starting_resources": "standard",
+  "population_menu": [
+    50,
+    75,
+    100,
+    150,
+    200,
+    250,
+    300,
+    500
+  ],
+  "game_speed_menu": {
+    "slow": 0.75,
+    "normal": 1.0,
+    "fast": 1.5,
+    "very_fast": 2.0
+  },
+  "default_game_speed": "normal",
+  "reveal_menu": [
+    "normal",
+    "explored",
+    "visible"
+  ],
+  "min_map_size_by_players": [
+    [
+      5,
+      "small"
+    ],
+    [
+      7,
+      "medium"
+    ]
+  ],
+  "wild_animals_menu": {
+    "none": 0.0,
+    "few": 0.5,
+    "normal": 1.0,
+    "many": 2.0
+  },
+  "default_wild_animals": "normal",
+  "autosave_minutes": 5.0
 }

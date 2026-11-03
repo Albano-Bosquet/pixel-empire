@@ -157,6 +157,7 @@ func _spawn(b: Building, unit_id: String) -> void:
 	if u == null:
 		return
 	_game.player(b.owner_id).stats["units_trained"] += 1
+	EventBus.unit_trained.emit(u)
 	var one: Array[Unit] = [u]
 	if is_instance_valid(b.rally_target) and b.rally_target is ResourceNode and u.is_worker:
 		_game.economy.order_gather(one, b.rally_target)

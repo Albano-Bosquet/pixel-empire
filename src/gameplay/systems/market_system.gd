@@ -125,6 +125,21 @@ func cancel(u: Unit) -> void:
 	_routes.erase(u.entity_id)
 
 
+## Every trade route (saves; entity values are re-linked by SaveGame).
+func routes() -> Dictionary:
+	return _routes
+
+
+func restore_routes(saved: Dictionary) -> void:
+	_routes = {}
+	for id in saved:
+		var r: Dictionary = saved[id]
+		if r.get("unit") != null and r.get("home") != null:
+			_routes[int(id)] = r
+			if r.get("to") != null:
+				_head(r["unit"], r["to"])
+
+
 func route_of(u: Unit) -> Dictionary:
 	return _routes.get(u.entity_id, {})
 
@@ -178,6 +193,6 @@ func _physics_process(_delta: float) -> void:
 			if gold > 0:
 				_game.player(u.owner_id).add("gold", gold)
 				_game.player(u.owner_id).stats["gathered"]["gold"] = int(_game.player(u.owner_id).stats["gathered"].get("gold", 0)) + gold
-				_game.fx.burst(u.position + Vector2(0, -20), "hit")
+				_game.fx.burst(u.position + Vector2(0, -20), "hit", "market")
 			r["to"] = home if to == dest else dest
 		_head(u, r["to"])

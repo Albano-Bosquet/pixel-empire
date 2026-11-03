@@ -23,4 +23,12 @@ signal entity_killed(entity: Node, attacker: Node)
 signal resource_depleted(entity: Node)
 ## Networked match paused / resumed by any player.
 signal net_paused(paused: bool)
+## A world sound at a world position (GameAudio plays it if the spot is seen).
+signal sound_at(key: String, world_pos: Vector2)
+## The local player gave units an order with the mouse (acknowledgement voices).
+signal local_order(units: Array)
+## A unit left a production building (host) or appeared for its owner (replica).
+signal unit_trained(unit: Node)
+## A non-positional interface sound requested by gameplay code.
+signal ui_sound(key: String)
 @warning_ignore_restore("unused_signal")

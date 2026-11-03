@@ -8,7 +8,8 @@ extends Node
 ## show them (Replicator). The lobby lives on the host and is mirrored.
 ## Roles: NONE (single player), HOST, CLIENT.
 ## Lobby slot: {"peer": int (0 = AI), "name": String, "ready": bool, "ai": bool,
-##              "difficulty": String, "connected": bool}. Slot index + 1 = player id.
+##              "difficulty": String, "team": int, "connected": bool}. Slot index + 1 = player id.
+## Match options live in `match_settings` (MatchConfig settings keys).
 ## Data: net_settings.json.
 ## Example:
 ##   Net.host("Ana")                       # then Net.host_start() from the lobby
@@ -29,7 +30,7 @@ var role := Role.NONE
 var settings: Dictionary = {}
 var slots: Array = []
 ## Map/victory settings chosen by the host, mirrored to the lobby.
-var match_settings: Dictionary = {"map_type": "continental", "size": "small", "victory": "conquest", "fog": true, "seed": 0}
+var match_settings: Dictionary = {}
 var my_name := "Player"
 var in_match := false
 ## The running match's replicator (set by Replicator when it starts).
@@ -49,6 +50,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(SETTINGS))
 	settings = raw if raw is Dictionary else {}
+	match_settings = MatchConfig.default_settings()
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	multiplayer.connected_to_server.connect(_on_connected)
@@ -96,7 +98,7 @@ func host(player_name: String, at_port: int = -1) -> String:
 		return Loc.msg("Cannot open port %s (already in use?)", [at_port if at_port > 0 else port()])
 	multiplayer.multiplayer_peer = _peer
 	role = Role.HOST
-	slots = [{"peer": 1, "name": my_name, "ready": true, "ai": false, "difficulty": "normal", "connected": true}]
+	slots = [{"peer": 1, "name": my_name, "ready": true, "ai": false, "difficulty": "normal", "team": 0, "connected": true}]
 	_udp_send = PacketPeerUDP.new()
 	_udp_send.set_broadcast_enabled(true)
 	lobby_changed.emit()
@@ -223,8 +225,26 @@ func _on_peer_disconnected(id: int) -> void:
 func host_add_ai(difficulty: String = "normal") -> void:
 	if role != Role.HOST or in_match or slots.size() >= int(settings.get("max_players", 4)):
 		return
-	slots.append({"peer": 0, "name": tr("AI (%s)") % tr(String(difficulty).capitalize()), "ready": true, "ai": true, "difficulty": difficulty, "connected": true})
+	slots.append({"peer": 0, "name": tr("AI (%s)") % tr(String(difficulty).capitalize()), "ready": true, "ai": true, "difficulty": difficulty, "team": 0, "connected": true})
 	_push_lobby()
+
+
+## Host: changes a slot's team or (computer slots) difficulty.
+func host_set_slot(index: int, key: String, value: Variant) -> void:
+	if role != Role.HOST or in_match or index < 0 or index >= slots.size() or not key in ["team", "difficulty"]:
+		return
+	slots[index][key] = value
+	if key == "difficulty" and slots[index]["ai"]:
+		slots[index]["name"] = tr("AI (%s)") % tr(String(value).capitalize())
+	_push_lobby()
+
+
+## A player picks their own team (clients ask the host).
+func request_team(team: int) -> void:
+	if role == Role.HOST:
+		host_set_slot(0, "team", team)
+	elif role == Role.CLIENT:
+		_c_team.rpc_id(1, team)
 
 
 func host_remove_slot(index: int) -> void:
@@ -283,16 +303,11 @@ func host_start() -> String:
 	var seed_v := int(match_settings.get("seed", 0))
 	if seed_v == 0:
 		seed_v = randi() % 1000000 + 1
-	var players := []
-	for s in slots:
-		players.append({"name": s["name"], "ai": s["ai"]})
-	var difficulty := "normal"
-	for s2 in slots:
-		if s2["ai"]:
-			difficulty = s2["difficulty"]
-	var cfg := {"mode": "skirmish", "size": match_settings.get("size", "small"), "map_type": match_settings.get("map_type", "continental"),
-		"seed": seed_v, "victory": match_settings.get("victory", "conquest"), "fog": match_settings.get("fog", true),
-		"difficulty": difficulty, "players": players, "net": true}
+	var ms := match_settings.duplicate()
+	ms["seed"] = seed_v
+	var cfg := MatchConfig.build(ms, slots)
+	cfg["mode"] = "skirmish"
+	cfg["net"] = true
 	in_match = true
 	for i in slots.size():
 		var peer := int(slots[i]["peer"])
@@ -349,7 +364,7 @@ func _c_hello(player_name: String) -> void:
 	if slots.size() >= int(settings.get("max_players", 4)):
 		_kick.rpc_id(peer, "The game is full")
 		return
-	slots.append({"peer": peer, "name": player_name, "ready": false, "ai": false, "difficulty": "normal", "connected": true})
+	slots.append({"peer": peer, "name": player_name, "ready": false, "ai": false, "difficulty": "normal", "team": 0, "connected": true})
 	_push_lobby()
 	_broadcast_chat("", "%s joined" % player_name)
 
@@ -360,6 +375,13 @@ func _c_ready(r: bool) -> void:
 	if role == Role.HOST and pid > 0:
 		slots[pid - 1]["ready"] = r
 		_push_lobby()
+
+
+@rpc("any_peer", "reliable")
+func _c_team(team: int) -> void:
+	var pid := player_of_peer(multiplayer.get_remote_sender_id())
+	if role == Role.HOST and pid > 0:
+		host_set_slot(pid - 1, "team", clampi(team, 0, int(GameData.rules.get("teams_menu", 4))))
 
 
 @rpc("any_peer", "reliable")

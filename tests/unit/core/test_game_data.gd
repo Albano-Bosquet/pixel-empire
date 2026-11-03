@@ -16,5 +16,6 @@ func test_resource_sprites_exist_in_atlas() -> void:
 func test_unit_sheets_exist() -> void:
 	for id in GameData.units:
 		var sprite: String = GameData.units[id]["sprite"]
-		for slot in GameData.players["colors"].size():
+		var slots: int = 1 if SpriteLibrary.unit_layout(sprite).get("neutral", false) else GameData.players["colors"].size()
+		for slot in slots:
 			assert_true(ResourceLoader.exists(SpriteLibrary.UNIT_SHEET % [sprite, slot]), "sheet %s_p%d" % [sprite, slot])

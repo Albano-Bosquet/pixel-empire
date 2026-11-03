@@ -319,7 +319,8 @@ func _mouse_motion_free(pos: Vector2) -> void:
 func _own_units() -> Array[Unit]:
 	var out: Array[Unit] = []
 	for u in _game.unit_system.units:
-		if u.owner_id == _game.local_player:
+		# Herded sheep and turkeys belong to the player but are not their units.
+		if u.owner_id == _game.local_player and not u.def.has("animal"):
 			out.append(u)
 	return out
 

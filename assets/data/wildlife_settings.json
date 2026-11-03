@@ -1,0 +1,86 @@
+{
+  "_doc": "Gaia animals (units_stats.json 'animal'). Distances in tiles, times in seconds. Counts are per player unless noted and scale with the match's wild_animals preset (game_rules.json).",
+  "check_interval": 0.5,
+  "claim_radius": 2.5,
+  "wander_interval": [
+    5.0,
+    14.0
+  ],
+  "wander_radius": 3.0,
+  "predator_wander_radius": 5.0,
+  "flee_distance": 4.5,
+  "butcher_reach": 1.2,
+  "spawn": {
+    "near_start": [
+      {
+        "unit": "sheep",
+        "count": 4,
+        "min": 5,
+        "max": 8,
+        "group": 2
+      },
+      {
+        "unit": "sheep",
+        "count": 2,
+        "min": 14,
+        "max": 20,
+        "group": 2
+      },
+      {
+        "unit": "turkey",
+        "count": 2,
+        "min": 9,
+        "max": 13,
+        "group": 2
+      },
+      {
+        "unit": "deer",
+        "count": 4,
+        "min": 13,
+        "max": 20,
+        "group": 4
+      },
+      {
+        "unit": "boar",
+        "count": 1,
+        "min": 11,
+        "max": 16,
+        "group": 1
+      }
+    ],
+    "wild_per_100_tiles_side": [
+      {
+        "unit": "wolf",
+        "count": 2.0,
+        "group": 3,
+        "min_from_start": 20
+      },
+      {
+        "unit": "deer",
+        "count": 2.0,
+        "group": 3,
+        "min_from_start": 16
+      },
+      {
+        "unit": "tiger",
+        "count": 0.6,
+        "group": 1,
+        "min_from_start": 24,
+        "near_forest": true
+      },
+      {
+        "unit": "bear",
+        "count": 0.5,
+        "group": 1,
+        "min_from_start": 24,
+        "near_forest": true
+      },
+      {
+        "unit": "boar",
+        "count": 0.8,
+        "group": 1,
+        "min_from_start": 16
+      }
+    ]
+  }
+}

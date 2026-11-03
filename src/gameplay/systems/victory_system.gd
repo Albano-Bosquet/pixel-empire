@@ -40,7 +40,7 @@ func is_alive(pid: int) -> bool:
 		return false
 	var ignored: Array = _rules.get("conquest_ignored_buildings", [])
 	for u in _game.unit_system.units:
-		if u.owner_id == pid and not u.dead:
+		if u.owner_id == pid and not u.dead and not u.def.has("animal"):
 			return true
 	for b in _game.buildings.buildings:
 		if b.owner_id == pid and not b.dead and not ignored.has(b.type_id):
@@ -70,9 +70,18 @@ func check() -> void:
 	for p in _game.players:
 		if not p.defeated:
 			standing.append(p.id)
-	var versus := _game.players.size() > 1
-	if (versus and standing.size() <= 1) or (not versus and standing.is_empty()):
+	var versus := _game.players.size() > 1 and not _all_allied(_game.players.map(func(p): return p.id))
+	if (versus and _all_allied(standing)) or (not versus and standing.is_empty()):
 		finish(standing)
+
+
+## True when every listed player is on one side (also for 0 or 1 players).
+func _all_allied(ids: Array) -> bool:
+	for a in ids:
+		for b in ids:
+			if not CombatSystem.are_allies(int(a), int(b)):
+				return false
+	return true
 
 
 ## Seconds left before `pid` wins by Wonder (INF when they have none standing).
@@ -106,10 +115,13 @@ func _tick_wonders(delta: float) -> void:
 			if minute < ceili(goal / 60.0):
 				EventBus.notify.emit(0, Loc.msg("Wonder of %s: %s min to victory", [_game.player(pid).name, minute]))
 		if left <= 0.0:
+			var won: Array[int] = []
 			for p in _game.players:
-				if p.id != pid and not p.defeated:
+				if CombatSystem.are_allies(p.id, pid):
+					if not p.defeated:
+						won.append(p.id)
+				elif not p.defeated:
 					defeat(p.id)
-			var won: Array[int] = [pid]
 			finish(won)
 			return
 
@@ -124,7 +136,7 @@ func defeat(pid: int) -> void:
 			ai.set_physics_process(false)
 	# The vanquished civilisation collapses: remaining units die, buildings fall.
 	for u in _game.unit_system.units.duplicate():
-		if u.owner_id == pid and not u.dead:
+		if u.owner_id == pid and not u.dead and not u.def.has("animal"):
 			u.take_damage(u.hp, null)
 	for b in _game.buildings.buildings.duplicate():
 		if b.owner_id == pid and not b.dead:

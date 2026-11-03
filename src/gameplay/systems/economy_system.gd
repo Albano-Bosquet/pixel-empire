@@ -298,6 +298,7 @@ func _deposit(u: Unit) -> void:
 		var p := _game.player(u.owner_id)
 		p.add(u.carry_type, amount)
 		p.stats["gathered"][u.carry_type] = int(p.stats["gathered"].get(u.carry_type, 0)) + amount
+		EventBus.sound_at.emit(String(GameData.audio.get("drop_sounds", {}).get(u.carry_type, "")), u.position)
 	u.carry_amount = 0.0
 
 

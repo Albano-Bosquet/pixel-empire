@@ -33,6 +33,34 @@
       "primary": "#d9a922",
       "dark": "#8a6612",
       "light": "#f5d86a"
+    },
+    {
+      "id": "purple",
+      "name": "Purple",
+      "primary": "#8a4fc9",
+      "dark": "#4f2a7a",
+      "light": "#c09af0"
+    },
+    {
+      "id": "cyan",
+      "name": "Cyan",
+      "primary": "#2fb3b8",
+      "dark": "#1a6a6e",
+      "light": "#7ae3e3"
+    },
+    {
+      "id": "orange",
+      "name": "Orange",
+      "primary": "#e07a26",
+      "dark": "#8a4310",
+      "light": "#f5b06e"
+    },
+    {
+      "id": "grey",
+      "name": "Grey",
+      "primary": "#8c8f96",
+      "dark": "#4d5056",
+      "light": "#c7c9ce"
     }
   ],
   "starting_buildings": [

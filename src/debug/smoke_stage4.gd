@@ -203,7 +203,13 @@ func _run4() -> void:
 	_main.show_menu()
 	await _seconds(1.0)
 	await _shot("stage4_07_main_menu")
-	var start_btn: Button = _main._menu._start
+	var single: Button = _main._menu._single
+	var c0 := single.get_global_rect().get_center()
+	_mouse_button(MOUSE_BUTTON_LEFT, true, c0)
+	_mouse_button(MOUSE_BUTTON_LEFT, false, c0)
+	await _frames(5)
+	await _shot("stage4_07b_setup")
+	var start_btn: Button = _main._menu._setup._start
 	var c := start_btn.get_global_rect().get_center()
 	_mouse_button(MOUSE_BUTTON_LEFT, true, c)
 	_mouse_button(MOUSE_BUTTON_LEFT, false, c)

@@ -1,0 +1,109 @@
+{
+  "_doc": "Sound map. Keys name files in assets/audio (variants name_1, name_2... are picked at random). Volumes in dB. Read by src/audio/audio_manager.gd and src/audio/game_audio.gd. Bus keys: master, music, sfx, ambient, ui (0..1 linear).",
+  "default_volumes": {"master": 0.8, "music": 0.55, "sfx": 0.8, "ambient": 0.7, "ui": 0.75},
+  "bus_effects": {"music": {"reverb_wet": 0.18, "reverb_room": 0.6}, "sfx": {"reverb_wet": 0.06, "reverb_room": 0.35}},
+  "pool_size": 40,
+  "ui_pool_size": 8,
+  "max_instances": 4,
+  "max_instances_by_key": {"chop": 3, "mine": 3, "build": 3, "forage": 2, "farm": 2, "fish": 2, "bow": 4, "musket": 4, "swing": 4, "hit_sword": 4, "hit_flesh": 4, "arrow_hit": 4, "machine_gun": 2, "death": 3, "collapse": 2, "explosion": 3, "bird": 2},
+  "min_interval": 0.04,
+  "positional": {"max_distance": 1100, "attenuation": 1.4, "screen_margin": 0.25, "zoom_volume": {"min_zoom": 0.5, "min_db": -9}},
+  "volumes_db": {
+    "ui_click": -10, "ui_hover": -22, "ui_queue": -8, "notify": -6, "chat": -8,
+    "chop": -10, "mine": -12, "build": -11, "forage": -14, "farm": -14, "fish": -12,
+    "swing": -12, "hit_sword": -9, "hit_flesh": -10, "hit_blunt": -8, "bow": -10, "arrow_hit": -12,
+    "musket": -7, "rifle": -8, "machine_gun": -9, "cannon": -4, "artillery": -4, "explosion": -4,
+    "collapse": -3, "death": -10, "death_horse": -8, "death_animal": -9,
+    "drop_wood": -12, "drop_food": -12, "drop_gold": -12, "drop_stone": -12, "tree_fall": -8,
+    "bird": -16, "owl": -14, "rooster": -14, "gull": -14, "frog": -16, "dawn_bell": -12,
+    "sheep": -12, "turkey": -12, "deer": -12, "boar": -10, "wolf_growl": -8, "wolf_howl": -12,
+    "tiger_roar": -7, "bear_roar": -7, "herd_claim": -10,
+    "sel_villager": -6, "ack_villager": -6, "building_done": -6, "unit_ready": -8
+  },
+  "unit_voices": {
+    "villager": "villager", "monk": "monk", "trade_cart": "trade", "observation_balloon": "balloon",
+    "camel_rider": "camel", "archer": "archer", "crossbowman": "archer", "skirmisher": "archer",
+    "cavalry_archer": "cavalry", "petard": "infantry"
+  },
+  "voice_by_class": [["air", "aircraft"], ["vehicle", "vehicle"], ["ship", "ship"], ["siege", "siege"], ["camel", "camel"], ["cavalry", "cavalry"], ["gunpowder", "gunner"], ["archer", "archer"], ["infantry", "infantry"]],
+  "animal_voices": {"sheep": "sheep", "turkey": "turkey", "deer": "deer", "boar": "boar", "wolf": "wolf_growl", "tiger": "tiger_roar", "bear": "bear_roar"},
+  "attack_by_unit": {
+    "machine_gunner": "machine_gun", "infantryman": "rifle", "rifleman": "rifle",
+    "biplane_fighter": "machine_gun", "jet_fighter": "machine_gun", "light_tank": "tank_gun", "heavy_tank": "tank_gun",
+    "fire_ship": "fire_ship", "wolf": "wolf_growl", "tiger": "tiger_roar", "bear": "bear_roar", "boar": "boar"
+  },
+  "attack_by_projectile": {
+    "arrow": "bow", "bolt": "crossbow", "javelin": "javelin", "bullet": "musket", "shot": "blunderbuss",
+    "grenade": "grenade_throw", "rock": "catapult", "boulder": "trebuchet", "ballista_bolt": "scorpion",
+    "cannonball": "cannon", "mortar_shell": "mortar", "rocket": "bazooka", "shell": "tank_gun",
+    "artillery_shell": "artillery", "bomb": "bomb_whistle", "fire": "fire_ship"
+  },
+  "attack_melee": "swing",
+  "attack_silent": ["battering_ram", "petard", "villager", "trade_cart", "monk", "fishing_ship", "transport_ship", "demolition_ship", "sheep", "turkey", "deer"],
+  "melee_hit_by_unit": {"battering_ram": "ram_hit", "villager": "hit_blunt", "monk": "hit_blunt"},
+  "melee_hit_by_class": [["animal", "hit_flesh"], ["cavalry", "hit_sword"], ["infantry", "hit_sword"], ["ship", "hit_blunt"]],
+  "melee_hit_default": "hit_sword",
+  "impact_by_projectile": {
+    "rock": "hit_blunt", "boulder": "ram_hit", "cannonball": "explosion", "bomb": "explosion",
+    "mortar_shell": "explosion", "grenade": "explosion", "rocket": "explosion", "shell": "explosion",
+    "artillery_shell": "explosion", "fire": "fire_ship"
+  },
+  "fx_sounds": {"blood": "hit_flesh", "chips": "building_hit", "hit": "arrow_hit", "dust": "hit_blunt", "flash": "explosion", "debris": "collapse", "heal": "heal", "holy": "conversion"},
+  "death_by_class": [["animal", "death_animal"], ["air", "death_vehicle"], ["vehicle", "death_vehicle"], ["ship", "death_ship"], ["cavalry", "death_horse"], ["siege", "ram_hit"]],
+  "death_default": "death",
+  "work": {
+    "chop": {"sound": "chop", "at": 0.5},
+    "mine": {"sound": "mine", "at": 0.5},
+    "build": {"sound": "build", "at": 0.5},
+    "forage": {"sound": "forage", "at": 0.3, "every": 2},
+    "farm": {"sound": "farm", "at": 0.4, "every": 2},
+    "fish": {"sound": "fish", "at": 0.5, "every": 3},
+    "butcher": {"sound": "hit_flesh", "at": 0.5, "every": 2}
+  },
+  "drop_sounds": {"wood": "drop_wood", "food": "drop_food", "gold": "drop_gold", "stone": "drop_stone"},
+  "building_select": {
+    "town_center": "bld_town_center", "house": "bld_house", "barracks": "bld_barracks", "archery_range": "bld_archery_range",
+    "stable": "bld_stable", "mill": "bld_mill", "lumber_camp": "bld_lumber_camp", "mining_camp": "bld_mining_camp",
+    "blacksmith": "bld_blacksmith", "market": "bld_market", "dock": "bld_dock", "monastery": "bld_monastery",
+    "castle": "bld_castle", "tower": "bld_tower", "bombard_tower": "bld_tower", "palisade_wall": "bld_wall",
+    "stone_wall": "bld_wall", "gate": "bld_gate", "farm": "bld_farm", "university": "bld_university",
+    "siege_workshop": "bld_siege_workshop", "storehouse": "bld_storehouse", "foundry": "bld_factory",
+    "tank_factory": "bld_factory", "military_base": "bld_barracks", "airfield": "bld_airfield", "air_base": "bld_airfield",
+    "flak_fort": "bld_castle", "wonder": "bld_wonder", "outpost": "bld_outpost"
+  },
+  "notify_sounds": {
+    "Not enough resources": "ui_error", "Not enough resources to repair": "ui_error", "Population limit reached — build more houses": "ui_error",
+    "You are under attack!": "under_attack", "No idle villagers": "ui_error", "Cannot build there": "ui_error"
+  },
+  "music": {
+    "menu": ["menu"],
+    "by_age": [["medieval_1", "medieval_2", "medieval_3"], ["medieval_1", "medieval_2", "medieval_3"], ["medieval_2", "medieval_3", "medieval_1"], ["medieval_3", "renaissance", "medieval_1"], ["renaissance", "industrial"], ["industrial", "renaissance"], ["modern", "industrial"]],
+    "battle": ["battle_1", "battle_2"],
+    "crossfade": 3.0,
+    "gap_seconds": [3.0, 9.0],
+    "battle_enter": 14,
+    "battle_exit_seconds": 25.0,
+    "battle_window": 8.0
+  },
+  "ambient": {
+    "update_interval": 0.5,
+    "loops": {
+      "amb_wind": {"base_db": -14, "per_open": 0.6},
+      "amb_water": {"base_db": -10, "per_water": 1.0},
+      "amb_forest": {"base_db": -16, "per_forest": 1.0},
+      "amb_night": {"base_db": -12, "night_only": true},
+      "amb_battle": {"base_db": -12, "per_battle": 1.0}
+    },
+    "day_one_shots": [["bird", 2.5, 7.0], ["rooster", 60.0, 140.0]],
+    "night_one_shots": [["owl", 9.0, 22.0], ["wolf_howl", 25.0, 60.0], ["frog", 8.0, 18.0]],
+    "coast_one_shots": [["gull", 10.0, 25.0]],
+    "dawn_sound": "dawn_bell",
+    "animal_chatter": [6.0, 14.0]
+  },
+  "loops": {
+    "max_emitters": 5,
+    "fire_loop": {"db": -10},
+    "engine_loop": {"db": -14},
+    "prop_loop": {"db": -12}
+  }
+}

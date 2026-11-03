@@ -79,6 +79,8 @@ func refresh_player(pid: int) -> void:
 ## Recomputes a unit's derived stats from its definition plus its owner's modifiers.
 func apply_unit(u: Unit) -> void:
 	var p := _game.player(u.owner_id)
+	if p == null:
+		return  # Gaia animals have no technologies
 	var hp_add := 0.0
 	var spd := 1.0
 	u.attack_bonus = 0

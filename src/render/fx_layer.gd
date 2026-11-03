@@ -17,7 +17,7 @@ const KINDS := {
 }
 
 ## Emitted for every burst (the multiplayer host forwards them to clients).
-signal burst_emitted(world_pos: Vector2, kind: String)
+signal burst_emitted(world_pos: Vector2, kind: String, sound: String)
 
 var projectiles: Array = []
 var _parts: Array[Dictionary] = []
@@ -28,8 +28,9 @@ func _ready() -> void:
 	z_index = 45
 
 
-func burst(world_pos: Vector2, kind: String) -> void:
-	burst_emitted.emit(world_pos, kind)
+## `sound` overrides the burst's default sound (audio_settings.json fx_sounds); "none" = silent.
+func burst(world_pos: Vector2, kind: String, sound: String = "") -> void:
+	burst_emitted.emit(world_pos, kind, sound)
 	var k: Dictionary = KINDS.get(kind, KINDS["hit"])
 	for i in int(k["count"]):
 		var a := randf() * TAU

@@ -8,6 +8,8 @@ var id := 1
 var name := "Player"
 var color_slot := 0
 var is_ai := false
+## Alliance team (0 = none); allies share vision and win together.
+var team := 0
 var age := 0
 var resources: Dictionary = {"food": 0, "wood": 0, "gold": 0, "stone": 0}
 ## Multiplicative modifiers granted by technologies (Stage 4), e.g. "gather_wood": 1.1.

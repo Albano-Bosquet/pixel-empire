@@ -109,7 +109,7 @@ func _tick_convert(id: int, delta: float) -> void:
 		m.play_once("attack")
 	c["time"] = float(c["time"]) + delta
 	if fmod(float(c["time"]), 0.6) < delta:
-		_game.fx.burst(t.position + Vector2(0, -22), "holy")
+		_game.fx.burst(t.position + Vector2(0, -22), "holy", "conversion" if float(c["time"]) < 0.6 else "none")
 	if float(c["time"]) >= conversion_time(t.def, _cfg):
 		_convert(m, t)
 		_converting.erase(id)
@@ -122,7 +122,7 @@ func _convert(m: Unit, t: Unit) -> void:
 	_game.economy.clear_task(t)
 	_game.market.cancel(t)
 	cancel(t)
-	_game.fx.burst(t.position + Vector2(0, -20), "holy")
+	_game.fx.burst(t.position + Vector2(0, -20), "holy", "heal")
 	_game.selection.prune.call_deferred()
 	if _game.fog != null:
 		t.visible = _game.fog.is_visible(_game.local_player, t)

@@ -1,23 +1,16 @@
 class_name MainMenu
 extends CanvasLayer
-## Title screen: match setup (mode, difficulty, map size, victory condition,
-## fog of war, seed). Emits `start_requested(config)`; Main starts the match.
+## Title screen over the live village backdrop: single player (opens
+## SkirmishSetup), multiplayer lobby, sound options, language, quit.
+## Emits `start_requested(config)`; Main starts the match.
 
 signal start_requested(config: Dictionary)
 signal quit_requested
 
-const MODES := [["skirmish", "Skirmish vs Computer"], ["sandbox", "Sandbox (no enemies)"]]
-
-var _mode: OptionButton
-var _difficulty: OptionButton
-var _size: OptionButton
-var _map_type: OptionButton
-var _victory: OptionButton
-var _fog: CheckButton
-var _seed: LineEdit
-var _start: Button
+var _single: Button
 var _message: Label
 var _lobby: LobbyMenu
+var _setup: SkirmishSetup
 
 
 func _ready() -> void:
@@ -52,56 +45,35 @@ func _ready() -> void:
 	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.offset_left = -230
 	panel.offset_right = 230
-	panel.offset_top = -205
-	panel.offset_bottom = 281
+	panel.offset_top = -170
+	panel.offset_bottom = 262
 	root.add_child(panel)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 10)
+	v.add_theme_constant_override("separation", 12)
 	panel.add_child(v)
-	v.add_child(UiStyle.label(tr("New game"), 24, UiStyle.GOLD))
-
-	var form := GridContainer.new()
-	form.columns = 2
-	form.add_theme_constant_override("h_separation", 16)
-	form.add_theme_constant_override("v_separation", 8)
-	v.add_child(form)
-	var rules: Dictionary = GameData.rules
-	_mode = UiStyle.option(MODES.map(func(m): return tr(m[1])))
-	_add_row(form, tr("Mode"), _mode)
-	var diffs: Array = rules.get("difficulties_menu", ["easy", "normal", "hard"])
-	_difficulty = UiStyle.option(diffs.map(func(d): return tr(String(d).capitalize())), diffs.find("normal"))
-	_add_row(form, tr("Difficulty"), _difficulty)
-	var sizes: Array = rules.get("map_sizes_menu", ["small"])
-	var tiles: Dictionary = GameData.map_gen.get("sizes", {})
-	_size = UiStyle.option(sizes.map(func(s): return "%s (%d×%d)" % [tr(String(s).capitalize()), int(tiles.get(s, 96)), int(tiles.get(s, 96))]), maxi(0, sizes.find(GameData.map_gen.get("default_size", "small"))))
-	_add_row(form, tr("Map size"), _size)
-	var types: Array = rules.get("map_types_menu", ["continental"])
-	var tdefs: Dictionary = GameData.map_gen.get("map_types", {})
-	_map_type = UiStyle.option(types.map(func(t): return tr(String(tdefs.get(t, {}).get("display_name", String(t).capitalize())))), maxi(0, types.find(GameData.map_gen.get("default_map_type", "continental"))))
-	_add_row(form, tr("Map type"), _map_type)
-	var vcs: Dictionary = rules.get("victory_conditions", {})
-	_victory = UiStyle.option(vcs.keys().map(func(k): return tr(vcs[k]["display_name"])), maxi(0, vcs.keys().find(rules.get("default_victory", "conquest"))))
-	_add_row(form, tr("Victory"), _victory)
-	_fog = CheckButton.new()
-	_fog.button_pressed = true
-	_fog.text = tr("Explore the map")
-	_add_row(form, tr("Fog of war"), _fog)
-	_seed = LineEdit.new()
-	_seed.placeholder_text = tr("random")
-	_seed.custom_minimum_size = Vector2(220, 34)
-	_add_row(form, tr("Map seed"), _seed)
-	_add_row(form, tr("Language"), UiStyle.language_option())
-	_mode.item_selected.connect(func(i: int) -> void: _difficulty.disabled = MODES[i][0] == "sandbox")
-
-	var gap := Control.new()
-	gap.custom_minimum_size.y = 8
-	v.add_child(gap)
-	_start = UiStyle.button(tr("Start game"), 400)
-	_start.pressed.connect(func() -> void: start_requested.emit(config()))
-	v.add_child(_start)
+	_single = UiStyle.button(tr("Single player"), 400)
+	_single.pressed.connect(open_setup)
+	v.add_child(_single)
+	var load_btn := UiStyle.button(tr("Load game"), 400)
+	load_btn.disabled = SaveGame.list().is_empty()
+	load_btn.pressed.connect(func() -> void:
+		var dlg := SaveLoadPanel.new()
+		dlg.setup(false)
+		dlg.load_requested.connect(func(d: Dictionary) -> void: start_requested.emit({"save": d}))
+		add_child(dlg))
+	v.add_child(load_btn)
 	var mp := UiStyle.button(tr("Multiplayer (LAN / VPN)"), 400)
 	mp.pressed.connect(_open_lobby)
 	v.add_child(mp)
+	var snd := UiStyle.button(tr("Sound"), 400)
+	snd.pressed.connect(func() -> void: add_child(AudioPanel.new()))
+	v.add_child(snd)
+	var lang := HBoxContainer.new()
+	lang.add_child(UiStyle.label(tr("Language"), 16, UiStyle.TEXT_DIM))
+	var pick := UiStyle.language_option()
+	pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lang.add_child(pick)
+	v.add_child(lang)
 	_message = UiStyle.label("", 14, Color("#ff8a7a"))
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -116,7 +88,19 @@ func _ready() -> void:
 	hint.offset_right = 600
 	hint.offset_top = -40
 	root.add_child(hint)
-	_start.grab_focus()
+	_single.grab_focus()
+
+
+## Opens the single-player setup screen.
+func open_setup() -> void:
+	if _setup != null and is_instance_valid(_setup):
+		return
+	_setup = SkirmishSetup.new()
+	add_child(_setup)
+	_setup.start_requested.connect(func(cfg: Dictionary) -> void: start_requested.emit(cfg))
+	_setup.closed.connect(func() -> void:
+		_setup = null
+		_single.grab_focus())
 
 
 ## Shows a one-line message (e.g. why a network session ended).
@@ -131,23 +115,3 @@ func _open_lobby() -> void:
 	_lobby = LobbyMenu.new()
 	add_child(_lobby)
 	_lobby.closed.connect(func() -> void: _lobby = null)
-
-
-func _add_row(form: GridContainer, text: String, control: Control) -> void:
-	form.add_child(UiStyle.label(text, 16, UiStyle.TEXT_DIM))
-	form.add_child(control)
-
-
-## The match configuration currently selected.
-func config() -> Dictionary:
-	var rules: Dictionary = GameData.rules
-	var seed_text := _seed.text.strip_edges()
-	return {
-		"mode": MODES[_mode.selected][0],
-		"difficulty": rules.get("difficulties_menu", ["normal"])[_difficulty.selected],
-		"size": rules.get("map_sizes_menu", ["small"])[_size.selected],
-		"map_type": rules.get("map_types_menu", ["continental"])[_map_type.selected],
-		"victory": rules.get("victory_conditions", {}).keys()[_victory.selected],
-		"fog": _fog.button_pressed,
-		"seed": seed_text.hash() & 0x7fffffff if seed_text != "" and not seed_text.is_valid_int() else int(seed_text) if seed_text != "" else 0,
-	}

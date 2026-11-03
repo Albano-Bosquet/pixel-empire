@@ -103,12 +103,15 @@ func _host() -> void:
 	for b in g.buildings.buildings:
 		if b.owner_id == 2 and b.type_id == "town_center":
 			tc_p2 = b
-	var victim: Unit = g.spawn_unit("villager", 2, tc_p2.grid_pos + Vector2(-6, 0)) if tc_p2 != null else null
+	# Out of the Town Center's arrow range, so it is the archers' fight alone.
+	var tc_range := float(GameData.building("town_center").get("attack", {}).get("range", 7)) + 3.0
+	var away := (Vector2(g.map.width, g.map.height) * 0.5 - tc_p2.grid_pos).normalized() if tc_p2 != null else Vector2.RIGHT
+	var victim: Unit = g.spawn_unit("villager", 2, tc_p2.grid_pos + away * tc_range) if tc_p2 != null else null
 	if victim != null:
 		victim.stance = "stand"
 		var squad: Array[Unit] = []
 		for i in 3:
-			squad.append(g.spawn_unit("archer", 1, victim.grid_pos + Vector2(3.0, 0.5 * i)))
+			squad.append(g.spawn_unit("archer", 1, victim.grid_pos + away * 3.0 + Vector2(-away.y, away.x) * 0.5 * i))
 		g.combat.order_attack(squad, victim)
 		_check(await _wait(func(): return victim.dead, 30.0), "host-side archers kill a villager of the client")
 	await get_tree().create_timer(2.0, true, false, true).timeout
@@ -182,7 +185,11 @@ func _client() -> void:
 	_check(await _wait(func(): return get_tree().paused, 10.0), "pausing from the client pauses the match")
 	Net.set_paused(false)
 	_check(await _wait(func(): return not get_tree().paused, 10.0), "and resuming works too")
-	var enemy_seen := g.unit_system.units.filter(func(u): return u.owner_id == 1 and not g.fog.is_visible(2, u))
+	# Give the replica a couple of snapshots after the pause: units that just left
+	# our sight linger for VANISH_GRACE_MS before the client forgets them.
+	var hidden_enemies := func() -> Array: return g.unit_system.units.filter(func(u): return u.owner_id == 1 and not g.fog.is_visible(2, u))
+	await _wait(func(): return hidden_enemies.call().is_empty(), 3.0)
+	var enemy_seen: Array = hidden_enemies.call()
 	_check(enemy_seen.is_empty(), "the host never sends enemy units hidden by fog (%d)" % enemy_seen.size())
 	g.camera.settings["edge_scroll"] = false  # the mouse may rest on the window edge
 	g.camera.focus_world(tc.position)

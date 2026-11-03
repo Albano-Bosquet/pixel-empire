@@ -148,7 +148,11 @@ func _draw() -> void:
 	for u in _game.unit_system.units:
 		if u.dead or not u.visible:
 			continue
-		draw_rect(Rect2(u.grid_pos - Vector2(0.9, 0.9), Vector2(1.8, 1.8)), _game.player(u.owner_id).color().lightened(0.2 if u.owner_id == pid else 0.0))
+		var owner := _game.player(u.owner_id)
+		# Wild animals: small light dots (wolves and other predators reddish).
+		var ucol := owner.color().lightened(0.2 if u.owner_id == pid else 0.0) if owner != null else (Color("#e07a6a") if Wildlife.is_predator(u) else Color("#e8e2d0"))
+		var s := 1.8 if owner != null else 1.2
+		draw_rect(Rect2(u.grid_pos - Vector2(s, s) * 0.5, Vector2(s, s)), ucol)
 	# Camera view: the four viewport corners projected to the grid.
 	var vp := get_viewport_rect().size
 	var corners: PackedVector2Array = []

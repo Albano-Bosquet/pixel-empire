@@ -274,6 +274,11 @@ func _update_fires() -> void:
 		_fires[i].emitting = state == State.COMPLETE and frac < threshold * (1.0 - i * 0.3)
 
 
+## True while the building shows flames (GameAudio loops a fire crackle).
+func is_burning() -> bool:
+	return not _fires.is_empty() and _fires[0].emitting
+
+
 ## Offset from the anchor to the top of the visible artwork (pixels, negative y).
 func visual_top() -> float:
 	return float(atlas_entry(type_id).get("meta", {}).get("top", -_body_anchor.y))
@@ -366,6 +371,7 @@ func add_progress(work: float) -> void:
 		_set_state(State.COMPLETE)
 		_puff.restart()
 		completed.emit(self)
+		EventBus.sound_at.emit("building_done", position)
 
 
 func _set_state(s: State) -> void:

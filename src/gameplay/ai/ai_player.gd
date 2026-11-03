@@ -106,7 +106,7 @@ func _refresh() -> void:
 	_fleet.clear()
 	_transports.clear()
 	for u in _game.unit_system.units:
-		if u.owner_id != player.id or u.dead or u.aboard != null:
+		if u.owner_id != player.id or u.dead or u.aboard != null or u.def.has("animal"):
 			continue
 		if NavalSystem.is_ship(u):
 			if u.is_worker:
@@ -128,7 +128,7 @@ func _refresh() -> void:
 	wave = wave.filter(func(u): return is_instance_valid(u) and not u.dead)
 	# Remember enemy buildings we have seen.
 	for b in _game.buildings.buildings:
-		if b.owner_id != player.id and not b.dead and _game.fog.is_explored(player.id, Iso.tile_of(b.grid_pos)):
+		if _is_foe(b.owner_id) and not b.dead and _game.fog.is_explored(player.id, Iso.tile_of(b.grid_pos)):
 			if not enemy_targets.has(b.grid_pos):
 				enemy_targets.push_front(b.grid_pos)
 	enemy_targets = enemy_targets.filter(func(p): return _enemy_building_near(p) or not _game.fog.is_explored(player.id, Iso.tile_of(p)))
@@ -136,7 +136,12 @@ func _refresh() -> void:
 
 func _enemy_building_near(p: Vector2) -> bool:
 	var e: Entity = _game.static_entity_at(Iso.tile_of(p))
-	return e is Building and e.owner_id != player.id and not e.dead
+	return e is Building and _is_foe(e.owner_id) and not e.dead
+
+
+## Another player not allied with this AI (Gaia is nobody's target here).
+func _is_foe(owner: int) -> bool:
+	return owner != Entity.GAIA and not CombatSystem.are_allies(owner, player.id)
 
 
 func _home() -> Vector2:
@@ -287,7 +292,7 @@ func _build() -> void:
 		return
 	var pop := _game.population(player.id)
 	var cap := _game.population_cap(player.id)
-	if cap < int(GameData.economy.get("max_population", 200)) and cap - pop <= 3 and not _under_construction("house"):
+	if cap < _game.buildings.max_population and cap - pop <= 3 and not _under_construction("house"):
 		_place("house", _home(), 4, 12, _builders(1))
 		return
 	if _count("mill") == 0 and _villagers.size() >= 5:
@@ -517,7 +522,7 @@ func _defend() -> void:
 		near.clear()
 		_game.unit_system.units_near(b.grid_pos, radius, near)
 		for o in near:
-			if not o.dead and o.owner_id != player.id and o.owner_id != Entity.GAIA and _game.fog.is_visible(player.id, o) and o.grid_pos.distance_to(b.grid_pos) <= radius:
+			if not o.dead and CombatSystem.is_enemy(b, o) and _game.fog.is_visible(player.id, o) and o.grid_pos.distance_to(b.grid_pos) <= radius and _threatens(o):
 				sum += o.grid_pos
 				n += 1
 		if n > 0:
@@ -539,6 +544,14 @@ func _defend() -> void:
 			var one: Array[Unit] = [v]
 			_game.economy.clear_task(v)
 			_game.commands.move_group(one, home)
+
+
+## Enemy players' units always threaten the base; wild animals only while
+## they are attacking this AI (deer and boar grazing nearby are no raid).
+func _threatens(o: Unit) -> bool:
+	if not Wildlife.is_animal(o):
+		return true
+	return o.has_target() and o.target.owner_id == player.id
 
 
 func _rally_idle_army() -> void:

@@ -40,7 +40,10 @@ static func prop(name: String) -> Dictionary:
 	return _props[name]
 
 
+## Team sheet of a unit; layouts marked "neutral" (animals) have one sheet for all.
 static func unit_sheet(sprite_id: String, color_slot: int) -> Texture2D:
+	if unit_layout(sprite_id).get("neutral", false):
+		color_slot = 0
 	var key := "%s:%d" % [sprite_id, color_slot]
 	if not _sheets.has(key):
 		_sheets[key] = load(UNIT_SHEET % [sprite_id, color_slot])

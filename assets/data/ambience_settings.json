@@ -1,0 +1,138 @@
+{
+  "_doc": "Day/night cycle and living-world effects (src/render/day_night.gd, src/render/ambient_life.gd). Times are fractions of a day (0 = midnight, 0.5 = noon); colours are the world tint (CanvasModulate).",
+  "day_minutes": 12.0,
+  "start_time": 0.3,
+  "tint_keys": [
+    [
+      0.0,
+      "#3a4672"
+    ],
+    [
+      0.2,
+      "#4a5482"
+    ],
+    [
+      0.26,
+      "#e0a888"
+    ],
+    [
+      0.32,
+      "#ffffff"
+    ],
+    [
+      0.7,
+      "#ffffff"
+    ],
+    [
+      0.76,
+      "#f0b07a"
+    ],
+    [
+      0.82,
+      "#5a5a8c"
+    ],
+    [
+      1.0,
+      "#3a4672"
+    ]
+  ],
+  "night_ranges": [
+    [
+      0.0,
+      0.22
+    ],
+    [
+      0.8,
+      1.0
+    ]
+  ],
+  "night_fade": 0.04,
+  "lights": {
+    "default": {
+      "color": "#ffb45a",
+      "radius": 26,
+      "energy": 0.55
+    },
+    "by_building": {
+      "town_center": {
+        "radius": 54,
+        "energy": 0.75
+      },
+      "castle": {
+        "radius": 60,
+        "energy": 0.75
+      },
+      "house": {
+        "radius": 22
+      },
+      "tower": {
+        "radius": 28
+      },
+      "monastery": {
+        "color": "#ffd88a",
+        "radius": 36
+      },
+      "wonder": {
+        "color": "#ffe6a0",
+        "radius": 70,
+        "energy": 0.8
+      },
+      "market": {
+        "radius": 30
+      },
+      "blacksmith": {
+        "color": "#ff8a3a",
+        "radius": 30,
+        "energy": 0.7
+      },
+      "farm": {
+        "radius": 0
+      },
+      "palisade_wall": {
+        "radius": 0
+      },
+      "stone_wall": {
+        "radius": 0
+      },
+      "gate": {
+        "radius": 14
+      }
+    }
+  },
+  "birds": {
+    "flock_interval": [
+      8.0,
+      20.0
+    ],
+    "flock_size": [
+      3,
+      9
+    ],
+    "speed": [
+      38.0,
+      60.0
+    ],
+    "altitude": [
+      40.0,
+      70.0
+    ],
+    "max_flocks": 3
+  },
+  "clouds": {
+    "count": 5,
+    "speed": 8.0,
+    "alpha": 0.1,
+    "size": [
+      120.0,
+      260.0
+    ]
+  },
+  "butterflies": {
+    "count": 10,
+    "speed": 14.0
+  },
+  "fireflies": {
+    "count": 26,
+    "radius": 1.5
+  }
+}

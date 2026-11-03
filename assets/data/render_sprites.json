@@ -1847,6 +1847,265 @@
           "fps": 10.0
         }
       }
+    },
+    "sheep": {
+      "frame_size": [
+        40,
+        40
+      ],
+      "anchor": [
+        20,
+        35
+      ],
+      "portrait_rect": [
+        8,
+        10,
+        24,
+        22
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "neutral": true,
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 6.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "die": {
+          "frames": 8,
+          "fps": 12.0
+        }
+      }
+    },
+    "turkey": {
+      "frame_size": [
+        36,
+        36
+      ],
+      "anchor": [
+        18,
+        32
+      ],
+      "portrait_rect": [
+        8,
+        6,
+        20,
+        22
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "neutral": true,
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 6.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "die": {
+          "frames": 8,
+          "fps": 12.0
+        }
+      }
+    },
+    "wolf": {
+      "frame_size": [
+        48,
+        40
+      ],
+      "anchor": [
+        24,
+        35
+      ],
+      "portrait_rect": [
+        10,
+        8,
+        28,
+        24
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "neutral": true,
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 6.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "die": {
+          "frames": 8,
+          "fps": 12.0
+        }
+      }
+    },
+    "deer": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        42
+      ],
+      "portrait_rect": [
+        10,
+        6,
+        28,
+        30
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "neutral": true,
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 6.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "die": {
+          "frames": 8,
+          "fps": 12.0
+        }
+      }
+    },
+    "boar": {
+      "frame_size": [
+        48,
+        40
+      ],
+      "anchor": [
+        24,
+        35
+      ],
+      "portrait_rect": [
+        10,
+        8,
+        28,
+        24
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "neutral": true,
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 6.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "die": {
+          "frames": 8,
+          "fps": 12.0
+        }
+      }
+    },
+    "tiger": {
+      "frame_size": [
+        56,
+        48
+      ],
+      "anchor": [
+        28,
+        42
+      ],
+      "portrait_rect": [
+        12,
+        8,
+        32,
+        28
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "neutral": true,
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 6.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "die": {
+          "frames": 8,
+          "fps": 12.0
+        }
+      }
+    },
+    "bear": {
+      "frame_size": [
+        56,
+        52
+      ],
+      "anchor": [
+        28,
+        46
+      ],
+      "portrait_rect": [
+        12,
+        8,
+        32,
+        30
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "neutral": true,
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 6.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 12.0
+        },
+        "die": {
+          "frames": 8,
+          "fps": 12.0
+        }
+      }
     }
   },
   "terrain": {

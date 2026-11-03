@@ -102,7 +102,11 @@ func _build_training(b: Building) -> void:
 		var tip := "%s  [%s]\n%s\n%s · %ds" % [tr(udef.get("display_name", unit_id)), udef.get("hotkey", ""), tr(udef.get("description", "")), cost_text(udef.get("cost", {})), int(udef.get("train_time", 0))]
 		var bb := b
 		_add_button(SpriteLibrary.unit_sheet(udef.get("sprite", unit_id), b.color_slot), Rect2(pr[0], pr[1], pr[2], pr[3]), tip, udef.get("hotkey", ""),
-			func() -> void: _game.orders.submit({"t": "enqueue", "b": bb.entity_id, "item": unit_id}),
+			func() -> void:
+				# Shift queues a batch (economy_settings.json shift_queue_count).
+				var n := int(GameData.economy.get("shift_queue_count", 5)) if Input.is_key_pressed(KEY_SHIFT) else 1
+				for k in n:
+					_game.orders.submit({"t": "enqueue", "b": bb.entity_id, "item": unit_id}),
 			func() -> String: return _game.production.enqueue_error(bb, unit_id))
 	if b.def.get("exchange", false):
 		_build_exchange(b)

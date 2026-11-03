@@ -10,6 +10,8 @@ extends Node
 const SHADER := preload("res://assets/shaders/fog.gdshader")
 
 var enabled := true
+## "explored" map visibility: every tile starts explored (set by Game).
+var pending_reveal := false
 
 var _game: Game
 var _w := 0
@@ -76,7 +78,7 @@ func is_explored(player_id: int, t: Vector2i) -> bool:
 
 ## Whether `player_id` currently sees entity `e` (buildings: any corner/centre).
 func is_visible(player_id: int, e: Entity) -> bool:
-	if not enabled or e.owner_id == player_id:
+	if not enabled or e.owner_id == player_id or not _visible.has(player_id):
 		return true
 	if e is Building:
 		var r: Rect2i = e.footprint()
@@ -94,6 +96,12 @@ func visible_grid(player_id: int) -> PackedByteArray:
 
 func explored_grid(player_id: int) -> PackedByteArray:
 	return _explored.get(player_id, PackedByteArray())
+
+
+## Restores a saved exploration grid.
+func set_explored(player_id: int, grid: PackedByteArray) -> void:
+	if _explored.has(player_id) and grid.size() == _explored[player_id].size():
+		_explored[player_id] = grid.duplicate()
 
 
 ## Tiles explored by `player_id` (0..1), for statistics and the AI.
@@ -114,10 +122,10 @@ func update_now() -> void:
 		var vis: PackedByteArray = _visible[pid]
 		vis.fill(0)
 		for u in _game.unit_system.units:
-			if u.owner_id == pid and not u.dead and u.aboard == null:
+			if u.owner_id != Entity.GAIA and CombatSystem.are_allies(u.owner_id, pid) and not u.dead and u.aboard == null:
 				_stamp(vis, u.tile(), u.sight)
 		for b in _game.buildings.buildings:
-			if b.owner_id == pid and not b.dead:
+			if b.owner_id != Entity.GAIA and CombatSystem.are_allies(b.owner_id, pid) and not b.dead:
 				_stamp(vis, Iso.tile_of(b.grid_pos), int(b.def.get("sight", 4)) if b.is_complete() else 2)
 		var exp: PackedByteArray = _explored[pid]
 		for i in vis.size():
@@ -147,6 +155,10 @@ func _refresh_local() -> void:
 	if not _visible.has(pid):
 		return
 	var vis: PackedByteArray = _visible[pid]
+	if pending_reveal:
+		pending_reveal = false
+		for p2 in _explored:
+			_explored[p2].fill(1)
 	var exp: PackedByteArray = _explored[pid]
 	var data := PackedByteArray()
 	data.resize(_w * _h)

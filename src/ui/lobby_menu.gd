@@ -3,8 +3,10 @@ extends CanvasLayer
 ## Multiplayer screen (opened from the title menu).
 ##   Connect view: player name, "Host a game", join by IP (LAN or VPN address,
 ##   optional ":port"), and games found on the local network.
-##   Lobby view: player slots (host can add AI and remove slots), the host's
-##   map settings, ready toggle, chat, Start (host, when everyone is ready).
+##   Lobby view: up to 8 player slots (host adds computer players, sets
+##   difficulties and teams, removes slots; each player may pick their own
+##   team), the host's match options (MatchSettingsForm), ready toggle, chat,
+##   Start (host, when everyone is ready).
 ## All state lives in the Net autoload; this screen only displays it and
 ## forwards button presses.
 
@@ -17,18 +19,13 @@ var _name: LineEdit
 var _ip: LineEdit
 var _status: Label
 var _found_box: VBoxContainer
-var _slots_box: VBoxContainer
+var _slots_list: PlayerSlotsList
 var _addresses: Label
 var _chat_log: RichTextLabel
 var _chat_line: LineEdit
 var _ready_toggle: CheckButton
 var _start: Button
-var _settings_box: GridContainer
-var _map_type: OptionButton
-var _size: OptionButton
-var _victory: OptionButton
-var _fog: CheckButton
-var _seed: LineEdit
+var _form: MatchSettingsForm
 var _ai_diff: OptionButton
 var _add_ai: Button
 
@@ -39,7 +36,7 @@ func _ready() -> void:
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_root)
 	_root.add_child(UiStyle.dimmer(0.6))
-	var pv: Array = UiStyle.centered_panel(_root, 760)
+	var pv: Array = UiStyle.centered_panel(_root, 1060)
 	var v: VBoxContainer = pv[1]
 	v.add_child(UiStyle.title(tr("Multiplayer"), 40))
 	_connect_view = VBoxContainer.new()
@@ -101,8 +98,23 @@ func _build_lobby() -> void:
 	_addresses = UiStyle.label("", 14, UiStyle.TEXT_DIM)
 	_addresses.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_lobby_view.add_child(_addresses)
-	_slots_box = VBoxContainer.new()
-	_lobby_view.add_child(_slots_box)
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 24)
+	_lobby_view.add_child(cols)
+	var left := VBoxContainer.new()
+	left.custom_minimum_size.x = 540
+	cols.add_child(left)
+	_slots_list = PlayerSlotsList.new()
+	_slots_list.editable = func(i: int) -> bool: return Net.is_host() or Net.player_of_peer(multiplayer.get_unique_id()) == i + 1
+	_slots_list.removable = func(i: int) -> bool: return Net.is_host() and i > 0
+	_slots_list.team_changed.connect(func(i: int, t: int) -> void:
+		if Net.is_host():
+			Net.host_set_slot(i, "team", t)
+		else:
+			Net.request_team(t))
+	_slots_list.difficulty_changed.connect(func(i: int, d: String) -> void: Net.host_set_slot(i, "difficulty", d))
+	_slots_list.remove_requested.connect(func(i: int) -> void: Net.host_remove_slot(i))
+	left.add_child(_slots_list)
 	var ai_row := HBoxContainer.new()
 	_ai_diff = UiStyle.option(GameData.rules.get("difficulties_menu", ["easy", "normal", "hard"]).map(func(d): return tr(String(d).capitalize())), 1)
 	ai_row.add_child(_ai_diff)
@@ -110,31 +122,12 @@ func _build_lobby() -> void:
 	_add_ai.pressed.connect(func() -> void:
 		Net.host_add_ai(GameData.rules.get("difficulties_menu", ["easy", "normal", "hard"])[_ai_diff.selected]))
 	ai_row.add_child(_add_ai)
-	_lobby_view.add_child(ai_row)
-	_settings_box = GridContainer.new()
-	_settings_box.columns = 4
-	_settings_box.add_theme_constant_override("h_separation", 10)
-	var rules: Dictionary = GameData.rules
-	var types: Array = rules.get("map_types_menu", ["continental"])
-	_map_type = UiStyle.option(types.map(func(t): return tr(String(GameData.map_gen.get("map_types", {}).get(t, {}).get("display_name", t)))))
-	var sizes: Array = rules.get("map_sizes_menu", ["small"])
-	_size = UiStyle.option(sizes.map(func(s): return tr(String(s).capitalize())), maxi(0, sizes.find("small")))
-	var vcs: Array = rules.get("victory_conditions", {}).keys()
-	_victory = UiStyle.option(vcs.map(func(k): return tr(rules["victory_conditions"][k]["display_name"])))
-	_fog = CheckButton.new()
-	_fog.button_pressed = true
-	_fog.text = tr("Fog of war")
-	_seed = LineEdit.new()
-	_seed.placeholder_text = tr("random seed")
-	for pair in [[tr("Map type"), _map_type], [tr("Size"), _size], [tr("Victory"), _victory], [tr("Seed"), _seed]]:
-		_settings_box.add_child(UiStyle.label(pair[0], 14, UiStyle.TEXT_DIM))
-		_settings_box.add_child(pair[1])
-	_settings_box.add_child(_fog)
-	_lobby_view.add_child(_settings_box)
-	for c in [_map_type, _size, _victory]:
-		(c as OptionButton).item_selected.connect(func(_i: int) -> void: _push_settings())
-	_fog.toggled.connect(func(_b: bool) -> void: _push_settings())
-	_seed.text_changed.connect(func(_t: String) -> void: _push_settings())
+	left.add_child(ai_row)
+	_form = MatchSettingsForm.new()
+	cols.add_child(_form)
+	_form.changed.connect(func(settings: Dictionary) -> void:
+		if Net.is_host():
+			Net.host_set_settings(settings))
 	_chat_log = RichTextLabel.new()
 	_chat_log.custom_minimum_size = Vector2(700, 110)
 	_chat_log.scroll_following = true
@@ -179,20 +172,6 @@ func _join(text: String) -> void:
 	_set_status(err if err != "" else tr("Connecting to %s...") % ip)
 
 
-func _push_settings() -> void:
-	if not Net.is_host():
-		return
-	var rules: Dictionary = GameData.rules
-	var seed_text := _seed.text.strip_edges()
-	Net.host_set_settings({
-		"map_type": rules.get("map_types_menu", ["continental"])[_map_type.selected],
-		"size": rules.get("map_sizes_menu", ["small"])[_size.selected],
-		"victory": rules.get("victory_conditions", {}).keys()[_victory.selected],
-		"fog": _fog.button_pressed,
-		"seed": int(seed_text) if seed_text.is_valid_int() else (seed_text.hash() & 0x7fffffff if seed_text != "" else 0),
-	})
-
-
 func _refresh() -> void:
 	var in_lobby := Net.is_networked() and not Net.slots.is_empty()
 	_connect_view.visible = not in_lobby
@@ -201,39 +180,22 @@ func _refresh() -> void:
 		return
 	var host := Net.is_host()
 	_addresses.text = (tr("Your addresses (share one): ") + ", ".join(Net.local_ips()) + "  ·  " + tr("port") + " %d" % Net.port()) if host else tr("Connected. Waiting for the host to start.")
-	for c in _slots_box.get_children():
-		c.queue_free()
-	var colors: Array = GameData.players.get("colors", [])
+	var shown := []
 	for i in Net.slots.size():
-		var s: Dictionary = Net.slots[i]
-		var row := HBoxContainer.new()
-		var sw := ColorRect.new()
-		sw.custom_minimum_size = Vector2(18, 18)
-		sw.color = Color(colors[i % colors.size()]["primary"]) if not colors.is_empty() else Color.WHITE
-		row.add_child(sw)
-		var tag := tr("computer") if s["ai"] else (tr("ready") if s["ready"] else tr("not ready"))
-		row.add_child(UiStyle.label("  %s  —  %s" % [s["name"], tag], 16, UiStyle.TEXT if s["ready"] else UiStyle.TEXT_DIM))
-		if host and i > 0:
-			var rm := UiStyle.button(tr("Remove"), 110)
-			var idx := i
-			rm.pressed.connect(func() -> void: Net.host_remove_slot(idx))
-			row.add_child(rm)
-		_slots_box.add_child(row)
+		var sl: Dictionary = Net.slots[i].duplicate()
+		sl["you"] = Net.player_of_peer(multiplayer.get_unique_id()) == i + 1 if Net.is_networked() else false
+		sl["ready"] = sl["ai"] or sl["ready"]
+		shown.append(sl)
+	_slots_list.show_slots(shown)
 	_add_ai.visible = host
+	_add_ai.disabled = Net.slots.size() >= int(Net.settings.get("max_players", 8))
 	_ai_diff.visible = host
 	_start.visible = host
 	_start.disabled = not Net.all_ready()
 	_ready_toggle.visible = not host
-	for c in [_map_type, _size, _victory, _fog]:
-		c.set("disabled", not host)
-	_seed.editable = host
+	_form.set_editable(host)
 	if not host:
-		var ms: Dictionary = Net.match_settings
-		var rules: Dictionary = GameData.rules
-		_map_type.select(maxi(0, rules.get("map_types_menu", []).find(ms.get("map_type", "continental"))))
-		_size.select(maxi(0, rules.get("map_sizes_menu", []).find(ms.get("size", "small"))))
-		_victory.select(maxi(0, rules.get("victory_conditions", {}).keys().find(ms.get("victory", "conquest"))))
-		_fog.set_pressed_no_signal(bool(ms.get("fog", true)))
+		_form.set_settings(Net.match_settings)
 
 
 func _on_found(list: Array) -> void:

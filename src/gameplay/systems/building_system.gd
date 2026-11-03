@@ -10,11 +10,14 @@ var buildings: Array[Building] = []
 
 var _game: Game
 var _econ: Dictionary
+## Population limit of the match (economy_settings.json max_population unless the setup changes it).
+var max_population := 200
 
 
 func setup(game: Game, economy_cfg: Dictionary) -> void:
 	_game = game
 	_econ = economy_cfg
+	max_population = int(economy_cfg.get("max_population", 200))
 
 
 ## Effective build-speed multiplier for `n` simultaneous builders.
@@ -221,7 +224,7 @@ func population_cap(player_id: int) -> int:
 	for b in buildings:
 		if b.owner_id == player_id and b.is_complete():
 			cap += int(b.def.get("population", 0))
-	return mini(cap, int(_econ.get("max_population", 200)))
+	return mini(cap, max_population)
 
 
 ## Nearest completed building of `player_id` accepting `resource` (grid distance).

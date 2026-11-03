@@ -1,7 +1,8 @@
 extends SceneTree
 ## Generates every sprite PNG of the game into res://assets/sprites/.
-## Run: Godot --headless --path . -s res://tools/art/generate_art.gd
+## Run: Godot --headless --path . -s res://tools/art/generate_art.gd [-- --units=sheep,wolf]
 ## Re-run after changing any painter; then run `--headless --import`.
+## --units= only repaints those unit sheets (atlases and previews are skipped).
 
 const PixelCanvas := preload("res://tools/art/pixel_canvas.gd")
 const TerrainArt := preload("res://tools/art/terrain_art.gd")
@@ -14,6 +15,7 @@ const SheetBuilder := preload("res://tools/art/sheet_builder.gd")
 const ShipArt := preload("res://tools/art/ship_art.gd")
 const AirArt := preload("res://tools/art/air_art.gd")
 const VehicleArt := preload("res://tools/art/vehicle_art.gd")
+const AnimalArt := preload("res://tools/art/animal_art.gd")
 
 const OUT := "res://assets/sprites/"
 const PREVIEW := "res://production/qa/screenshots/art_preview.png"
@@ -71,6 +73,14 @@ const UNIT_LOOKS := {
 	"monk": {"painter": "humanoid", "robe": "#7a5a3a", "weapon": "staff", "skin": "#d9a37a", "boots": "#4a3426"},
 	"petard": {"painter": "humanoid", "weapon": "petard", "helmet": "kettle", "pants": "#4a4034", "hair": "#2a1d14"},
 	"camel_rider": {"painter": "cavalry", "coat": "#c79a5e", "mount": "camel", "weapon": "sword", "hair": "#2e2218", "skin": "#c98e62"},
+	# Gaia animals (neutral sheets: one for every owner).
+	"sheep": {"painter": "animal", "species": "sheep", "coat": "#e6e0d0", "belly": "#d4ccb8", "dark": "#3a3330", "face": "#4a403a", "size": 0.85, "leg": 6.0, "wool": true, "ears": "floppy", "tail": "stub", "snout": 1.6},
+	"turkey": {"painter": "animal", "species": "turkey", "coat": "#5e4636"},
+	"deer": {"painter": "animal", "species": "deer", "coat": "#a8703e", "belly": "#e2c8a0", "dark": "#3a2a1c", "size": 0.9, "leg": 11.0, "antlers": true, "ears": "pointed", "tail": "stub", "snout": 2.2},
+	"boar": {"painter": "animal", "species": "boar", "coat": "#4e3e34", "belly": "#5e4c40", "dark": "#2a201a", "size": 1.0, "leg": 5.0, "tusks": true, "ears": "pointed", "tail": "short", "snout": 3.2, "head": 1.15, "mane": true},
+	"wolf": {"painter": "animal", "species": "wolf", "coat": "#8c8a88", "belly": "#cfcac2", "dark": "#3a3836", "size": 0.9, "leg": 8.0, "ears": "pointed", "tail": "bushy", "snout": 3.0, "predator": true, "grazes": false},
+	"tiger": {"painter": "animal", "species": "tiger", "coat": "#d88a2e", "belly": "#f0e2c8", "dark": "#2a1a10", "size": 1.15, "leg": 8.0, "stripes": true, "ears": "round", "tail": "long", "snout": 2.4, "head": 1.15, "predator": true, "grazes": false},
+	"bear": {"painter": "animal", "species": "bear", "coat": "#5a3e2a", "belly": "#6e5038", "dark": "#2a1c12", "size": 1.35, "leg": 7.0, "ears": "round", "tail": "stub", "snout": 2.2, "head": 1.2, "predator": true, "grazes": false},
 }
 
 
@@ -78,6 +88,19 @@ func _initialize() -> void:
 	var t0 := Time.get_ticks_msec()
 	var sprites: Dictionary = _json("res://assets/data/render_sprites.json")
 	var players: Dictionary = _json("res://assets/data/players_config.json")
+	var only_units := []
+	for arg in OS.get_cmdline_user_args():
+		if String(arg).begins_with("--units="):
+			only_units = Array(String(arg).get_slice("=", 1).split(","))
+	if not only_units.is_empty():
+		var picked := {}
+		for unit_id in only_units:
+			_paint_unit(String(unit_id), sprites, players)
+			picked[unit_id] = sprites["units"][unit_id]
+		_save(_unit_preview(picked), "res://production/qa/screenshots/art_units_partial.png")
+		print("Art (units only) generated in %d ms" % (Time.get_ticks_msec() - t0))
+		quit(0)
+		return
 	for dir in ["terrain", "props", "units", "buildings"]:
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT + dir))
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://production/qa/screenshots"))
@@ -111,31 +134,7 @@ func _initialize() -> void:
 
 	var unit_sheets := []
 	for unit_id in sprites["units"]:
-		var look: Dictionary = BASE_LOOK.duplicate()
-		look.merge(UNIT_LOOKS.get(unit_id, UNIT_LOOKS["villager"]), true)
-		var colors: Array = players["colors"]
-		for slot in colors.size():
-			var params := {}
-			for k in look:
-				params[k] = Color(look[k]) if look[k] is String and String(look[k]).begins_with("#") else look[k]
-			params["tunic"] = Color(colors[slot]["primary"])
-			var layout: Dictionary = sprites["units"][unit_id]
-			var sheet: Image
-			match String(look["painter"]):
-				"cavalry":
-					sheet = CavalryArt.build_sheet(layout, params)
-				"siege":
-					sheet = SiegeArt.build_sheet(layout, params)
-				"ship":
-					sheet = ShipArt.build_sheet(layout, params)
-				"air":
-					sheet = AirArt.build_sheet(layout, params)
-				"vehicle":
-					sheet = VehicleArt.build_sheet(layout, params)
-				_:
-					sheet = HumanoidArt.build_sheet(layout, params)
-			_save(sheet, OUT + "units/%s_p%d.png" % [unit_id, slot])
-			unit_sheets.append(sheet)
+		unit_sheets.append_array(_paint_unit(unit_id, sprites, players))
 
 	_save(_preview(atlas, packed["image"], unit_sheets), PREVIEW)
 	_save(_unit_preview(sprites["units"]), "res://production/qa/screenshots/art_units.png")
@@ -147,6 +146,40 @@ func _initialize() -> void:
 	_save(bg, "res://production/qa/screenshots/art_buildings.png")
 	print("Art generated in %d ms" % (Time.get_ticks_msec() - t0))
 	quit(0)
+
+
+## Paints every team-coloured sheet of one unit (one sheet for "neutral" layouts).
+func _paint_unit(unit_id: String, sprites: Dictionary, players: Dictionary) -> Array:
+	var out := []
+	var look: Dictionary = BASE_LOOK.duplicate()
+	look.merge(UNIT_LOOKS.get(unit_id, UNIT_LOOKS["villager"]), true)
+	var colors: Array = players["colors"]
+	var layout: Dictionary = sprites["units"][unit_id]
+	var slots := 1 if layout.get("neutral", false) else colors.size()
+	for slot in slots:
+		var params := {}
+		for k in look:
+			params[k] = Color(look[k]) if look[k] is String and String(look[k]).begins_with("#") else look[k]
+		params["tunic"] = Color(colors[slot]["primary"])
+		var sheet: Image
+		match String(look["painter"]):
+			"cavalry":
+				sheet = CavalryArt.build_sheet(layout, params)
+			"siege":
+				sheet = SiegeArt.build_sheet(layout, params)
+			"ship":
+				sheet = ShipArt.build_sheet(layout, params)
+			"air":
+				sheet = AirArt.build_sheet(layout, params)
+			"vehicle":
+				sheet = VehicleArt.build_sheet(layout, params)
+			"animal":
+				sheet = AnimalArt.build_sheet(layout, params)
+			_:
+				sheet = HumanoidArt.build_sheet(layout, params)
+		_save(sheet, OUT + "units/%s_p%d.png" % [unit_id, slot])
+		out.append(sheet)
+	return out
 
 
 func _json(path: String) -> Dictionary:

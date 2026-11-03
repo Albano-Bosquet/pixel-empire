@@ -10,6 +10,9 @@ extends Entity
 
 enum State { IDLE, MOVING }
 
+## Animations whose tool strikes make a sound (audio_settings.json "work").
+const WORK_ANIMS := ["chop", "mine", "build", "forage"]
+
 var state: State = State.IDLE
 var speed := 1.5
 var radius := 0.22
@@ -71,6 +74,8 @@ var _frame_w := 48
 var _anchor := Vector2(24, 44)
 var _anim_time := 0.0
 var _turn_time := 0.0
+## Last work-animation cycle that made a sound (tool strikes, see _work_sound).
+var _work_cycle := -1
 
 
 func setup(id: String, unit_def: Dictionary, player_id: int, color_slot_arg: int, at: Vector2) -> void:
@@ -165,7 +170,15 @@ func attack_range() -> float:
 	return r + range_bonus if r > 0.5 else r
 
 
-## Switches sides (monk conversion): new owner and team colours, all orders dropped.
+## Owned animals show a small team-coloured collar ring (their sheet has no team colour).
+func _draw() -> void:
+	super._draw()
+	if def.has("animal") and owner_id != GAIA and not dead:
+		var c: Color = Color(GameData.player_color(color_slot).get("primary", "#ffffff"))
+		draw_arc(Vector2(0, -2), 6.0, 0.0, TAU, 14, Color(c, 0.85), 1.0)
+
+
+## Switches sides (monk conversion, herding): new owner and team colours, all orders dropped.
 func change_owner(player_id: int, slot: int) -> void:
 	owner_id = player_id
 	color_slot = slot
@@ -193,10 +206,13 @@ func play_once(anim: String) -> void:
 	_anim_time = 0.0
 	var info: Dictionary = _anim_rows[anim]
 	anim_lock = float(info["frames"]) / maxf(1.0, info["fps"])
+	if anim == "attack":
+		EventBus.sound_at.emit(SoundRules.attack_key(GameData.audio, type_id, def), position)
 
 
 ## Switches to the death animation (holds its last frame).
 func die() -> void:
+	EventBus.sound_at.emit(SoundRules.death_key(GameData.audio, def), position)
 	stop()
 	target = null
 	task = {}
@@ -215,6 +231,19 @@ func die() -> void:
 	queue_redraw()
 
 
+func body_sprite() -> Sprite2D:
+	return _sprite
+
+
+## Sheet frame index of the last death frame in the current facing.
+func final_death_frame() -> int:
+	var info: Dictionary = _anim_rows.get("die", _anim_rows.get("idle", {}))
+	if info.is_empty():
+		return _sprite.frame
+	var sd := Iso.sheet_direction(facing)
+	return (int(info["row"]) + sd.x) * _sprite.hframes + int(info["frames"]) - 1
+
+
 func has_anim(anim: String) -> bool:
 	return _anim_rows.has(anim)
 
@@ -223,6 +252,7 @@ func play(anim: String) -> void:
 	if anim != _anim and _anim_rows.has(anim):
 		_anim = anim
 		_anim_time = 0.0
+		_work_cycle = -1
 
 
 ## Advances the sprite animation; called by UnitSystem every frame.
@@ -247,6 +277,8 @@ func animate(delta: float) -> void:
 	if altitude > 0.0 and not dead:
 		_sprite.position.y = -altitude + sin(_anim_time * 2.2) * 1.5
 	_sprite.flip_h = sd.y == 1
+	if not dead and (_anim in WORK_ANIMS or (task.get("type", "") == "gather" and def.get("naval", false) and state == State.IDLE)):
+		_work_sound(info)
 	# Mirroring happens inside the frame rect, so mirror the anchor too.
 	_sprite.offset.x = -(_frame_w - _anchor.x) if _sprite.flip_h else -_anchor.x
 
@@ -260,3 +292,19 @@ func _turn(delta: float) -> void:
 	while _turn_time >= step_time and facing != facing_target:
 		_turn_time -= step_time
 		facing = posmod(facing + signi(Iso.direction_delta(facing, facing_target)), Iso.DIR_COUNT)
+
+
+## Emits the work sound once per animation cycle, at the strike frame
+## ("at" = fraction of the cycle, "every" = only every n-th cycle).
+func _work_sound(info: Dictionary) -> void:
+	var farming: bool = task.get("type", "") == "gather" and task.get("kind", "") == "food" and _anim == "build"
+	var entry := SoundRules.work_entry(GameData.audio, "fish" if def.get("naval", false) else _anim, farming)
+	if entry.is_empty():
+		return
+	var period := float(info["frames"]) / maxf(1.0, float(info["fps"])) if _anim in WORK_ANIMS else 2.0
+	var cycle := floori(_anim_time / period - float(entry.get("at", 0.5)))
+	if cycle < 0 or cycle == _work_cycle:
+		return
+	_work_cycle = cycle
+	if cycle % maxi(1, int(entry.get("every", 1))) == 0:
+		EventBus.sound_at.emit(String(entry.get("sound", "")), position)

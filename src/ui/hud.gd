@@ -42,11 +42,19 @@ var _idle_button: Button
 var _selection: Array = []
 var _elapsed := 0.0
 var _queue_sig := ""
+## Phase 5 shortcuts (alerts, idle military, Town Center, speed...).
+var controls: ControlKeys
+
+
+func _exit_tree() -> void:
+	if controls != null:
+		controls.dispose()
 
 
 func setup(game: Game) -> void:
 	_game = game
 	layer = 10
+	controls = ControlKeys.new(game)
 	_build_top_bar()
 	_build_bottom_panel()
 	_build_minimap()
@@ -113,7 +121,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	elif event.keycode == KEY_F10:
 		EventBus.pause_requested.emit()
 		get_viewport().set_input_as_handled()
+	elif event.keycode == KEY_F1:
+		add_child(HelpPanel.new())
+		get_viewport().set_input_as_handled()
 	elif not event.ctrl_pressed and _commands.handle_key(event.keycode):
+		get_viewport().set_input_as_handled()
+	elif controls.handle(event):
 		get_viewport().set_input_as_handled()
 
 
@@ -522,7 +535,7 @@ static func portrait_texture(e: Entity) -> Texture2D:
 		at.atlas = Building.atlas_texture()
 		at.region = Building.sprite_region(e.type_id)["rect"]
 	elif e is ResourceNode:
-		at.atlas = SpriteLibrary.props_texture()
+		at.atlas = (e as ResourceNode).portrait_texture()
 		at.region = (e as ResourceNode).portrait_region()
 	return at
 
