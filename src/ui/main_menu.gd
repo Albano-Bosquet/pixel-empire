@@ -1,7 +1,9 @@
 class_name MainMenu
 extends CanvasLayer
 ## Title screen over the live village backdrop: single player (opens
-## SkirmishSetup), multiplayer lobby, sound options, language, quit.
+## SkirmishSetup), multiplayer lobby, sound options, language, update, quit.
+## The Update button checks GitHub for a newer release (UpdateChecker) and is
+## enabled only when one exists; pressing it downloads and runs the installer.
 ## Emits `start_requested(config)`; Main starts the match.
 
 signal start_requested(config: Dictionary)
@@ -11,6 +13,8 @@ var _single: Button
 var _message: Label
 var _lobby: LobbyMenu
 var _setup: SkirmishSetup
+var _update_btn: Button
+var _updater: UpdateChecker
 
 
 func _ready() -> void:
@@ -46,7 +50,7 @@ func _ready() -> void:
 	panel.offset_left = -230
 	panel.offset_right = 230
 	panel.offset_top = -170
-	panel.offset_bottom = 262
+	panel.offset_bottom = 316
 	root.add_child(panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
@@ -74,6 +78,10 @@ func _ready() -> void:
 	pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lang.add_child(pick)
 	v.add_child(lang)
+	_update_btn = UiStyle.button(tr("Checking for updates..."), 400)
+	_update_btn.disabled = true
+	_update_btn.pressed.connect(func() -> void: _updater.download_and_install())
+	v.add_child(_update_btn)
 	_message = UiStyle.label("", 14, Color("#ff8a7a"))
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -89,6 +97,33 @@ func _ready() -> void:
 	hint.offset_top = -40
 	root.add_child(hint)
 	_single.grab_focus()
+	_updater = UpdateChecker.new()
+	add_child(_updater)
+	_updater.state_changed.connect(_on_update_state)
+	_updater.check()
+
+
+func _process(_delta: float) -> void:
+	if _updater != null and _updater.state == UpdateChecker.State.DOWNLOADING:
+		_update_btn.text = tr("Downloading update... %d%%") % roundi(_updater.progress() * 100.0)
+
+
+func _on_update_state(st: UpdateChecker.State) -> void:
+	_update_btn.disabled = st != UpdateChecker.State.AVAILABLE
+	match st:
+		UpdateChecker.State.CHECKING:
+			_update_btn.text = tr("Checking for updates...")
+		UpdateChecker.State.UP_TO_DATE:
+			_update_btn.text = tr("Up to date (%s)") % UpdateChecker.current_version()
+		UpdateChecker.State.AVAILABLE:
+			_update_btn.text = tr("Update to %s") % _updater.latest_version
+		UpdateChecker.State.DOWNLOADING:
+			_update_btn.text = tr("Downloading update... %d%%") % 0
+		UpdateChecker.State.LAUNCHED:
+			_update_btn.text = tr("Starting installer...")
+		UpdateChecker.State.FAILED:
+			_update_btn.text = tr("Update")
+			_update_btn.tooltip_text = tr("Could not reach the update server")
 
 
 ## Opens the single-player setup screen.
