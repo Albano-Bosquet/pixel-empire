@@ -1,0 +1,87 @@
+{
+  "sizes": {
+    "tiny": 64,
+    "small": 96,
+    "medium": 128,
+    "large": 160,
+    "huge": 200
+  },
+  "default_size": "small",
+  "elevation_frequency": 2.4,
+  "moisture_frequency": 3.2,
+  "deep_water_level": 0.24,
+  "water_level": 0.31,
+  "beach_level": 0.345,
+  "rocky_level": 0.7,
+  "mountain_level": 0.76,
+  "forest_moisture": 0.6,
+  "meadow_moisture": 0.38,
+  "dirt_patch_threshold": 0.74,
+  "forest_tree_density": 0.78,
+  "lone_tree_density": 0.018,
+  "pine_elevation": 0.56,
+  "start_ring_radius": 0.33,
+  "start_clear_radius": 7,
+  "start_dirt_radius": 3,
+  "decor_density": 0.12,
+  "mountain_crag_density": 0.55,
+  "player_resources": {
+    "gold_mine": {
+      "clusters": 1,
+      "cluster_size": 6,
+      "min_dist": 7,
+      "max_dist": 10
+    },
+    "stone_mine": {
+      "clusters": 1,
+      "cluster_size": 5,
+      "min_dist": 8,
+      "max_dist": 11
+    },
+    "berry_bush": {
+      "clusters": 1,
+      "cluster_size": 6,
+      "min_dist": 5,
+      "max_dist": 7
+    }
+  },
+  "extra_resource_clusters_per_100_tiles_side": {
+    "gold_mine": 3,
+    "stone_mine": 2,
+    "berry_bush": 2
+  },
+  "fish_shoals_per_100_tiles_side": 6,
+  "map_types": {
+    "continental": {
+      "display_name": "Continental"
+    },
+    "coast": {
+      "display_name": "Coast",
+      "sea_radius": 0.2,
+      "sea_depth": 0.55,
+      "land_ring_width": 0.12,
+      "land_ring_boost": 0.18,
+      "fish_multiplier": 1.5,
+      "start_woods": {
+        "clusters": 1,
+        "cluster_size": 16,
+        "min_dist": 9,
+        "max_dist": 13
+      }
+    },
+    "islands": {
+      "display_name": "Islands",
+      "island_radius": 0.17,
+      "extra_islands": 3,
+      "sea_floor": 0.12,
+      "fish_multiplier": 2.0,
+      "start_woods": {
+        "clusters": 2,
+        "cluster_size": 22,
+        "min_dist": 9,
+        "max_dist": 13
+      }
+    }
+  },
+  "default_map_type": "continental"
+}

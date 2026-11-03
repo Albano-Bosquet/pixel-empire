@@ -1,0 +1,15 @@
+{
+  "waypoint_radius": 0.35,
+  "arrive_radius": 0.08,
+  "slowdown_distance": 0.35,
+  "separation_strength": 5.0,
+  "moving_separation_factor": 0.45,
+  "crowd_arrive_distance": 1.1,
+  "crowd_stuck_time": 0.6,
+  "repath_stuck_time": 2.5,
+  "formation_spacing": 0.62,
+  "path_budget_ms": 3.0,
+  "turn_steps_per_second": 40.0,
+  "walk_anim_min_rate": 0.35,
+  "walk_anim_max_rate": 1.4
+}

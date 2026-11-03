@@ -1,0 +1,45 @@
+{
+  "starting_resources": {
+    "wood": 200,
+    "food": 200,
+    "gold": 100,
+    "stone": 200
+  },
+  "colors": [
+    {
+      "id": "blue",
+      "name": "Blue",
+      "primary": "#3d6fd6",
+      "dark": "#24418c",
+      "light": "#7ea6f2"
+    },
+    {
+      "id": "red",
+      "name": "Red",
+      "primary": "#cf3b34",
+      "dark": "#80211f",
+      "light": "#f07b62"
+    },
+    {
+      "id": "green",
+      "name": "Green",
+      "primary": "#3c9c45",
+      "dark": "#22602b",
+      "light": "#7cd27a"
+    },
+    {
+      "id": "yellow",
+      "name": "Yellow",
+      "primary": "#d9a922",
+      "dark": "#8a6612",
+      "light": "#f5d86a"
+    }
+  ],
+  "starting_buildings": [
+    "town_center"
+  ],
+  "starting_units": {
+    "villager": 3,
+    "scout": 1
+  }
+}

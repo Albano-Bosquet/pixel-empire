@@ -1,0 +1,929 @@
+{
+  "town_center": {
+    "display_name": "Town Center",
+    "age": 0,
+    "size": 4,
+    "max_hp": 2400,
+    "build_time": 150,
+    "cost": {
+      "wood": 275,
+      "stone": 100
+    },
+    "population": 5,
+    "drop_off": [
+      "food",
+      "wood",
+      "gold",
+      "stone"
+    ],
+    "trains": [
+      "villager"
+    ],
+    "sight": 8,
+    "hotkey": "C",
+    "category": "economy",
+    "description": "Trains villagers, accepts every resource and houses 5 population.",
+    "art": {
+      "style": "town_center"
+    },
+    "armor": {
+      "melee": 1,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ],
+    "attack": {
+      "damage": 4,
+      "range": 6,
+      "cooldown": 2.0,
+      "arrows": 1
+    },
+    "researches": [
+      "feudal_age",
+      "castle_age",
+      "imperial_age",
+      "loom",
+      "wheelbarrow",
+      "hand_cart",
+      "treadmill_crane",
+      "masonry",
+      "gunpowder_age",
+      "industrial_age"
+    ]
+  },
+  "house": {
+    "display_name": "House",
+    "age": 0,
+    "size": 2,
+    "max_hp": 550,
+    "build_time": 25,
+    "cost": {
+      "wood": 25
+    },
+    "population": 5,
+    "drop_off": [],
+    "trains": [],
+    "sight": 2,
+    "hotkey": "E",
+    "category": "economy",
+    "description": "Increases the population limit by 5.",
+    "art": {
+      "style": "house"
+    },
+    "armor": {
+      "melee": 0,
+      "pierce": 4
+    },
+    "classes": [
+      "building"
+    ]
+  },
+  "mill": {
+    "display_name": "Mill",
+    "age": 0,
+    "size": 2,
+    "max_hp": 600,
+    "build_time": 35,
+    "cost": {
+      "wood": 100
+    },
+    "population": 0,
+    "drop_off": [
+      "food"
+    ],
+    "trains": [],
+    "sight": 4,
+    "hotkey": "M",
+    "category": "economy",
+    "description": "Drop-off point for food. Researches farming upgrades.",
+    "art": {
+      "style": "mill"
+    },
+    "armor": {
+      "melee": 0,
+      "pierce": 4
+    },
+    "classes": [
+      "building"
+    ],
+    "researches": [
+      "horse_collar",
+      "heavy_plow"
+    ]
+  },
+  "storehouse": {
+    "display_name": "Storehouse",
+    "age": 0,
+    "size": 2,
+    "max_hp": 600,
+    "build_time": 35,
+    "cost": {
+      "wood": 100
+    },
+    "population": 0,
+    "drop_off": [
+      "wood",
+      "gold",
+      "stone"
+    ],
+    "trains": [],
+    "sight": 4,
+    "hotkey": "G",
+    "category": "economy",
+    "description": "Drop-off point for wood, gold and stone. Researches gathering upgrades.",
+    "art": {
+      "style": "storehouse"
+    },
+    "armor": {
+      "melee": 0,
+      "pierce": 4
+    },
+    "classes": [
+      "building"
+    ],
+    "researches": [
+      "double_bit_axe",
+      "bow_saw",
+      "gold_mining",
+      "stone_mining"
+    ]
+  },
+  "barracks": {
+    "display_name": "Barracks",
+    "age": 0,
+    "size": 3,
+    "max_hp": 1200,
+    "build_time": 50,
+    "cost": {
+      "wood": 175
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [
+      "militia",
+      "swordsman",
+      "spearman",
+      "pikeman",
+      "greatsword",
+      "blunderbussier",
+      "musketeer",
+      "grenadier",
+      "rifleman"
+    ],
+    "sight": 5,
+    "hotkey": "B",
+    "category": "military",
+    "description": "Trains infantry, from militia to gunpowder troops and riflemen.",
+    "art": {
+      "style": "barracks"
+    },
+    "armor": {
+      "melee": 1,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ],
+    "researches": [
+      "tracking",
+      "squires"
+    ]
+  },
+  "archery_range": {
+    "display_name": "Archery Range",
+    "age": 1,
+    "size": 3,
+    "max_hp": 1200,
+    "build_time": 50,
+    "cost": {
+      "wood": 175
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [
+      "archer",
+      "skirmisher",
+      "crossbowman",
+      "cavalry_archer",
+      "hand_cannoneer"
+    ],
+    "sight": 5,
+    "hotkey": "Y",
+    "category": "military",
+    "description": "Trains archers, skirmishers, crossbowmen, cavalry archers and hand cannoneers.",
+    "art": {
+      "style": "archery_range"
+    },
+    "armor": {
+      "melee": 0,
+      "pierce": 4
+    },
+    "classes": [
+      "building"
+    ]
+  },
+  "stable": {
+    "display_name": "Stable",
+    "age": 0,
+    "size": 3,
+    "max_hp": 1200,
+    "build_time": 50,
+    "cost": {
+      "wood": 175
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [
+      "scout",
+      "light_cavalry",
+      "knight",
+      "camel_rider",
+      "cavalier",
+      "dragoon"
+    ],
+    "sight": 5,
+    "hotkey": "L",
+    "category": "military",
+    "description": "Trains scouts, light cavalry, knights, camel riders and cavaliers.",
+    "art": {
+      "style": "stable"
+    },
+    "armor": {
+      "melee": 0,
+      "pierce": 4
+    },
+    "classes": [
+      "building"
+    ],
+    "researches": [
+      "bloodlines",
+      "husbandry"
+    ]
+  },
+  "blacksmith": {
+    "display_name": "Blacksmith",
+    "age": 1,
+    "size": 3,
+    "max_hp": 1200,
+    "build_time": 40,
+    "cost": {
+      "wood": 150
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [],
+    "sight": 5,
+    "hotkey": "K",
+    "category": "economy",
+    "description": "Researches attack and armor upgrades.",
+    "art": {
+      "style": "blacksmith"
+    },
+    "armor": {
+      "melee": 1,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ],
+    "researches": [
+      "forging",
+      "iron_casting",
+      "fletching",
+      "bodkin_arrow",
+      "scale_mail",
+      "chain_mail",
+      "scale_barding",
+      "padded_archer",
+      "rifling"
+    ]
+  },
+  "tower": {
+    "display_name": "Watch Tower",
+    "age": 1,
+    "size": 1,
+    "max_hp": 1020,
+    "build_time": 80,
+    "cost": {
+      "wood": 25,
+      "stone": 125
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [],
+    "sight": 10,
+    "hotkey": "T",
+    "category": "military",
+    "description": "Defensive tower that shoots arrows at nearby enemies.",
+    "art": {
+      "style": "tower"
+    },
+    "armor": {
+      "melee": 1,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ],
+    "attack": {
+      "damage": 5,
+      "range": 8,
+      "cooldown": 2.0,
+      "arrows": 1
+    }
+  },
+  "castle": {
+    "display_name": "Castle",
+    "age": 2,
+    "size": 4,
+    "max_hp": 4800,
+    "build_time": 200,
+    "cost": {
+      "stone": 650
+    },
+    "population": 20,
+    "drop_off": [],
+    "trains": [
+      "catapult",
+      "trebuchet",
+      "petard"
+    ],
+    "sight": 11,
+    "hotkey": "V",
+    "category": "military",
+    "description": "Fortress that fires arrows, trains catapults, trebuchets and petards, and houses 20 population.",
+    "art": {
+      "style": "castle"
+    },
+    "armor": {
+      "melee": 1,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ],
+    "attack": {
+      "damage": 11,
+      "range": 8,
+      "cooldown": 2.0,
+      "arrows": 3
+    }
+  },
+  "farm": {
+    "display_name": "Farm",
+    "age": 0,
+    "size": 2,
+    "max_hp": 480,
+    "build_time": 15,
+    "cost": {
+      "wood": 60
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [],
+    "sight": 1,
+    "hotkey": "F",
+    "category": "economy",
+    "description": "Renewable-style food source: 175 food, walkable. Villagers farm it.",
+    "art": {
+      "style": "farm"
+    },
+    "farm_food": 175,
+    "walkable": true,
+    "armor": {
+      "melee": 0,
+      "pierce": 0
+    },
+    "classes": [
+      "building"
+    ]
+  },
+  "siege_workshop": {
+    "display_name": "Siege Workshop",
+    "age": 2,
+    "size": 3,
+    "max_hp": 1500,
+    "build_time": 40,
+    "cost": {
+      "wood": 200
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [
+      "battering_ram",
+      "mangonel",
+      "scorpion",
+      "bombard_cannon"
+    ],
+    "sight": 5,
+    "hotkey": "P",
+    "category": "military",
+    "description": "Builds rams, mangonels, scorpions and bombard cannons.",
+    "art": {
+      "style": "siege_workshop"
+    },
+    "armor": {
+      "melee": 1,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ]
+  },
+  "lumber_camp": {
+    "display_name": "Lumber Camp",
+    "age": 0,
+    "size": 2,
+    "max_hp": 600,
+    "build_time": 35,
+    "cost": {
+      "wood": 100
+    },
+    "population": 0,
+    "drop_off": [
+      "wood"
+    ],
+    "trains": [],
+    "sight": 4,
+    "hotkey": "L",
+    "category": "economy",
+    "description": "Cheap drop-off point for wood, built next to forests.",
+    "art": {
+      "style": "lumber_camp"
+    },
+    "armor": {
+      "melee": 0,
+      "pierce": 4
+    },
+    "classes": [
+      "building"
+    ]
+  },
+  "mining_camp": {
+    "display_name": "Mining Camp",
+    "age": 0,
+    "size": 2,
+    "max_hp": 600,
+    "build_time": 35,
+    "cost": {
+      "wood": 100
+    },
+    "population": 0,
+    "drop_off": [
+      "gold",
+      "stone"
+    ],
+    "trains": [],
+    "sight": 4,
+    "hotkey": "N",
+    "category": "economy",
+    "description": "Drop-off point for gold and stone, built next to mines.",
+    "art": {
+      "style": "mining_camp"
+    },
+    "armor": {
+      "melee": 0,
+      "pierce": 4
+    },
+    "classes": [
+      "building"
+    ]
+  },
+  "market": {
+    "display_name": "Market",
+    "age": 1,
+    "size": 4,
+    "max_hp": 2100,
+    "build_time": 60,
+    "cost": {
+      "wood": 175
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [
+      "trade_cart"
+    ],
+    "sight": 6,
+    "hotkey": "R",
+    "category": "economy",
+    "description": "Buy and sell food, wood and stone for gold. Trains trade carts.",
+    "art": {
+      "style": "market"
+    },
+    "armor": {
+      "melee": 0,
+      "pierce": 4
+    },
+    "classes": [
+      "building"
+    ],
+    "exchange": true
+  },
+  "university": {
+    "display_name": "University",
+    "age": 2,
+    "size": 3,
+    "max_hp": 2100,
+    "build_time": 60,
+    "cost": {
+      "wood": 200
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [],
+    "sight": 6,
+    "hotkey": "U",
+    "category": "economy",
+    "description": "Researches building, tower and siege technologies.",
+    "art": {
+      "style": "university"
+    },
+    "armor": {
+      "melee": 2,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ],
+    "researches": [
+      "architecture",
+      "heated_shot",
+      "chemistry",
+      "siege_engineers"
+    ]
+  },
+  "outpost": {
+    "display_name": "Outpost",
+    "age": 0,
+    "size": 1,
+    "max_hp": 500,
+    "build_time": 15,
+    "cost": {
+      "wood": 25,
+      "stone": 10
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [],
+    "sight": 10,
+    "hotkey": "O",
+    "category": "military",
+    "description": "Lookout platform with a very long line of sight. Has no attack.",
+    "art": {
+      "style": "outpost"
+    },
+    "armor": {
+      "melee": 0,
+      "pierce": 2
+    },
+    "classes": [
+      "building"
+    ]
+  },
+  "bombard_tower": {
+    "display_name": "Bombard Tower",
+    "age": 3,
+    "size": 1,
+    "max_hp": 1800,
+    "build_time": 80,
+    "cost": {
+      "stone": 125,
+      "gold": 100
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [],
+    "sight": 10,
+    "hotkey": "N",
+    "category": "military",
+    "description": "Gunpowder tower firing heavy cannonballs at nearby enemies.",
+    "art": {
+      "style": "bombard_tower"
+    },
+    "armor": {
+      "melee": 2,
+      "pierce": 8
+    },
+    "classes": [
+      "building"
+    ],
+    "attack": {
+      "damage": 30,
+      "range": 8,
+      "cooldown": 5.0,
+      "arrows": 1,
+      "projectile": "cannonball",
+      "type": "siege",
+      "bonuses": {
+        "siege": 20
+      }
+    }
+  },
+  "monastery": {
+    "display_name": "Monastery",
+    "age": 2,
+    "size": 3,
+    "max_hp": 2100,
+    "build_time": 40,
+    "cost": {
+      "wood": 175
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [
+      "monk"
+    ],
+    "sight": 6,
+    "hotkey": "M",
+    "category": "military",
+    "description": "Trains monks, who heal allies and convert enemy units.",
+    "art": {
+      "style": "monastery"
+    },
+    "armor": {
+      "melee": 3,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ],
+    "researches": [
+      "fervor",
+      "sanctity"
+    ]
+  },
+  "palisade_wall": {
+    "display_name": "Palisade Wall",
+    "age": 0,
+    "size": 1,
+    "max_hp": 250,
+    "build_time": 6,
+    "cost": {
+      "wood": 3
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [],
+    "sight": 2,
+    "hotkey": "Z",
+    "category": "military",
+    "description": "Cheap wooden wall. Drag to build a line.",
+    "art": {
+      "style": "palisade_wall"
+    },
+    "armor": {
+      "melee": 2,
+      "pierce": 5
+    },
+    "classes": [
+      "building"
+    ],
+    "wall": true,
+    "line_build": true
+  },
+  "stone_wall": {
+    "display_name": "Stone Wall",
+    "age": 1,
+    "size": 1,
+    "max_hp": 1500,
+    "build_time": 10,
+    "cost": {
+      "stone": 5
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [],
+    "sight": 2,
+    "hotkey": "X",
+    "category": "military",
+    "description": "Sturdy stone wall. Drag to build a line.",
+    "art": {
+      "style": "stone_wall"
+    },
+    "armor": {
+      "melee": 8,
+      "pierce": 10
+    },
+    "classes": [
+      "building"
+    ],
+    "wall": true,
+    "line_build": true
+  },
+  "gate": {
+    "display_name": "Gate",
+    "age": 1,
+    "size": 1,
+    "max_hp": 2000,
+    "build_time": 15,
+    "cost": {
+      "stone": 30
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [],
+    "sight": 3,
+    "hotkey": "G",
+    "category": "military",
+    "description": "Wall gate: opens for your units, stays shut to everyone else.",
+    "art": {
+      "style": "gate"
+    },
+    "armor": {
+      "melee": 6,
+      "pierce": 8
+    },
+    "classes": [
+      "building"
+    ],
+    "wall": true,
+    "gate": true
+  },
+  "wonder": {
+    "display_name": "Wonder",
+    "age": 3,
+    "size": 5,
+    "max_hp": 4800,
+    "build_time": 300,
+    "cost": {
+      "wood": 1000,
+      "stone": 1000,
+      "gold": 1000
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [],
+    "sight": 8,
+    "hotkey": "Q",
+    "category": "economy",
+    "description": "Monument of your civilisation. Keep it standing long enough to win the game.",
+    "art": {
+      "style": "wonder"
+    },
+    "armor": {
+      "melee": 1,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ],
+    "wonder": true
+  },
+  "dock": {
+    "display_name": "Dock",
+    "age": 0,
+    "size": 3,
+    "max_hp": 1800,
+    "build_time": 35,
+    "cost": {
+      "wood": 150
+    },
+    "population": 0,
+    "drop_off": [],
+    "ship_drop_off": [
+      "food"
+    ],
+    "trains": [
+      "fishing_ship",
+      "transport_ship",
+      "war_galley",
+      "fire_ship",
+      "demolition_ship",
+      "cannon_galleon",
+      "ironclad"
+    ],
+    "sight": 6,
+    "hotkey": "H",
+    "category": "economy",
+    "description": "Built on water by the shore. Builds ships and receives fish.",
+    "art": {
+      "style": "dock"
+    },
+    "armor": {
+      "melee": 0,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ],
+    "placement": "shore",
+    "researches": [
+      "careening",
+      "dry_dock"
+    ]
+  },
+  "foundry": {
+    "display_name": "Artillery Foundry",
+    "age": 4,
+    "size": 3,
+    "max_hp": 2000,
+    "build_time": 60,
+    "cost": {
+      "wood": 250,
+      "stone": 100
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [
+      "field_cannon",
+      "mortar"
+    ],
+    "sight": 5,
+    "hotkey": "F",
+    "category": "military",
+    "description": "Casts field cannons and mortars.",
+    "art": {
+      "style": "foundry"
+    },
+    "armor": {
+      "melee": 1,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ],
+    "researches": [
+      "standardized_artillery"
+    ]
+  },
+  "airfield": {
+    "display_name": "Airfield",
+    "age": 5,
+    "size": 4,
+    "max_hp": 2400,
+    "build_time": 80,
+    "cost": {
+      "wood": 300,
+      "stone": 200,
+      "gold": 100
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [
+      "biplane_fighter",
+      "biplane_bomber",
+      "observation_balloon"
+    ],
+    "sight": 5,
+    "hotkey": "J",
+    "category": "military",
+    "description": "Builds aircraft and rearms them.",
+    "art": {
+      "style": "airfield"
+    },
+    "armor": {
+      "melee": 1,
+      "pierce": 6
+    },
+    "classes": [
+      "building"
+    ],
+    "researches": [
+      "aerodynamics"
+    ],
+    "rearms_air": true
+  },
+  "flak_fort": {
+    "display_name": "Flak Fort",
+    "age": 5,
+    "size": 2,
+    "max_hp": 2500,
+    "build_time": 60,
+    "cost": {
+      "stone": 150,
+      "gold": 150
+    },
+    "population": 0,
+    "drop_off": [],
+    "trains": [],
+    "sight": 10,
+    "hotkey": "K",
+    "category": "military",
+    "description": "Anti-aircraft emplacement: rapid fire against aircraft only.",
+    "art": {
+      "style": "flak_fort"
+    },
+    "armor": {
+      "melee": 3,
+      "pierce": 10
+    },
+    "classes": [
+      "building"
+    ],
+    "attack": {
+      "damage": 12,
+      "range": 9,
+      "cooldown": 0.8,
+      "arrows": 2,
+      "projectile": "flak",
+      "type": "pierce",
+      "bonuses": {
+        "air": 10
+      },
+      "targets": [
+        "air"
+      ]
+    }
+  }
+}

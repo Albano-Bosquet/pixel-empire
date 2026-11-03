@@ -1,0 +1,1581 @@
+{
+  "directions": 9,
+  "units": {
+    "villager": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        10,
+        20,
+        24
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "chop": {
+          "frames": 10,
+          "fps": 15.0
+        },
+        "mine": {
+          "frames": 10,
+          "fps": 13.33
+        },
+        "forage": {
+          "frames": 10,
+          "fps": 11.67
+        },
+        "build": {
+          "frames": 10,
+          "fps": 20.0
+        },
+        "carry_wood": {
+          "frames": 12,
+          "fps": 16.5
+        },
+        "carry_food": {
+          "frames": 12,
+          "fps": 16.5
+        },
+        "carry_gold": {
+          "frames": 12,
+          "fps": 16.5
+        },
+        "carry_stone": {
+          "frames": 12,
+          "fps": 16.5
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "swordsman": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "spearman": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "archer": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 11.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "scout": {
+      "frame_size": [
+        64,
+        64
+      ],
+      "anchor": [
+        32,
+        56
+      ],
+      "portrait_rect": [
+        16,
+        10,
+        32,
+        34
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 21.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "knight": {
+      "frame_size": [
+        64,
+        64
+      ],
+      "anchor": [
+        32,
+        56
+      ],
+      "portrait_rect": [
+        16,
+        10,
+        32,
+        34
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 21.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "catapult": {
+      "frame_size": [
+        72,
+        64
+      ],
+      "anchor": [
+        36,
+        54
+      ],
+      "portrait_rect": [
+        12,
+        12,
+        48,
+        40
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 1,
+          "fps": 1.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 16.0
+        },
+        "attack": {
+          "frames": 12,
+          "fps": 12.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "militia": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "pikeman": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "greatsword": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "skirmisher": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 12.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "crossbowman": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 11.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "hand_cannoneer": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 7.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "cavalry_archer": {
+      "frame_size": [
+        64,
+        64
+      ],
+      "anchor": [
+        32,
+        56
+      ],
+      "portrait_rect": [
+        16,
+        10,
+        32,
+        34
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 21.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 11.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "light_cavalry": {
+      "frame_size": [
+        64,
+        64
+      ],
+      "anchor": [
+        32,
+        56
+      ],
+      "portrait_rect": [
+        16,
+        10,
+        32,
+        34
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 21.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "cavalier": {
+      "frame_size": [
+        64,
+        64
+      ],
+      "anchor": [
+        32,
+        56
+      ],
+      "portrait_rect": [
+        16,
+        10,
+        32,
+        34
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 21.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "camel_rider": {
+      "frame_size": [
+        64,
+        64
+      ],
+      "anchor": [
+        32,
+        56
+      ],
+      "portrait_rect": [
+        16,
+        10,
+        32,
+        34
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 21.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "battering_ram": {
+      "frame_size": [
+        80,
+        64
+      ],
+      "anchor": [
+        40,
+        54
+      ],
+      "portrait_rect": [
+        14,
+        10,
+        52,
+        44
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 1,
+          "fps": 1.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 16.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 6.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "mangonel": {
+      "frame_size": [
+        80,
+        72
+      ],
+      "anchor": [
+        40,
+        62
+      ],
+      "portrait_rect": [
+        14,
+        12,
+        52,
+        48
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 1,
+          "fps": 1.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 16.0
+        },
+        "attack": {
+          "frames": 12,
+          "fps": 12.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "scorpion": {
+      "frame_size": [
+        72,
+        64
+      ],
+      "anchor": [
+        36,
+        54
+      ],
+      "portrait_rect": [
+        12,
+        12,
+        48,
+        40
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 1,
+          "fps": 1.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 16.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 10.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "bombard_cannon": {
+      "frame_size": [
+        80,
+        64
+      ],
+      "anchor": [
+        40,
+        54
+      ],
+      "portrait_rect": [
+        12,
+        12,
+        56,
+        42
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 1,
+          "fps": 1.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 16.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "trebuchet": {
+      "frame_size": [
+        112,
+        128
+      ],
+      "anchor": [
+        56,
+        110
+      ],
+      "portrait_rect": [
+        22,
+        16,
+        68,
+        80
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 1,
+          "fps": 1.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 16.0
+        },
+        "attack": {
+          "frames": 14,
+          "fps": 7.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "petard": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 16.67
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "trade_cart": {
+      "frame_size": [
+        80,
+        64
+      ],
+      "anchor": [
+        40,
+        54
+      ],
+      "portrait_rect": [
+        14,
+        12,
+        52,
+        44
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 1,
+          "fps": 1.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 14.0
+        },
+        "attack": {
+          "frames": 1,
+          "fps": 1.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "monk": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 6.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "fishing_ship": {
+      "frame_size": [
+        80,
+        72
+      ],
+      "anchor": [
+        40,
+        58
+      ],
+      "portrait_rect": [
+        14,
+        10,
+        52,
+        52
+      ],
+      "shadow": "",
+      "ring": "ring_m",
+      "die_style": "sink",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 5.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 8.0
+        }
+      }
+    },
+    "transport_ship": {
+      "frame_size": [
+        96,
+        80
+      ],
+      "anchor": [
+        48,
+        64
+      ],
+      "portrait_rect": [
+        16,
+        10,
+        64,
+        60
+      ],
+      "shadow": "",
+      "ring": "ring_m",
+      "die_style": "sink",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 5.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 8.0
+        }
+      }
+    },
+    "war_galley": {
+      "frame_size": [
+        96,
+        88
+      ],
+      "anchor": [
+        48,
+        70
+      ],
+      "portrait_rect": [
+        16,
+        8,
+        64,
+        68
+      ],
+      "shadow": "",
+      "ring": "ring_m",
+      "die_style": "sink",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 5.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 8.0
+        }
+      }
+    },
+    "fire_ship": {
+      "frame_size": [
+        88,
+        80
+      ],
+      "anchor": [
+        44,
+        64
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        60,
+        62
+      ],
+      "shadow": "",
+      "ring": "ring_m",
+      "die_style": "sink",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 5.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 14.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 8.0
+        }
+      }
+    },
+    "demolition_ship": {
+      "frame_size": [
+        72,
+        64
+      ],
+      "anchor": [
+        36,
+        50
+      ],
+      "portrait_rect": [
+        10,
+        8,
+        52,
+        50
+      ],
+      "shadow": "",
+      "ring": "ring_m",
+      "die_style": "sink",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 5.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 8.0
+        }
+      }
+    },
+    "cannon_galleon": {
+      "frame_size": [
+        104,
+        96
+      ],
+      "anchor": [
+        52,
+        76
+      ],
+      "portrait_rect": [
+        18,
+        8,
+        68,
+        76
+      ],
+      "shadow": "",
+      "ring": "ring_m",
+      "die_style": "sink",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 5.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 8.0
+        }
+      }
+    },
+    "blunderbussier": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "musketeer": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "grenadier": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "rifleman": {
+      "frame_size": [
+        48,
+        48
+      ],
+      "anchor": [
+        24,
+        44
+      ],
+      "portrait_rect": [
+        14,
+        8,
+        20,
+        26
+      ],
+      "shadow": "shadow_s",
+      "ring": "ring_s",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "dragoon": {
+      "frame_size": [
+        64,
+        64
+      ],
+      "anchor": [
+        32,
+        56
+      ],
+      "portrait_rect": [
+        16,
+        10,
+        32,
+        34
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "walk": {
+          "frames": 12,
+          "fps": 21.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 9.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "field_cannon": {
+      "frame_size": [
+        80,
+        64
+      ],
+      "anchor": [
+        40,
+        54
+      ],
+      "portrait_rect": [
+        12,
+        12,
+        56,
+        42
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 1,
+          "fps": 1.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 16.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "mortar": {
+      "frame_size": [
+        72,
+        64
+      ],
+      "anchor": [
+        36,
+        54
+      ],
+      "portrait_rect": [
+        12,
+        14,
+        48,
+        40
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "animations": {
+        "idle": {
+          "frames": 1,
+          "fps": 1.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 16.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 13.33
+        }
+      }
+    },
+    "biplane_fighter": {
+      "frame_size": [
+        72,
+        56
+      ],
+      "anchor": [
+        36,
+        30
+      ],
+      "portrait_rect": [
+        10,
+        8,
+        52,
+        40
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "die_style": "crash",
+      "animations": {
+        "idle": {
+          "frames": 6,
+          "fps": 18.0
+        },
+        "walk": {
+          "frames": 6,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 6,
+          "fps": 18.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 10.0
+        }
+      }
+    },
+    "biplane_bomber": {
+      "frame_size": [
+        96,
+        72
+      ],
+      "anchor": [
+        48,
+        38
+      ],
+      "portrait_rect": [
+        14,
+        10,
+        68,
+        52
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "die_style": "crash",
+      "animations": {
+        "idle": {
+          "frames": 6,
+          "fps": 18.0
+        },
+        "walk": {
+          "frames": 6,
+          "fps": 18.0
+        },
+        "attack": {
+          "frames": 6,
+          "fps": 18.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 10.0
+        }
+      }
+    },
+    "observation_balloon": {
+      "frame_size": [
+        64,
+        88
+      ],
+      "anchor": [
+        32,
+        66
+      ],
+      "portrait_rect": [
+        12,
+        4,
+        40,
+        56
+      ],
+      "shadow": "shadow_m",
+      "ring": "ring_m",
+      "die_style": "crash",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 3.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 3.0
+        },
+        "attack": {
+          "frames": 6,
+          "fps": 18.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 10.0
+        }
+      }
+    },
+    "ironclad": {
+      "frame_size": [
+        104,
+        96
+      ],
+      "anchor": [
+        52,
+        76
+      ],
+      "portrait_rect": [
+        18,
+        8,
+        68,
+        76
+      ],
+      "shadow": "",
+      "ring": "ring_m",
+      "die_style": "sink",
+      "animations": {
+        "idle": {
+          "frames": 8,
+          "fps": 5.0
+        },
+        "walk": {
+          "frames": 8,
+          "fps": 8.0
+        },
+        "attack": {
+          "frames": 10,
+          "fps": 8.0
+        },
+        "die": {
+          "frames": 10,
+          "fps": 8.0
+        }
+      }
+    }
+  },
+  "terrain": {
+    "tile_texture_size": 64,
+    "order": [
+      "deep_water",
+      "water",
+      "sand",
+      "grass",
+      "meadow",
+      "forest",
+      "dirt",
+      "path",
+      "rocky",
+      "mountain"
+    ]
+  },
+  "construction": {
+    "stages": 8,
+    "materials_until": 0.5,
+    "fade_start": 0.55,
+    "dust_seconds": 0.35,
+    "stage_puff_particles": 14
+  }
+}

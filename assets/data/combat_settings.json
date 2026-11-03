@@ -1,0 +1,66 @@
+{
+  "scan_interval": 0.4,
+  "leash_extra": 4.0,
+  "guard_return_distance": 1.5,
+  "corpse_seconds": 6.0,
+  "rubble_seconds": 20.0,
+  "projectile_speeds": {
+    "arrow": 9.0,
+    "rock": 5.5,
+    "bolt": 12.0,
+    "javelin": 8.0,
+    "bullet": 20.0,
+    "ballista_bolt": 13.0,
+    "cannonball": 11.0,
+    "boulder": 5.0,
+    "fire": 7.0,
+    "shot": 14.0,
+    "grenade": 6.5,
+    "mortar_shell": 5.0,
+    "bomb": 4.0,
+    "flak": 16.0
+  },
+  "arc_height_px": {
+    "arrow": 10,
+    "rock": 38,
+    "bolt": 4,
+    "javelin": 14,
+    "bullet": 1,
+    "ballista_bolt": 3,
+    "cannonball": 12,
+    "boulder": 70,
+    "fire": 2,
+    "shot": 2,
+    "grenade": 22,
+    "mortar_shell": 80,
+    "bomb": 0,
+    "flak": 2
+  },
+  "melee_hit_delay": 0.35,
+  "retaliate": true,
+  "damaged_bar_seconds": 3.0,
+  "burn_below_hp_fraction": 0.5,
+  "fog_update_hz": 8,
+  "line_hit_width": 0.35,
+  "line_overshoot": 2.0,
+  "melee_building_reach_extra": 0.3,
+  "monk": {
+    "heal_interval": 1.0,
+    "convert_base_seconds": 4.0,
+    "convert_seconds_per_hp": 0.03,
+    "convert_max_seconds": 9.0,
+    "convert_recharge": 20.0
+  },
+  "naval": {
+    "board_reach": 1.9,
+    "unload_reach": 2.6,
+    "unload_goal_slack": 6.0,
+    "landing_search_radius": 40,
+    "landing_arrive_radius": 1.5
+  },
+  "air": {
+    "rearm_reach": 1.6,
+    "loiter_radius": 1.1,
+    "loiter_step": 0.9
+  }
+}

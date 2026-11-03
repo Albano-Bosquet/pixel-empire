@@ -1,0 +1,10 @@
+{
+  "port": 24680,
+  "discovery_port": 24681,
+  "discovery_interval": 1.0,
+  "max_players": 4,
+  "snapshot_hz": 15,
+  "interp_seconds": 0.08,
+  "connect_timeout": 8.0,
+  "game_tag": "PixelEmpire1"
+}

@@ -1,0 +1,1503 @@
+{
+  "villager": {
+    "display_name": "Villager",
+    "max_hp": 25,
+    "speed": 1.6,
+    "sight": 4,
+    "radius": 0.22,
+    "attack_damage": 3,
+    "attack_range": 0.0,
+    "attack_cooldown": 2.0,
+    "train_time": 25,
+    "cost": {
+      "food": 50
+    },
+    "sprite": "villager",
+    "portrait_icon": "villager",
+    "worker": true,
+    "hotkey": "Q",
+    "trained_at": "town_center",
+    "description": "Gathers resources, builds and repairs.",
+    "classes": [
+      "infantry",
+      "villager"
+    ],
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 0
+    },
+    "bonuses": {},
+    "age": 0,
+    "auto_attack": false
+  },
+  "scout": {
+    "display_name": "Scout Cavalry",
+    "max_hp": 45,
+    "speed": 2.3,
+    "sight": 8,
+    "radius": 0.34,
+    "attack_damage": 3,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 2
+    },
+    "bonuses": {},
+    "classes": [
+      "cavalry"
+    ],
+    "train_time": 30,
+    "cost": {
+      "food": 80
+    },
+    "age": 0,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "scout",
+    "hotkey": "R",
+    "trained_at": "stable",
+    "description": "Fast explorer with long sight. Weak in combat."
+  },
+  "swordsman": {
+    "display_name": "Swordsman",
+    "max_hp": 60,
+    "speed": 1.0,
+    "sight": 5,
+    "radius": 0.24,
+    "attack_damage": 9,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 1,
+      "pierce": 1
+    },
+    "bonuses": {},
+    "classes": [
+      "infantry"
+    ],
+    "train_time": 21,
+    "cost": {
+      "food": 60,
+      "gold": 20
+    },
+    "age": 0,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "swordsman",
+    "hotkey": "Q",
+    "trained_at": "barracks",
+    "description": "Sturdy all-round infantry."
+  },
+  "spearman": {
+    "display_name": "Spearman",
+    "max_hp": 45,
+    "speed": 1.0,
+    "sight": 5,
+    "radius": 0.24,
+    "attack_damage": 3,
+    "attack_range": 0.4,
+    "min_range": 0.0,
+    "attack_cooldown": 3.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 0
+    },
+    "bonuses": {
+      "cavalry": 15
+    },
+    "classes": [
+      "infantry",
+      "spear"
+    ],
+    "train_time": 22,
+    "cost": {
+      "food": 35,
+      "wood": 25
+    },
+    "age": 1,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "spearman",
+    "hotkey": "F",
+    "trained_at": "barracks",
+    "description": "Cheap anti-cavalry infantry (+15 vs cavalry)."
+  },
+  "archer": {
+    "display_name": "Archer",
+    "max_hp": 30,
+    "speed": 0.96,
+    "sight": 6,
+    "radius": 0.24,
+    "attack_damage": 4,
+    "attack_range": 4.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 0,
+      "pierce": 0
+    },
+    "bonuses": {
+      "spear": 3
+    },
+    "classes": [
+      "archer"
+    ],
+    "train_time": 35,
+    "cost": {
+      "wood": 25,
+      "gold": 45
+    },
+    "age": 1,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "archer",
+    "hotkey": "Q",
+    "trained_at": "archery_range",
+    "projectile": "arrow",
+    "description": "Ranged unit, strong against infantry at a distance."
+  },
+  "knight": {
+    "display_name": "Knight",
+    "max_hp": 100,
+    "speed": 1.35,
+    "sight": 5,
+    "radius": 0.34,
+    "attack_damage": 10,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 1.8,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 2,
+      "pierce": 2
+    },
+    "bonuses": {},
+    "classes": [
+      "cavalry"
+    ],
+    "train_time": 30,
+    "cost": {
+      "food": 60,
+      "gold": 75
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "sprite": "knight",
+    "hotkey": "F",
+    "trained_at": "stable",
+    "description": "Fast, powerful heavy cavalry."
+  },
+  "catapult": {
+    "display_name": "Catapult",
+    "max_hp": 60,
+    "speed": 0.6,
+    "sight": 7,
+    "radius": 0.4,
+    "attack_damage": 40,
+    "attack_range": 7.0,
+    "min_range": 3.0,
+    "attack_cooldown": 6.0,
+    "attack_type": "siege",
+    "armor": {
+      "melee": 0,
+      "pierce": 6
+    },
+    "bonuses": {
+      "building": 60
+    },
+    "classes": [
+      "siege"
+    ],
+    "train_time": 46,
+    "cost": {
+      "wood": 160,
+      "gold": 135
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "area_radius": 1.0,
+    "sprite": "catapult",
+    "hotkey": "Q",
+    "trained_at": "castle",
+    "projectile": "rock",
+    "description": "Siege engine: area damage, devastating against buildings."
+  },
+  "militia": {
+    "display_name": "Militia",
+    "max_hp": 40,
+    "speed": 1.0,
+    "sight": 4,
+    "radius": 0.24,
+    "attack_damage": 5,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 1
+    },
+    "bonuses": {},
+    "classes": [
+      "infantry"
+    ],
+    "train_time": 18,
+    "cost": {
+      "food": 50,
+      "gold": 15
+    },
+    "age": 0,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "Z",
+    "trained_at": "barracks",
+    "description": "Cheap, lightly armed infantry for the early game.",
+    "sprite": "militia"
+  },
+  "pikeman": {
+    "display_name": "Pikeman",
+    "max_hp": 55,
+    "speed": 1.0,
+    "sight": 5,
+    "radius": 0.24,
+    "attack_damage": 4,
+    "attack_range": 0.5,
+    "min_range": 0.0,
+    "attack_cooldown": 3.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 0
+    },
+    "bonuses": {
+      "cavalry": 22,
+      "camel": 8
+    },
+    "classes": [
+      "infantry",
+      "spear"
+    ],
+    "train_time": 22,
+    "cost": {
+      "food": 35,
+      "wood": 25
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "X",
+    "trained_at": "barracks",
+    "description": "Long-pike infantry that breaks cavalry charges (+22 vs cavalry).",
+    "sprite": "pikeman"
+  },
+  "greatsword": {
+    "display_name": "Greatswordsman",
+    "max_hp": 70,
+    "speed": 1.0,
+    "sight": 5,
+    "radius": 0.25,
+    "attack_damage": 12,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 1,
+      "pierce": 1
+    },
+    "bonuses": {
+      "building": 3
+    },
+    "classes": [
+      "infantry"
+    ],
+    "train_time": 21,
+    "cost": {
+      "food": 70,
+      "gold": 25
+    },
+    "age": 3,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "C",
+    "trained_at": "barracks",
+    "description": "Elite two-handed swordsman: heavy blows against infantry and buildings.",
+    "sprite": "greatsword"
+  },
+  "skirmisher": {
+    "display_name": "Skirmisher",
+    "max_hp": 30,
+    "speed": 1.0,
+    "sight": 6,
+    "radius": 0.24,
+    "attack_damage": 2,
+    "attack_range": 4.0,
+    "min_range": 0.0,
+    "attack_cooldown": 3.0,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 0,
+      "pierce": 3
+    },
+    "bonuses": {
+      "archer": 4,
+      "spear": 1
+    },
+    "classes": [
+      "archer"
+    ],
+    "train_time": 22,
+    "cost": {
+      "food": 25,
+      "wood": 35
+    },
+    "age": 1,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "Z",
+    "trained_at": "archery_range",
+    "description": "Cheap javelin thrower with heavy shields; counters archers.",
+    "projectile": "javelin",
+    "sprite": "skirmisher"
+  },
+  "crossbowman": {
+    "display_name": "Crossbowman",
+    "max_hp": 35,
+    "speed": 0.96,
+    "sight": 7,
+    "radius": 0.24,
+    "attack_damage": 5,
+    "attack_range": 5.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 0,
+      "pierce": 0
+    },
+    "bonuses": {
+      "spear": 3
+    },
+    "classes": [
+      "archer"
+    ],
+    "train_time": 27,
+    "cost": {
+      "wood": 25,
+      "gold": 45
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "E",
+    "trained_at": "archery_range",
+    "description": "Ranged infantry with a powerful, long-range crossbow.",
+    "projectile": "bolt",
+    "sprite": "crossbowman"
+  },
+  "cavalry_archer": {
+    "display_name": "Cavalry Archer",
+    "max_hp": 50,
+    "speed": 1.4,
+    "sight": 6,
+    "radius": 0.34,
+    "attack_damage": 6,
+    "attack_range": 4.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 0,
+      "pierce": 0
+    },
+    "bonuses": {
+      "spear": 2
+    },
+    "classes": [
+      "archer",
+      "cavalry"
+    ],
+    "train_time": 34,
+    "cost": {
+      "wood": 40,
+      "gold": 70
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "R",
+    "trained_at": "archery_range",
+    "description": "Mounted bowman: fast hit-and-run ranged attacks.",
+    "projectile": "arrow",
+    "sprite": "cavalry_archer"
+  },
+  "hand_cannoneer": {
+    "display_name": "Hand Cannoneer",
+    "max_hp": 35,
+    "speed": 0.96,
+    "sight": 7,
+    "radius": 0.24,
+    "attack_damage": 17,
+    "attack_range": 6.0,
+    "min_range": 0.0,
+    "attack_cooldown": 3.5,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 1,
+      "pierce": 0
+    },
+    "bonuses": {
+      "infantry": 10
+    },
+    "classes": [
+      "archer",
+      "gunpowder"
+    ],
+    "train_time": 34,
+    "cost": {
+      "food": 45,
+      "gold": 50
+    },
+    "age": 3,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "T",
+    "trained_at": "archery_range",
+    "description": "Early firearm: slow but devastating against infantry.",
+    "projectile": "bullet",
+    "sprite": "hand_cannoneer"
+  },
+  "light_cavalry": {
+    "display_name": "Light Cavalry",
+    "max_hp": 60,
+    "speed": 2.2,
+    "sight": 8,
+    "radius": 0.34,
+    "attack_damage": 7,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 2
+    },
+    "bonuses": {},
+    "classes": [
+      "cavalry"
+    ],
+    "train_time": 30,
+    "cost": {
+      "food": 80
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "E",
+    "trained_at": "stable",
+    "description": "Cheap, fast raider. Good for scouting and hunting archers.",
+    "sprite": "light_cavalry"
+  },
+  "cavalier": {
+    "display_name": "Cavalier",
+    "max_hp": 120,
+    "speed": 1.35,
+    "sight": 5,
+    "radius": 0.34,
+    "attack_damage": 12,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 1.8,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 2,
+      "pierce": 3
+    },
+    "bonuses": {},
+    "classes": [
+      "cavalry"
+    ],
+    "train_time": 30,
+    "cost": {
+      "food": 60,
+      "gold": 75
+    },
+    "age": 3,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "C",
+    "trained_at": "stable",
+    "description": "Elite heavy cavalry clad in plate.",
+    "sprite": "cavalier"
+  },
+  "camel_rider": {
+    "display_name": "Camel Rider",
+    "max_hp": 100,
+    "speed": 1.45,
+    "sight": 5,
+    "radius": 0.34,
+    "attack_damage": 6,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 0
+    },
+    "bonuses": {
+      "cavalry": 9
+    },
+    "classes": [
+      "cavalry",
+      "camel"
+    ],
+    "train_time": 22,
+    "cost": {
+      "food": 55,
+      "gold": 60
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "Z",
+    "trained_at": "stable",
+    "description": "Camel-mounted lancer; horses fear camels (+9 vs cavalry).",
+    "sprite": "camel_rider"
+  },
+  "battering_ram": {
+    "display_name": "Battering Ram",
+    "max_hp": 175,
+    "speed": 0.55,
+    "sight": 3,
+    "radius": 0.42,
+    "attack_damage": 2,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 4.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": -3,
+      "pierce": 180
+    },
+    "bonuses": {
+      "building": 125,
+      "siege": 40
+    },
+    "classes": [
+      "siege",
+      "ram"
+    ],
+    "train_time": 36,
+    "cost": {
+      "wood": 160,
+      "gold": 75
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "Q",
+    "trained_at": "siege_workshop",
+    "description": "Armoured ram: smashes buildings, immune to arrows, helpless against units.",
+    "attack_targets": [
+      "building",
+      "siege"
+    ],
+    "sprite": "battering_ram"
+  },
+  "mangonel": {
+    "display_name": "Mangonel",
+    "max_hp": 50,
+    "speed": 0.6,
+    "sight": 7,
+    "radius": 0.4,
+    "attack_damage": 40,
+    "attack_range": 7.0,
+    "min_range": 3.0,
+    "attack_cooldown": 6.0,
+    "attack_type": "siege",
+    "armor": {
+      "melee": 0,
+      "pierce": 6
+    },
+    "bonuses": {
+      "building": 35
+    },
+    "classes": [
+      "siege"
+    ],
+    "train_time": 46,
+    "cost": {
+      "wood": 160,
+      "gold": 135
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "Z",
+    "trained_at": "siege_workshop",
+    "description": "Throws rocks that hurt everything in the impact area. Cannot fire up close.",
+    "projectile": "rock",
+    "area_radius": 1.0,
+    "sprite": "mangonel"
+  },
+  "scorpion": {
+    "display_name": "Scorpion",
+    "max_hp": 40,
+    "speed": 0.65,
+    "sight": 9,
+    "radius": 0.38,
+    "attack_damage": 12,
+    "attack_range": 7.0,
+    "min_range": 1.0,
+    "attack_cooldown": 3.6,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 0,
+      "pierce": 7
+    },
+    "bonuses": {
+      "infantry": 3,
+      "cavalry": 2
+    },
+    "classes": [
+      "siege"
+    ],
+    "train_time": 30,
+    "cost": {
+      "wood": 75,
+      "gold": 75
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "E",
+    "trained_at": "siege_workshop",
+    "description": "Giant crossbow: each bolt flies on and hits every enemy along its line.",
+    "projectile": "ballista_bolt",
+    "pierce_line": true,
+    "sprite": "scorpion"
+  },
+  "bombard_cannon": {
+    "display_name": "Bombard Cannon",
+    "max_hp": 80,
+    "speed": 0.6,
+    "sight": 12,
+    "radius": 0.42,
+    "attack_damage": 40,
+    "attack_range": 12.0,
+    "min_range": 3.0,
+    "attack_cooldown": 6.5,
+    "attack_type": "siege",
+    "armor": {
+      "melee": 2,
+      "pierce": 5
+    },
+    "bonuses": {
+      "building": 160,
+      "siege": 20
+    },
+    "classes": [
+      "siege",
+      "gunpowder"
+    ],
+    "train_time": 56,
+    "cost": {
+      "wood": 225,
+      "gold": 225
+    },
+    "age": 3,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "R",
+    "trained_at": "siege_workshop",
+    "description": "Gunpowder siege gun with huge range against buildings.",
+    "projectile": "cannonball",
+    "sprite": "bombard_cannon"
+  },
+  "trebuchet": {
+    "display_name": "Trebuchet",
+    "max_hp": 150,
+    "speed": 0.45,
+    "sight": 12,
+    "radius": 0.48,
+    "attack_damage": 200,
+    "attack_range": 13.0,
+    "min_range": 4.0,
+    "attack_cooldown": 10.0,
+    "attack_type": "siege",
+    "armor": {
+      "melee": 1,
+      "pierce": 150
+    },
+    "bonuses": {
+      "building": 250
+    },
+    "classes": [
+      "siege"
+    ],
+    "train_time": 50,
+    "cost": {
+      "wood": 200,
+      "gold": 200
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "T",
+    "trained_at": "castle",
+    "description": "Huge counterweight engine: out-ranges every tower and castle. Buildings only.",
+    "projectile": "boulder",
+    "attack_targets": [
+      "building"
+    ],
+    "sprite": "trebuchet"
+  },
+  "petard": {
+    "display_name": "Petard",
+    "max_hp": 50,
+    "speed": 1.05,
+    "sight": 4,
+    "radius": 0.24,
+    "attack_damage": 25,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 1.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 2
+    },
+    "bonuses": {
+      "building": 500,
+      "siege": 60
+    },
+    "classes": [
+      "infantry"
+    ],
+    "train_time": 25,
+    "cost": {
+      "food": 65,
+      "gold": 20
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "X",
+    "trained_at": "castle",
+    "description": "Sapper with a powder keg: blows itself up against walls and buildings.",
+    "attack_targets": [
+      "building",
+      "siege"
+    ],
+    "self_destruct": true,
+    "area_radius": 1.2,
+    "sprite": "petard"
+  },
+  "trade_cart": {
+    "display_name": "Trade Cart",
+    "max_hp": 70,
+    "speed": 1.4,
+    "sight": 5,
+    "radius": 0.36,
+    "attack_damage": 0,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 0
+    },
+    "bonuses": {},
+    "classes": [
+      "trade"
+    ],
+    "train_time": 50,
+    "cost": {
+      "wood": 100,
+      "gold": 50
+    },
+    "age": 1,
+    "auto_attack": false,
+    "worker": false,
+    "trade": true,
+    "sprite": "trade_cart",
+    "hotkey": "Q",
+    "trained_at": "market",
+    "description": "Right-click another of your markets: carries goods back and forth and earns gold (more for longer routes)."
+  },
+  "monk": {
+    "display_name": "Monk",
+    "max_hp": 30,
+    "speed": 0.8,
+    "sight": 11,
+    "radius": 0.24,
+    "attack_damage": 0,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 0
+    },
+    "bonuses": {},
+    "classes": [
+      "monk"
+    ],
+    "train_time": 51,
+    "cost": {
+      "gold": 100
+    },
+    "age": 2,
+    "auto_attack": false,
+    "worker": false,
+    "convert": true,
+    "convert_range": 6.0,
+    "heal_range": 4.0,
+    "heal_amount": 2,
+    "sprite": "monk",
+    "hotkey": "Q",
+    "trained_at": "monastery",
+    "description": "Heals nearby allies. Right-click an enemy unit to convert it to your side."
+  },
+  "fishing_ship": {
+    "display_name": "Fishing Ship",
+    "max_hp": 60,
+    "speed": 1.3,
+    "sight": 5,
+    "radius": 0.45,
+    "attack_damage": 0,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 4
+    },
+    "bonuses": {},
+    "classes": [
+      "ship"
+    ],
+    "train_time": 40,
+    "cost": {
+      "wood": 75
+    },
+    "age": 0,
+    "auto_attack": false,
+    "worker": true,
+    "naval": true,
+    "hotkey": "Q",
+    "trained_at": "dock",
+    "description": "Catches fish from shoals and brings it to a dock.",
+    "builds": false,
+    "sprite": "fishing_ship",
+    "gather_rate": 0.6
+  },
+  "transport_ship": {
+    "display_name": "Transport Ship",
+    "max_hp": 100,
+    "speed": 1.5,
+    "sight": 5,
+    "radius": 0.5,
+    "attack_damage": 0,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 6
+    },
+    "bonuses": {},
+    "classes": [
+      "ship"
+    ],
+    "train_time": 46,
+    "cost": {
+      "wood": 125
+    },
+    "age": 0,
+    "auto_attack": false,
+    "worker": false,
+    "naval": true,
+    "hotkey": "E",
+    "trained_at": "dock",
+    "description": "Carries up to 10 land units. Right-click it with units selected to board; right-click land to unload.",
+    "transport_capacity": 10,
+    "sprite": "transport_ship"
+  },
+  "war_galley": {
+    "display_name": "War Galley",
+    "max_hp": 120,
+    "speed": 1.55,
+    "sight": 7,
+    "radius": 0.5,
+    "attack_damage": 6,
+    "attack_range": 6.0,
+    "min_range": 0.0,
+    "attack_cooldown": 3.0,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 0,
+      "pierce": 6
+    },
+    "bonuses": {
+      "ship": 4,
+      "building": 4
+    },
+    "classes": [
+      "ship"
+    ],
+    "train_time": 36,
+    "cost": {
+      "wood": 90,
+      "gold": 30
+    },
+    "age": 1,
+    "auto_attack": true,
+    "worker": false,
+    "naval": true,
+    "hotkey": "R",
+    "trained_at": "dock",
+    "description": "Warship with archers on deck; good against other ships.",
+    "projectile": "arrow",
+    "sprite": "war_galley"
+  },
+  "fire_ship": {
+    "display_name": "Fire Ship",
+    "max_hp": 100,
+    "speed": 1.7,
+    "sight": 5,
+    "radius": 0.5,
+    "attack_damage": 2,
+    "attack_range": 2.0,
+    "min_range": 0.0,
+    "attack_cooldown": 0.25,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 0,
+      "pierce": 6
+    },
+    "bonuses": {
+      "ship": 2
+    },
+    "classes": [
+      "ship"
+    ],
+    "train_time": 36,
+    "cost": {
+      "wood": 75,
+      "gold": 45
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "naval": true,
+    "hotkey": "F",
+    "trained_at": "dock",
+    "description": "Sprays fire at close range; burns ships quickly.",
+    "projectile": "fire",
+    "sprite": "fire_ship"
+  },
+  "demolition_ship": {
+    "display_name": "Demolition Ship",
+    "max_hp": 60,
+    "speed": 1.8,
+    "sight": 6,
+    "radius": 0.45,
+    "attack_damage": 110,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 1.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 3
+    },
+    "bonuses": {
+      "ship": 60,
+      "building": 220
+    },
+    "classes": [
+      "ship"
+    ],
+    "train_time": 31,
+    "cost": {
+      "wood": 70,
+      "gold": 50
+    },
+    "age": 2,
+    "auto_attack": true,
+    "worker": false,
+    "naval": true,
+    "hotkey": "T",
+    "trained_at": "dock",
+    "description": "Floating powder keg: rams ships or docks and explodes.",
+    "attack_targets": [
+      "ship",
+      "building"
+    ],
+    "self_destruct": true,
+    "area_radius": 1.5,
+    "sprite": "demolition_ship"
+  },
+  "cannon_galleon": {
+    "display_name": "Cannon Galleon",
+    "max_hp": 120,
+    "speed": 1.1,
+    "sight": 13,
+    "radius": 0.55,
+    "attack_damage": 35,
+    "attack_range": 13.0,
+    "min_range": 3.0,
+    "attack_cooldown": 10.0,
+    "attack_type": "siege",
+    "armor": {
+      "melee": 0,
+      "pierce": 6
+    },
+    "bonuses": {
+      "building": 200,
+      "ship": 20
+    },
+    "classes": [
+      "ship"
+    ],
+    "train_time": 46,
+    "cost": {
+      "wood": 200,
+      "gold": 150
+    },
+    "age": 3,
+    "auto_attack": true,
+    "worker": false,
+    "naval": true,
+    "hotkey": "G",
+    "trained_at": "dock",
+    "description": "Heavy gunship that bombards buildings from far away.",
+    "projectile": "cannonball",
+    "sprite": "cannon_galleon"
+  },
+  "blunderbussier": {
+    "display_name": "Blunderbussier",
+    "max_hp": 55,
+    "speed": 1.0,
+    "sight": 5,
+    "radius": 0.24,
+    "attack_damage": 9,
+    "attack_range": 2.5,
+    "min_range": 0.0,
+    "attack_cooldown": 3.0,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 1,
+      "pierce": 2
+    },
+    "bonuses": {
+      "infantry": 4
+    },
+    "classes": [
+      "infantry",
+      "gunpowder"
+    ],
+    "train_time": 24,
+    "cost": {
+      "food": 50,
+      "gold": 40
+    },
+    "age": 4,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "V",
+    "trained_at": "barracks",
+    "description": "Short-range scattergun: every shot sprays the enemies in front.",
+    "projectile": "shot",
+    "area_radius": 0.7,
+    "sprite": "blunderbussier"
+  },
+  "musketeer": {
+    "display_name": "Musketeer",
+    "max_hp": 45,
+    "speed": 1.0,
+    "sight": 7,
+    "radius": 0.24,
+    "attack_damage": 12,
+    "attack_range": 6.0,
+    "min_range": 0.0,
+    "attack_cooldown": 3.5,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 0,
+      "pierce": 1
+    },
+    "bonuses": {
+      "cavalry": 4
+    },
+    "classes": [
+      "infantry",
+      "gunpowder"
+    ],
+    "train_time": 26,
+    "cost": {
+      "food": 50,
+      "gold": 45
+    },
+    "age": 4,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "B",
+    "trained_at": "barracks",
+    "description": "Line infantry with a long musket and bayonet.",
+    "projectile": "bullet",
+    "sprite": "musketeer"
+  },
+  "grenadier": {
+    "display_name": "Grenadier",
+    "max_hp": 50,
+    "speed": 1.0,
+    "sight": 6,
+    "radius": 0.24,
+    "attack_damage": 14,
+    "attack_range": 4.0,
+    "min_range": 0.0,
+    "attack_cooldown": 4.0,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 1,
+      "pierce": 1
+    },
+    "bonuses": {
+      "building": 20
+    },
+    "classes": [
+      "infantry",
+      "gunpowder"
+    ],
+    "train_time": 28,
+    "cost": {
+      "food": 60,
+      "gold": 55
+    },
+    "age": 4,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "N",
+    "trained_at": "barracks",
+    "description": "Throws hand grenades that burst over an area.",
+    "projectile": "grenade",
+    "area_radius": 1.0,
+    "sprite": "grenadier"
+  },
+  "rifleman": {
+    "display_name": "Rifleman",
+    "max_hp": 60,
+    "speed": 1.05,
+    "sight": 8,
+    "radius": 0.24,
+    "attack_damage": 16,
+    "attack_range": 8.0,
+    "min_range": 0.0,
+    "attack_cooldown": 3.0,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 1,
+      "pierce": 2
+    },
+    "bonuses": {
+      "cavalry": 4
+    },
+    "classes": [
+      "infantry",
+      "gunpowder"
+    ],
+    "train_time": 26,
+    "cost": {
+      "food": 60,
+      "gold": 60
+    },
+    "age": 5,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "M",
+    "trained_at": "barracks",
+    "description": "Industrial-age infantry with an accurate breech-loading rifle.",
+    "sprite": "rifleman"
+  },
+  "dragoon": {
+    "display_name": "Dragoon",
+    "max_hp": 90,
+    "speed": 1.6,
+    "sight": 6,
+    "radius": 0.34,
+    "attack_damage": 9,
+    "attack_range": 3.5,
+    "min_range": 0.0,
+    "attack_cooldown": 2.5,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 1,
+      "pierce": 2
+    },
+    "bonuses": {
+      "infantry": 2
+    },
+    "classes": [
+      "cavalry",
+      "gunpowder"
+    ],
+    "train_time": 30,
+    "cost": {
+      "food": 70,
+      "gold": 70
+    },
+    "age": 4,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "V",
+    "trained_at": "stable",
+    "description": "Mounted soldier firing a carbine from the saddle.",
+    "projectile": "bullet",
+    "sprite": "dragoon"
+  },
+  "field_cannon": {
+    "display_name": "Field Cannon",
+    "max_hp": 90,
+    "speed": 0.8,
+    "sight": 10,
+    "radius": 0.42,
+    "attack_damage": 30,
+    "attack_range": 10.0,
+    "min_range": 2.0,
+    "attack_cooldown": 6.0,
+    "attack_type": "siege",
+    "armor": {
+      "melee": 1,
+      "pierce": 6
+    },
+    "bonuses": {
+      "infantry": 10,
+      "building": 20
+    },
+    "classes": [
+      "siege",
+      "artillery"
+    ],
+    "train_time": 40,
+    "cost": {
+      "wood": 150,
+      "gold": 150
+    },
+    "age": 4,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "Q",
+    "trained_at": "foundry",
+    "description": "Mobile cannon: shells burst among enemy troops.",
+    "projectile": "cannonball",
+    "area_radius": 0.8,
+    "sprite": "field_cannon"
+  },
+  "mortar": {
+    "display_name": "Mortar",
+    "max_hp": 70,
+    "speed": 0.6,
+    "sight": 9,
+    "radius": 0.4,
+    "attack_damage": 50,
+    "attack_range": 13.0,
+    "min_range": 5.0,
+    "attack_cooldown": 9.0,
+    "attack_type": "siege",
+    "armor": {
+      "melee": 0,
+      "pierce": 6
+    },
+    "bonuses": {
+      "building": 80
+    },
+    "classes": [
+      "siege",
+      "artillery"
+    ],
+    "train_time": 46,
+    "cost": {
+      "wood": 175,
+      "gold": 175
+    },
+    "age": 4,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "E",
+    "trained_at": "foundry",
+    "description": "Lobs heavy shells over walls; devastating against buildings.",
+    "projectile": "mortar_shell",
+    "area_radius": 1.4,
+    "sprite": "mortar"
+  },
+  "biplane_fighter": {
+    "display_name": "Biplane Fighter",
+    "max_hp": 90,
+    "speed": 3.2,
+    "sight": 9,
+    "radius": 0.4,
+    "attack_damage": 7,
+    "attack_range": 3.0,
+    "min_range": 0.0,
+    "attack_cooldown": 0.6,
+    "attack_type": "pierce",
+    "armor": {
+      "melee": 0,
+      "pierce": 2
+    },
+    "bonuses": {
+      "air": 6
+    },
+    "classes": [
+      "air"
+    ],
+    "train_time": 40,
+    "cost": {
+      "wood": 150,
+      "gold": 150
+    },
+    "age": 5,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "Q",
+    "trained_at": "airfield",
+    "description": "Fast fighter with a machine gun. Out of ammunition it flies home to rearm.",
+    "air": true,
+    "altitude": 46.0,
+    "ammo": 30,
+    "rearm_seconds": 8.0,
+    "loiter": true,
+    "projectile": "bullet",
+    "sprite": "biplane_fighter"
+  },
+  "biplane_bomber": {
+    "display_name": "Biplane Bomber",
+    "max_hp": 150,
+    "speed": 2.4,
+    "sight": 8,
+    "radius": 0.5,
+    "attack_damage": 60,
+    "attack_range": 1.2,
+    "min_range": 0.0,
+    "attack_cooldown": 3.0,
+    "attack_type": "siege",
+    "armor": {
+      "melee": 0,
+      "pierce": 3
+    },
+    "bonuses": {
+      "building": 120
+    },
+    "classes": [
+      "air"
+    ],
+    "train_time": 50,
+    "cost": {
+      "wood": 220,
+      "gold": 220
+    },
+    "age": 5,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "E",
+    "trained_at": "airfield",
+    "description": "Drops bombs on buildings and troops below. Cannot fight other aircraft.",
+    "air": true,
+    "altitude": 52.0,
+    "ammo": 4,
+    "rearm_seconds": 12.0,
+    "loiter": true,
+    "ground_only": true,
+    "projectile": "bomb",
+    "area_radius": 1.6,
+    "sprite": "biplane_bomber"
+  },
+  "observation_balloon": {
+    "display_name": "Observation Balloon",
+    "max_hp": 120,
+    "speed": 0.7,
+    "sight": 15,
+    "radius": 0.5,
+    "attack_damage": 0,
+    "attack_range": 0.0,
+    "min_range": 0.0,
+    "attack_cooldown": 2.0,
+    "attack_type": "melee",
+    "armor": {
+      "melee": 0,
+      "pierce": 4
+    },
+    "bonuses": {},
+    "classes": [
+      "air"
+    ],
+    "train_time": 30,
+    "cost": {
+      "wood": 100,
+      "gold": 50
+    },
+    "age": 5,
+    "auto_attack": false,
+    "worker": false,
+    "hotkey": "R",
+    "trained_at": "airfield",
+    "description": "Tethered gas balloon that sees very far. Unarmed.",
+    "air": true,
+    "altitude": 64.0,
+    "sprite": "observation_balloon"
+  },
+  "ironclad": {
+    "display_name": "Ironclad",
+    "max_hp": 450,
+    "speed": 1.3,
+    "sight": 11,
+    "radius": 0.6,
+    "attack_damage": 40,
+    "attack_range": 10.0,
+    "min_range": 2.0,
+    "attack_cooldown": 5.0,
+    "attack_type": "siege",
+    "armor": {
+      "melee": 4,
+      "pierce": 12
+    },
+    "bonuses": {
+      "ship": 30,
+      "building": 60
+    },
+    "classes": [
+      "ship"
+    ],
+    "train_time": 60,
+    "cost": {
+      "wood": 200,
+      "gold": 250
+    },
+    "age": 5,
+    "auto_attack": true,
+    "worker": false,
+    "hotkey": "X",
+    "trained_at": "dock",
+    "description": "Steam-driven armoured warship with turret guns.",
+    "naval": true,
+    "projectile": "cannonball",
+    "sprite": "ironclad"
+  }
+}

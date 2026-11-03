@@ -1,0 +1,69 @@
+# CCGS project configuration — single source of truth for project settings.
+# See .claude/docs/effects-map.md for full schema.
+
+schema_version: 1
+
+framework:
+  version: 1.2.0
+  last_upgraded: 2026-10-19
+
+project:
+  stage: Concept
+
+# NOTE: this template ships with no `modes:` block, and the six knobs below must
+# never be added to one.
+#
+# `/start` DOES add `modes.rigor` and `modes.automation` here — that is its job,
+# and a `modes:` block containing those two is the expected state of a configured
+# project, not a mistake.
+#
+# What must stay absent is the six knobs `modes.rigor` FRONTS:
+# `modes.review_mode`, `modes.workflow`, `docs.density`, `qa.level`,
+# `modes.story_granularity` and `team.size`. Seeding any of them in this file
+# pins that value and shadows the rigor expansion, so the rigor `/start` infers
+# and saves would stop changing anything. `/start` states the same rule for the
+# settings it writes.
+#
+# Per-developer preferences belong in `project.local.yaml` (gitignored), not
+# here. `/settings --local <key>=<value>` writes there; `/settings <key>=<value>`
+# edits this file. See `.claude/docs/config-resolution.md` for the full
+# precedence order.
+
+modes:
+  rigor: minimal
+  automation: autonomous
+
+engine:
+  name: "Godot"
+  version: "4.7.2"
+  language: "GDScript"
+  rendering: "Forward+"
+  physics: "Godot Physics 2D"
+
+specialists:
+  code: "godot-gdscript-specialist"
+  shader: "godot-shader-specialist"
+  ui: "godot-specialist"
+  additional: ["godot-gdextension-specialist"]
+
+naming:
+  classes: PascalCase
+  variables: snake_case
+  constants: SCREAMING_SNAKE
+  signals: past_tense
+  files: snake_case
+  scenes: snake_case
+
+commands:
+  # Portable editor downloaded to tools/godot (gitignored).
+  run: "tools/godot/Godot_v4.7.2-stable_win64_console.exe --path ."
+  test: "tools/godot/Godot_v4.7.2-stable_win64_console.exe --headless --path . -s res://tests/run_tests.gd"
+  build: "[TO BE CONFIGURED]"
+
+platform:
+  targets: ["PC"]
+  input: "Keyboard/Mouse"
+
+performance:
+  target_fps: 60
+  max_units: 200

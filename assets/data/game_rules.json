@@ -1,0 +1,40 @@
+{
+  "victory_conditions": {
+    "conquest": {
+      "display_name": "Conquest",
+      "description": "Destroy every enemy unit and building (farms and houses excepted)."
+    },
+    "town_center": {
+      "display_name": "Regicide of the Town Center",
+      "description": "A player who loses all Town Centers is defeated."
+    }
+  },
+  "default_victory": "conquest",
+  "check_interval": 1.0,
+  "conquest_ignored_buildings": [
+    "farm",
+    "house",
+    "palisade_wall",
+    "stone_wall",
+    "gate",
+    "outpost"
+  ],
+  "map_sizes_menu": [
+    "tiny",
+    "small",
+    "medium",
+    "large",
+    "huge"
+  ],
+  "difficulties_menu": [
+    "easy",
+    "normal",
+    "hard"
+  ],
+  "wonder_victory_seconds": 300,
+  "map_types_menu": [
+    "continental",
+    "coast",
+    "islands"
+  ]
+}

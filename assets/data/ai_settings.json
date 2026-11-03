@@ -1,0 +1,166 @@
+{
+  "think_interval": 1.0,
+  "resource_split": {
+    "food": 0.48,
+    "wood": 0.36,
+    "gold": 0.11,
+    "stone": 0.05
+  },
+  "difficulties": {
+    "easy": {
+      "gather_multiplier": 0.75,
+      "villager_target": 14,
+      "army_attack_size": 3,
+      "first_attack_minute": 13,
+      "military_buildings": 1,
+      "age_up_villagers": [
+        20,
+        99,
+        99,
+        99,
+        99
+      ],
+      "reaction_radius": 10,
+      "max_army": 12,
+      "army_mix": {
+        "swordsman": 3,
+        "spearman": 1,
+        "archer": 1
+      },
+      "max_techs": 2,
+      "fishing_ships": 1,
+      "max_fleet": 1,
+      "fleet_mix": {
+        "war_galley": 1
+      }
+    },
+    "normal": {
+      "gather_multiplier": 1.0,
+      "villager_target": 22,
+      "army_attack_size": 4,
+      "first_attack_minute": 10,
+      "military_buildings": 2,
+      "age_up_villagers": [
+        20,
+        26,
+        34,
+        99,
+        99
+      ],
+      "reaction_radius": 14,
+      "max_army": 25,
+      "army_mix": {
+        "swordsman": 2,
+        "spearman": 2,
+        "archer": 3,
+        "knight": 2,
+        "scout": 1,
+        "militia": 1,
+        "skirmisher": 1,
+        "crossbowman": 2,
+        "pikeman": 1,
+        "light_cavalry": 1,
+        "mangonel": 1,
+        "battering_ram": 1
+      },
+      "max_techs": 8,
+      "fishing_ships": 3,
+      "max_fleet": 4,
+      "fleet_mix": {
+        "war_galley": 3,
+        "fire_ship": 1
+      }
+    },
+    "hard": {
+      "gather_multiplier": 1.2,
+      "villager_target": 30,
+      "army_attack_size": 4,
+      "first_attack_minute": 8,
+      "military_buildings": 3,
+      "age_up_villagers": [
+        20,
+        26,
+        30,
+        36,
+        42
+      ],
+      "reaction_radius": 18,
+      "max_army": 40,
+      "army_mix": {
+        "militia": 1,
+        "swordsman": 2,
+        "spearman": 1,
+        "pikeman": 2,
+        "greatsword": 2,
+        "archer": 2,
+        "skirmisher": 1,
+        "crossbowman": 3,
+        "hand_cannoneer": 1,
+        "cavalry_archer": 1,
+        "knight": 2,
+        "cavalier": 2,
+        "camel_rider": 1,
+        "catapult": 1,
+        "battering_ram": 1,
+        "mangonel": 1,
+        "scorpion": 1,
+        "bombard_cannon": 1,
+        "trebuchet": 1,
+        "blunderbussier": 2,
+        "musketeer": 3,
+        "grenadier": 1,
+        "rifleman": 3,
+        "dragoon": 2,
+        "field_cannon": 1,
+        "mortar": 1,
+        "biplane_fighter": 2,
+        "biplane_bomber": 1
+      },
+      "max_techs": 99,
+      "fishing_ships": 5,
+      "max_fleet": 6,
+      "fleet_mix": {
+        "war_galley": 3,
+        "fire_ship": 2,
+        "demolition_ship": 1,
+        "cannon_galleon": 1,
+        "ironclad": 1
+      }
+    }
+  },
+  "tech_priority": [
+    "loom",
+    "wheelbarrow",
+    "double_bit_axe",
+    "horse_collar",
+    "gold_mining",
+    "forging",
+    "scale_mail",
+    "fletching",
+    "bloodlines",
+    "padded_archer",
+    "scale_barding",
+    "tracking",
+    "heavy_plow",
+    "bow_saw",
+    "hand_cart",
+    "iron_casting",
+    "chain_mail",
+    "bodkin_arrow",
+    "stone_mining",
+    "husbandry",
+    "squires",
+    "treadmill_crane",
+    "masonry"
+  ],
+  "siege_workshop_from_age": 2,
+  "dock_min_villagers": 10,
+  "dock_search_radius": 24,
+  "naval_boarding_timeout": 45.0,
+  "dock_min_villagers_islands": 6,
+  "modern_buildings": [
+    "foundry",
+    "airfield",
+    "flak_fort"
+  ]
+}

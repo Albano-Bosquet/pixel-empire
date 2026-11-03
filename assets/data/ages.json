@@ -1,0 +1,62 @@
+{
+  "feudal_age": {
+    "display_name": "Feudal Age",
+    "sets_age": 1,
+    "requires_age": 0,
+    "cost": {
+      "food": 500
+    },
+    "research_time": 130,
+    "hotkey": "R",
+    "description": "Unlocks spearmen, archery range, blacksmith and towers."
+  },
+  "castle_age": {
+    "display_name": "Castle Age",
+    "sets_age": 2,
+    "requires_age": 1,
+    "cost": {
+      "food": 800,
+      "gold": 200
+    },
+    "research_time": 160,
+    "hotkey": "R",
+    "description": "Unlocks knights, castles and catapults."
+  },
+  "imperial_age": {
+    "display_name": "Imperial Age",
+    "sets_age": 3,
+    "requires_age": 2,
+    "cost": {
+      "food": 1000,
+      "gold": 800
+    },
+    "research_time": 190,
+    "hotkey": "R",
+    "description": "Unlocks the last medieval units and the Wonder."
+  },
+  "gunpowder_age": {
+    "display_name": "Gunpowder Age",
+    "sets_age": 4,
+    "requires_age": 3,
+    "cost": {
+      "food": 1200,
+      "gold": 1000
+    },
+    "research_time": 200,
+    "hotkey": "R",
+    "description": "Muskets and cannon: blunderbussiers, musketeers, grenadiers, dragoons and the artillery foundry."
+  },
+  "industrial_age": {
+    "display_name": "Industrial Age",
+    "sets_age": 5,
+    "requires_age": 4,
+    "cost": {
+      "food": 1500,
+      "gold": 1500,
+      "stone": 300
+    },
+    "research_time": 220,
+    "hotkey": "R",
+    "description": "Riflemen, ironclads, the airfield with early aircraft, and flak forts."
+  }
+}

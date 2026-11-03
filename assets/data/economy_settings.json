@@ -1,0 +1,36 @@
+{
+  "max_population": 200,
+  "carry_capacity": 10,
+  "gather_rates": {
+    "wood": 0.42,
+    "food": 0.34,
+    "gold": 0.38,
+    "stone": 0.36
+  },
+  "gather_animations": {
+    "wood": "chop",
+    "food": "forage",
+    "gold": "mine",
+    "stone": "mine"
+  },
+  "work_reach": 0.75,
+  "search_radius": 10,
+  "builder_count_formula": "aoe",
+  "repair_rate_hp_per_second": 25,
+  "repair_cost_fraction": 0.5,
+  "train_queue_limit": 15,
+  "foundation_start_hp": 1,
+  "auto_reseed_farms": true,
+  "market": {
+    "lot": 100,
+    "start_price": 100,
+    "price_step": 3,
+    "min_price": 20,
+    "max_price": 300,
+    "commission": 0.3,
+    "trade_gold_per_tile_sq": 0.045,
+    "trade_min_distance": 8,
+    "trade_reach": 1.3
+  },
+  "wall_chain_radius": 4.0
+}

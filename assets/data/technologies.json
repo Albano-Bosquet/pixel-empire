@@ -1,0 +1,817 @@
+{
+  "loom": {
+    "display_name": "Loom",
+    "building": "town_center",
+    "age": 0,
+    "cost": {
+      "gold": 50
+    },
+    "research_time": 25,
+    "effects": [
+      {
+        "key": "hp_add:villager",
+        "op": "add",
+        "value": 15
+      },
+      {
+        "key": "armor_melee_add:villager",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "armor_pierce_add:villager",
+        "op": "add",
+        "value": 2
+      }
+    ],
+    "description": "Villagers +15 HP, +1/+2 armor.",
+    "hotkey": "L",
+    "icon": "hp"
+  },
+  "wheelbarrow": {
+    "display_name": "Wheelbarrow",
+    "building": "town_center",
+    "age": 1,
+    "cost": {
+      "food": 175,
+      "wood": 50
+    },
+    "research_time": 75,
+    "effects": [
+      {
+        "key": "carry_capacity",
+        "op": "mul",
+        "value": 1.25
+      },
+      {
+        "key": "speed:villager",
+        "op": "mul",
+        "value": 1.1
+      }
+    ],
+    "description": "Villagers carry 25% more and walk 10% faster.",
+    "hotkey": "B",
+    "icon": "carry"
+  },
+  "hand_cart": {
+    "display_name": "Hand Cart",
+    "building": "town_center",
+    "age": 2,
+    "cost": {
+      "food": 300,
+      "wood": 200
+    },
+    "research_time": 55,
+    "effects": [
+      {
+        "key": "carry_capacity",
+        "op": "mul",
+        "value": 1.4
+      },
+      {
+        "key": "speed:villager",
+        "op": "mul",
+        "value": 1.1
+      }
+    ],
+    "description": "Villagers carry 40% more and walk 10% faster.",
+    "hotkey": "H",
+    "icon": "carry",
+    "requires": [
+      "wheelbarrow"
+    ]
+  },
+  "treadmill_crane": {
+    "display_name": "Treadmill Crane",
+    "building": "town_center",
+    "age": 2,
+    "cost": {
+      "wood": 200,
+      "stone": 75
+    },
+    "research_time": 40,
+    "effects": [
+      {
+        "key": "build_speed",
+        "op": "mul",
+        "value": 1.2
+      }
+    ],
+    "description": "Villagers build 20% faster.",
+    "hotkey": "N",
+    "icon": "build"
+  },
+  "masonry": {
+    "display_name": "Masonry",
+    "building": "town_center",
+    "age": 2,
+    "cost": {
+      "wood": 175,
+      "stone": 150
+    },
+    "research_time": 50,
+    "effects": [
+      {
+        "key": "building_hp",
+        "op": "mul",
+        "value": 1.1
+      },
+      {
+        "key": "armor_melee_add:building",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "armor_pierce_add:building",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "description": "Buildings +10% HP and +1/+1 armor.",
+    "hotkey": "J",
+    "icon": "armor"
+  },
+  "horse_collar": {
+    "display_name": "Horse Collar",
+    "building": "mill",
+    "age": 1,
+    "cost": {
+      "food": 75,
+      "wood": 75
+    },
+    "research_time": 20,
+    "effects": [
+      {
+        "key": "farm_food_add",
+        "op": "add",
+        "value": 75
+      }
+    ],
+    "description": "Farms hold +75 food.",
+    "hotkey": "H",
+    "icon": "food"
+  },
+  "heavy_plow": {
+    "display_name": "Heavy Plow",
+    "building": "mill",
+    "age": 2,
+    "cost": {
+      "food": 125,
+      "wood": 125
+    },
+    "research_time": 40,
+    "effects": [
+      {
+        "key": "farm_food_add",
+        "op": "add",
+        "value": 125
+      },
+      {
+        "key": "gather_food",
+        "op": "mul",
+        "value": 1.1
+      }
+    ],
+    "description": "Farms hold +125 food; food gathering +10%.",
+    "hotkey": "P",
+    "icon": "food",
+    "requires": [
+      "horse_collar"
+    ]
+  },
+  "double_bit_axe": {
+    "display_name": "Double-Bit Axe",
+    "building": "storehouse",
+    "age": 1,
+    "cost": {
+      "food": 100,
+      "wood": 50
+    },
+    "research_time": 25,
+    "effects": [
+      {
+        "key": "gather_wood",
+        "op": "mul",
+        "value": 1.2
+      }
+    ],
+    "description": "Wood gathering +20%.",
+    "hotkey": "X",
+    "icon": "wood"
+  },
+  "bow_saw": {
+    "display_name": "Bow Saw",
+    "building": "storehouse",
+    "age": 2,
+    "cost": {
+      "food": 150,
+      "wood": 100
+    },
+    "research_time": 50,
+    "effects": [
+      {
+        "key": "gather_wood",
+        "op": "mul",
+        "value": 1.2
+      }
+    ],
+    "description": "Wood gathering +20%.",
+    "hotkey": "Z",
+    "icon": "wood",
+    "requires": [
+      "double_bit_axe"
+    ]
+  },
+  "gold_mining": {
+    "display_name": "Gold Mining",
+    "building": "storehouse",
+    "age": 1,
+    "cost": {
+      "food": 100,
+      "wood": 75
+    },
+    "research_time": 30,
+    "effects": [
+      {
+        "key": "gather_gold",
+        "op": "mul",
+        "value": 1.15
+      }
+    ],
+    "description": "Gold mining +15%.",
+    "hotkey": "O",
+    "icon": "gold"
+  },
+  "stone_mining": {
+    "display_name": "Stone Mining",
+    "building": "storehouse",
+    "age": 1,
+    "cost": {
+      "food": 100,
+      "wood": 75
+    },
+    "research_time": 30,
+    "effects": [
+      {
+        "key": "gather_stone",
+        "op": "mul",
+        "value": 1.15
+      }
+    ],
+    "description": "Stone mining +15%.",
+    "hotkey": "N",
+    "icon": "stone"
+  },
+  "forging": {
+    "display_name": "Forging",
+    "building": "blacksmith",
+    "age": 1,
+    "cost": {
+      "food": 150
+    },
+    "research_time": 50,
+    "effects": [
+      {
+        "key": "attack_add:infantry",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "attack_add:cavalry",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "description": "Infantry and cavalry +1 attack.",
+    "hotkey": "F",
+    "icon": "attack"
+  },
+  "iron_casting": {
+    "display_name": "Iron Casting",
+    "building": "blacksmith",
+    "age": 2,
+    "cost": {
+      "food": 220,
+      "gold": 120
+    },
+    "research_time": 75,
+    "effects": [
+      {
+        "key": "attack_add:infantry",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "attack_add:cavalry",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "description": "Infantry and cavalry +1 attack.",
+    "hotkey": "I",
+    "icon": "attack",
+    "requires": [
+      "forging"
+    ]
+  },
+  "fletching": {
+    "display_name": "Fletching",
+    "building": "blacksmith",
+    "age": 1,
+    "cost": {
+      "food": 100,
+      "gold": 50
+    },
+    "research_time": 30,
+    "effects": [
+      {
+        "key": "attack_add:archer",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "range_add:archer",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "attack_add:building",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "description": "Archers +1 attack and +1 range; towers and castles +1 attack.",
+    "hotkey": "L",
+    "icon": "arrow"
+  },
+  "bodkin_arrow": {
+    "display_name": "Bodkin Arrow",
+    "building": "blacksmith",
+    "age": 2,
+    "cost": {
+      "food": 200,
+      "gold": 100
+    },
+    "research_time": 35,
+    "effects": [
+      {
+        "key": "attack_add:archer",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "range_add:archer",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "attack_add:building",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "description": "Archers +1 attack and +1 range; towers and castles +1 attack.",
+    "hotkey": "B",
+    "icon": "arrow",
+    "requires": [
+      "fletching"
+    ]
+  },
+  "scale_mail": {
+    "display_name": "Scale Mail Armor",
+    "building": "blacksmith",
+    "age": 1,
+    "cost": {
+      "food": 100
+    },
+    "research_time": 40,
+    "effects": [
+      {
+        "key": "armor_melee_add:infantry",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "armor_pierce_add:infantry",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "description": "Infantry +1/+1 armor.",
+    "hotkey": "M",
+    "icon": "armor"
+  },
+  "chain_mail": {
+    "display_name": "Chain Mail Armor",
+    "building": "blacksmith",
+    "age": 2,
+    "cost": {
+      "food": 200,
+      "gold": 100
+    },
+    "research_time": 55,
+    "effects": [
+      {
+        "key": "armor_melee_add:infantry",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "armor_pierce_add:infantry",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "description": "Infantry +1/+1 armor.",
+    "hotkey": "C",
+    "icon": "armor",
+    "requires": [
+      "scale_mail"
+    ]
+  },
+  "scale_barding": {
+    "display_name": "Scale Barding",
+    "building": "blacksmith",
+    "age": 1,
+    "cost": {
+      "food": 150
+    },
+    "research_time": 45,
+    "effects": [
+      {
+        "key": "armor_melee_add:cavalry",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "armor_pierce_add:cavalry",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "description": "Cavalry +1/+1 armor.",
+    "hotkey": "R",
+    "icon": "armor"
+  },
+  "padded_archer": {
+    "display_name": "Padded Archer Armor",
+    "building": "blacksmith",
+    "age": 1,
+    "cost": {
+      "food": 100
+    },
+    "research_time": 40,
+    "effects": [
+      {
+        "key": "armor_melee_add:archer",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "armor_pierce_add:archer",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "description": "Archers +1/+1 armor.",
+    "hotkey": "P",
+    "icon": "armor"
+  },
+  "bloodlines": {
+    "display_name": "Bloodlines",
+    "building": "stable",
+    "age": 1,
+    "cost": {
+      "food": 150,
+      "gold": 100
+    },
+    "research_time": 50,
+    "effects": [
+      {
+        "key": "hp_add:cavalry",
+        "op": "add",
+        "value": 20
+      }
+    ],
+    "description": "Cavalry +20 HP.",
+    "hotkey": "B",
+    "icon": "hp"
+  },
+  "husbandry": {
+    "display_name": "Husbandry",
+    "building": "stable",
+    "age": 2,
+    "cost": {
+      "food": 150
+    },
+    "research_time": 40,
+    "effects": [
+      {
+        "key": "speed:cavalry",
+        "op": "mul",
+        "value": 1.1
+      }
+    ],
+    "description": "Cavalry move 10% faster.",
+    "hotkey": "U",
+    "icon": "speed"
+  },
+  "squires": {
+    "display_name": "Squires",
+    "building": "barracks",
+    "age": 2,
+    "cost": {
+      "food": 100
+    },
+    "research_time": 40,
+    "effects": [
+      {
+        "key": "speed:infantry",
+        "op": "mul",
+        "value": 1.1
+      }
+    ],
+    "description": "Infantry move 10% faster.",
+    "hotkey": "E",
+    "icon": "speed"
+  },
+  "tracking": {
+    "display_name": "Supplies",
+    "building": "barracks",
+    "age": 1,
+    "cost": {
+      "food": 100,
+      "gold": 50
+    },
+    "research_time": 35,
+    "effects": [
+      {
+        "key": "hp_add:infantry",
+        "op": "add",
+        "value": 10
+      }
+    ],
+    "description": "Infantry +10 HP.",
+    "hotkey": "U",
+    "icon": "hp"
+  },
+  "architecture": {
+    "display_name": "Architecture",
+    "building": "university",
+    "age": 2,
+    "cost": {
+      "food": 300,
+      "wood": 200
+    },
+    "research_time": 70,
+    "effects": [
+      {
+        "key": "building_hp",
+        "op": "mul",
+        "value": 1.1
+      },
+      {
+        "key": "armor_melee_add:building",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "armor_pierce_add:building",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "hotkey": "R",
+    "icon": "armor",
+    "description": "Buildings +10% HP and +1/+1 armor."
+  },
+  "heated_shot": {
+    "display_name": "Heated Shot",
+    "building": "university",
+    "age": 2,
+    "cost": {
+      "food": 350,
+      "gold": 100
+    },
+    "research_time": 30,
+    "effects": [
+      {
+        "key": "attack_add:building",
+        "op": "add",
+        "value": 2
+      }
+    ],
+    "hotkey": "H",
+    "icon": "arrow",
+    "description": "Towers, castles and town centers +2 attack."
+  },
+  "chemistry": {
+    "display_name": "Chemistry",
+    "building": "university",
+    "age": 3,
+    "cost": {
+      "food": 300,
+      "gold": 200
+    },
+    "research_time": 100,
+    "effects": [
+      {
+        "key": "attack_add:archer",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "attack_add:siege",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "hotkey": "C",
+    "icon": "attack",
+    "description": "Archers and siege engines +1 attack."
+  },
+  "siege_engineers": {
+    "display_name": "Siege Engineers",
+    "building": "university",
+    "age": 3,
+    "cost": {
+      "food": 500,
+      "wood": 600
+    },
+    "research_time": 45,
+    "effects": [
+      {
+        "key": "range_add:siege",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "attack_add:siege",
+        "op": "add",
+        "value": 2
+      }
+    ],
+    "hotkey": "G",
+    "icon": "attack",
+    "description": "Siege engines +1 range and +2 attack.",
+    "requires": [
+      "chemistry"
+    ]
+  },
+  "fervor": {
+    "display_name": "Fervor",
+    "building": "monastery",
+    "age": 2,
+    "cost": {
+      "gold": 140
+    },
+    "research_time": 50,
+    "effects": [
+      {
+        "key": "speed:monk",
+        "op": "mul",
+        "value": 1.15
+      }
+    ],
+    "hotkey": "F",
+    "icon": "speed",
+    "description": "Monks move 15% faster."
+  },
+  "sanctity": {
+    "display_name": "Sanctity",
+    "building": "monastery",
+    "age": 2,
+    "cost": {
+      "gold": 120
+    },
+    "research_time": 60,
+    "effects": [
+      {
+        "key": "hp_add:monk",
+        "op": "add",
+        "value": 15
+      }
+    ],
+    "hotkey": "E",
+    "icon": "hp",
+    "description": "Monks +15 HP."
+  },
+  "careening": {
+    "display_name": "Careening",
+    "building": "dock",
+    "age": 2,
+    "cost": {
+      "food": 250,
+      "gold": 150
+    },
+    "research_time": 60,
+    "effects": [
+      {
+        "key": "armor_pierce_add:ship",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "hotkey": "C",
+    "icon": "armor",
+    "description": "Ships +1 pierce armor."
+  },
+  "dry_dock": {
+    "display_name": "Dry Dock",
+    "building": "dock",
+    "age": 3,
+    "cost": {
+      "food": 600,
+      "gold": 400
+    },
+    "research_time": 60,
+    "effects": [
+      {
+        "key": "speed:ship",
+        "op": "mul",
+        "value": 1.15
+      }
+    ],
+    "hotkey": "Y",
+    "icon": "speed",
+    "description": "Ships move 15% faster.",
+    "requires": [
+      "careening"
+    ]
+  },
+  "rifling": {
+    "display_name": "Rifling",
+    "building": "blacksmith",
+    "age": 4,
+    "cost": {
+      "food": 400,
+      "gold": 300
+    },
+    "research_time": 60,
+    "effects": [
+      {
+        "key": "attack_add:gunpowder",
+        "op": "add",
+        "value": 2
+      },
+      {
+        "key": "range_add:gunpowder",
+        "op": "add",
+        "value": 1
+      }
+    ],
+    "hotkey": "G",
+    "icon": "arrow",
+    "description": "Gunpowder units +2 attack and +1 range."
+  },
+  "standardized_artillery": {
+    "display_name": "Standardized Artillery",
+    "building": "foundry",
+    "age": 4,
+    "cost": {
+      "food": 500,
+      "gold": 400
+    },
+    "research_time": 70,
+    "effects": [
+      {
+        "key": "range_add:artillery",
+        "op": "add",
+        "value": 1
+      },
+      {
+        "key": "attack_add:artillery",
+        "op": "add",
+        "value": 5
+      }
+    ],
+    "hotkey": "T",
+    "icon": "attack",
+    "description": "Artillery +1 range and +5 attack."
+  },
+  "aerodynamics": {
+    "display_name": "Aerodynamics",
+    "building": "airfield",
+    "age": 5,
+    "cost": {
+      "food": 600,
+      "gold": 500
+    },
+    "research_time": 70,
+    "effects": [
+      {
+        "key": "speed:air",
+        "op": "mul",
+        "value": 1.2
+      },
+      {
+        "key": "hp_add:air",
+        "op": "add",
+        "value": 20
+      }
+    ],
+    "hotkey": "Y",
+    "icon": "speed",
+    "description": "Aircraft +20% speed and +20 HP."
+  }
+}
