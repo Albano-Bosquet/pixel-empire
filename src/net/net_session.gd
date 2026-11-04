@@ -141,6 +141,7 @@ func host_online(player_name: String) -> String:
 	leave()
 	my_name = player_name if player_name != "" else "Host"
 	var p := RelayPeer.new()
+	p.max_backlog = int(settings.get("relay_max_backlog", p.max_backlog))
 	p.hosted.connect(func(code: String) -> void:
 		if _relay_pending != p:
 			return
@@ -166,6 +167,7 @@ func join_online(player_name: String, code: String) -> String:
 		return "Type the game code"
 	my_name = player_name if player_name != "" else "Player"
 	var p := RelayPeer.new()
+	p.max_backlog = int(settings.get("relay_max_backlog", p.max_backlog))
 	p.relay_failed.connect(func(reason: String) -> void: _fail(reason))
 	if p.join_room(relay_url(), code, _relay_hello({})) != OK:
 		return "Could not reach the online server"

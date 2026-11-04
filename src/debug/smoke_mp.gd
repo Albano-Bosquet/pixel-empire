@@ -130,6 +130,9 @@ func _host() -> void:
 		_check(await _wait(func(): return victim.dead, 30.0), "host-side archers kill a villager of the client")
 	await get_tree().create_timer(2.0, true, false, true).timeout
 	await _shot("mp_01_host_view")
+	var sz: Array = g.replicator.last_snapshot_size
+	print("INFO: [host] snapshot %d bytes raw -> %d on the wire" % [sz[0], sz[1]])
+	_check(sz[1] > 0 and sz[1] < sz[0], "snapshots go compressed")
 	# The client leaves: its civilisation keeps playing under AI control.
 	_check(await _wait(func(): return g.replicator._ai_for.has(2), 40.0), "the AI takes over the disconnected player")
 	_check(g.player(2).is_ai, "player 2 is now marked as AI")

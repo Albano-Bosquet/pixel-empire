@@ -10,9 +10,9 @@ extends Node
 ## Client ("replica" match): the simulation systems are off; entities are
 ## created, updated, interpolated and removed from snapshots; fog is computed
 ## locally from the player's own (replicated) entities.
-## Wire format: var_to_bytes of
+## Wire format: [u32 LE raw size] + zstd(var_to_bytes of
 ##   {"t": float, "pl": [[id, res, age, researched, defeated]], "u": [[...]], "b": [[...]],
-##    "r": [[id, amount]], "pr": [[kind, sx, sy, dx, dy]], "mp": prices}
+##    "r": [[id, amount]], "pr": [[kind, sx, sy, dx, dy]], "mp": prices})
 ## Unit/building types travel as indexes into the sorted id lists of GameData.
 
 const UNIT_FIELDS := ["id", "type", "owner", "x", "y", "hp", "max_hp", "anim", "facing", "carry_t", "carry", "aboard", "ammo", "moving", "task"]
@@ -35,6 +35,10 @@ var _last_prices: Dictionary = {}
 ## unreliable snapshot) can still play the death animation.
 var _vanish: Dictionary = {}
 const VANISH_GRACE_MS := 600
+## Largest snapshot a client accepts once decompressed (guards bad packets).
+const MAX_SNAPSHOT := 1 << 24
+## Size of the last snapshot sent: [raw bytes, wire bytes] (diagnostics / tests).
+var last_snapshot_size := [0, 0]
 
 
 func setup(game: Game) -> void:
@@ -131,12 +135,39 @@ func _process(delta: float) -> void:
 		if _timer <= 0.0:
 			_timer = _interval
 			for h in _remote_humans():
-				Net.send_snapshot(h[1], var_to_bytes(build_snapshot(h[0])))
+				var wire := encode_snapshot(build_snapshot(h[0]))
+				Net.send_snapshot(h[1], wire)
 				if _events.has(h[0]) and not _events[h[0]].is_empty():
 					Net.send_events(h[1], _events[h[0]])
 					_events[h[0]] = []
 	elif Net.is_client():
 		_interpolate(delta)
+
+
+## Packs a snapshot for the wire: zstd keeps it small enough for the relay,
+## where every byte goes through TCP and a backlog shows up as lag.
+func encode_snapshot(snap: Dictionary) -> PackedByteArray:
+	var raw := var_to_bytes(snap)
+	var out := PackedByteArray()
+	out.resize(4)
+	out.encode_u32(0, raw.size())
+	out.append_array(raw.compress(FileAccess.COMPRESSION_ZSTD))
+	last_snapshot_size = [raw.size(), out.size()]
+	return out
+
+
+## Unpacks encode_snapshot(); an empty dictionary when the packet is malformed.
+static func decode_snapshot(data: PackedByteArray) -> Dictionary:
+	if data.size() < 4:
+		return {}
+	var size := data.decode_u32(0)
+	if size == 0 or size > MAX_SNAPSHOT:
+		return {}
+	var raw := data.slice(4).decompress(size, FileAccess.COMPRESSION_ZSTD)
+	if raw.size() != size:
+		return {}
+	var snap: Variant = bytes_to_var(raw)
+	return snap if snap is Dictionary else {}
 
 
 ## Everything player `pid` may know about the match right now.
@@ -197,8 +228,8 @@ func _client_submit(order: Dictionary) -> void:
 
 
 func receive_snapshot(data: PackedByteArray) -> void:
-	var snap: Variant = bytes_to_var(data)
-	if snap is Dictionary:
+	var snap := decode_snapshot(data)
+	if not snap.is_empty():
 		apply_snapshot(snap)
 
 

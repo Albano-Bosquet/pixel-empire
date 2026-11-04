@@ -22,6 +22,11 @@ const MAX_PACKET := 1 << 20
 
 ## Room code of the game we host or joined.
 var code := ""
+## Unreliable packets (snapshots) are dropped while more than this many bytes
+## wait to go out: over TCP a stale snapshot only delays the fresh ones.
+var max_backlog := 16384
+## Unreliable packets dropped so far, sending and receiving (diagnostics / tests).
+var dropped := 0
 
 var _ws := WebSocketPeer.new()
 var _hello: Dictionary = {}
@@ -97,7 +102,7 @@ func _poll() -> void:
 			if _ws.was_string_packet():
 				_on_control(pkt.get_string_from_utf8())
 			elif pkt.size() >= HEADER and _status == MultiplayerPeer.CONNECTION_CONNECTED:
-				_incoming.append([pkt.decode_s32(0), pkt[4], pkt[5], pkt.slice(HEADER)])
+				_receive([pkt.decode_s32(0), pkt[4], pkt[5], pkt.slice(HEADER)])
 	elif state == WebSocketPeer.STATE_CLOSED and _status != MultiplayerPeer.CONNECTION_DISCONNECTED:
 		var was := _status
 		_status = MultiplayerPeer.CONNECTION_DISCONNECTED
@@ -105,6 +110,18 @@ func _poll() -> void:
 			relay_failed.emit("Could not reach the online server")
 		elif not _host:
 			peer_disconnected.emit(1)
+
+
+# A burst of snapshots after a hiccup: only the newest one from that peer and
+# channel is worth applying, the older unreliable ones are skipped.
+func _receive(entry: Array) -> void:
+	if int(entry[2]) != MultiplayerPeer.TRANSFER_MODE_RELIABLE:
+		for i in range(_incoming.size() - 1, -1, -1):
+			var e: Array = _incoming[i]
+			if e[0] == entry[0] and e[1] == entry[1] and int(e[2]) != MultiplayerPeer.TRANSFER_MODE_RELIABLE:
+				_incoming.remove_at(i)
+				dropped += 1
+	_incoming.append(entry)
 
 
 func _on_control(text: String) -> void:
@@ -146,6 +163,9 @@ func _get_packet_script() -> PackedByteArray:
 func _put_packet_script(buffer: PackedByteArray) -> Error:
 	if _status != MultiplayerPeer.CONNECTION_CONNECTED:
 		return ERR_UNCONFIGURED
+	if _mode != MultiplayerPeer.TRANSFER_MODE_RELIABLE and _ws.get_current_outbound_buffered_amount() > max_backlog:
+		dropped += 1
+		return OK
 	var out := PackedByteArray()
 	out.resize(HEADER)
 	out.encode_s32(0, _target)

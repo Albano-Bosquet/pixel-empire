@@ -8,5 +8,6 @@
   "connect_timeout": 8.0,
   "game_tag": "PixelEmpire1",
   "relay_url": "wss://pixel-empire-relay.pixel-empire-relay-cloudflare.workers.dev",
-  "relay_timeout": 20.0
+  "relay_timeout": 20.0,
+  "relay_max_backlog": 16384
 }
