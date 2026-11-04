@@ -1,6 +1,9 @@
 extends Node
-## Multiplayer session for LAN and VPNs (Radmin, OpenVPN, Hamachi, ZeroTier...):
-## the host listens on a UDP port (ENet) and others join by typing its IP.
+## Multiplayer session, two transports with the same RPCs:
+##   LAN / VPN (Radmin, ZeroTier...): the host listens on a UDP port (ENet) and
+##   others join by typing its IP.
+##   Online: everyone connects out to the relay server (RelayPeer, tools/relay),
+##   the host gets a room code and others join with it - no ports or firewall.
 ## Autoload "Net" so its RPCs live at the same node path on every machine.
 ##
 ## Host-authoritative: the host runs the whole match (AI included); clients
@@ -14,6 +17,8 @@ extends Node
 ## Example:
 ##   Net.host("Ana")                       # then Net.host_start() from the lobby
 ##   Net.join("Luis", "26.12.34.56")       # Radmin / LAN address of the host
+##   Net.host_online("Ana")                # room code arrives in online_code
+##   Net.join_online("Luis", "K7QX2")
 
 signal lobby_changed
 signal chat_received(from: String, text: String)
@@ -21,6 +26,8 @@ signal match_started(cfg: Dictionary)
 signal connection_failed(reason: String)
 signal session_ended(reason: String)
 signal games_found(list: Array)
+## Open online games of this version: [{code, name, players, max}].
+signal online_games_found(list: Array)
 
 enum Role { NONE, HOST, CLIENT }
 
@@ -38,12 +45,17 @@ var replicator: Node = null
 ## Player id of this machine in the current match.
 var local_player := 1
 
-var _peer: ENetMultiplayerPeer
+var _peer: MultiplayerPeer
 var _udp_send: PacketPeerUDP
 var _udp_listen: PacketPeerUDP
 var _beacon_timer := 0.0
 var _found: Dictionary = {}
 var _connect_timer := -1.0
+## Room code of the online game (empty for LAN / VPN games).
+var online_code := ""
+var _relay_pending: RelayPeer
+var _lister: WebSocketPeer
+var _lister_sent := false
 
 
 func _ready() -> void:
@@ -91,8 +103,9 @@ func local_ips() -> Array:
 func host(player_name: String, at_port: int = -1) -> String:
 	leave()
 	my_name = player_name if player_name != "" else "Host"
-	_peer = ENetMultiplayerPeer.new()
-	var err := _peer.create_server(at_port if at_port > 0 else port(), int(settings.get("max_players", 4)) - 1)
+	var enet := ENetMultiplayerPeer.new()
+	_peer = enet
+	var err := enet.create_server(at_port if at_port > 0 else port(), int(settings.get("max_players", 4)) - 1)
 	if err != OK:
 		_peer = null
 		return Loc.msg("Cannot open port %s (already in use?)", [at_port if at_port > 0 else port()])
@@ -110,8 +123,9 @@ func host(player_name: String, at_port: int = -1) -> String:
 func join(player_name: String, ip: String, at_port: int = -1) -> String:
 	leave()
 	my_name = player_name if player_name != "" else "Player"
-	_peer = ENetMultiplayerPeer.new()
-	var err := _peer.create_client(ip.strip_edges(), at_port if at_port > 0 else port())
+	var enet := ENetMultiplayerPeer.new()
+	_peer = enet
+	var err := enet.create_client(ip.strip_edges(), at_port if at_port > 0 else port())
 	if err != OK:
 		_peer = null
 		return "Invalid address"
@@ -121,7 +135,95 @@ func join(player_name: String, ip: String, at_port: int = -1) -> String:
 	return ""
 
 
+## Opens an online game through the relay. The lobby appears when the relay
+## answers with the room code (lobby_changed); failures arrive as connection_failed.
+func host_online(player_name: String) -> String:
+	leave()
+	my_name = player_name if player_name != "" else "Host"
+	var p := RelayPeer.new()
+	p.hosted.connect(func(code: String) -> void:
+		if _relay_pending != p:
+			return
+		_relay_pending = null
+		online_code = code
+		_peer = p
+		multiplayer.multiplayer_peer = p
+		role = Role.HOST
+		slots = [{"peer": 1, "name": my_name, "ready": true, "ai": false, "difficulty": "normal", "team": 0, "connected": true}]
+		lobby_changed.emit())
+	p.relay_failed.connect(func(reason: String) -> void: _fail(reason))
+	if p.host_room(relay_url(), _relay_hello({"name": my_name, "max": int(settings.get("max_players", 8))})) != OK:
+		return "Could not reach the online server"
+	_relay_pending = p
+	_connect_timer = float(settings.get("relay_timeout", 15.0))
+	return ""
+
+
+## Joins an online game by its room code.
+func join_online(player_name: String, code: String) -> String:
+	leave()
+	if code.strip_edges() == "":
+		return "Type the game code"
+	my_name = player_name if player_name != "" else "Player"
+	var p := RelayPeer.new()
+	p.relay_failed.connect(func(reason: String) -> void: _fail(reason))
+	if p.join_room(relay_url(), code, _relay_hello({})) != OK:
+		return "Could not reach the online server"
+	_peer = p
+	multiplayer.multiplayer_peer = p
+	role = Role.CLIENT
+	_connect_timer = float(settings.get("relay_timeout", 15.0))
+	return ""
+
+
+## Asks the relay for the open online games (answer: online_games_found).
+func browse_online() -> void:
+	_lister = WebSocketPeer.new()
+	_lister_sent = false
+	if _lister.connect_to_url(relay_url()) != OK:
+		_lister = null
+		online_games_found.emit([])
+
+
+## Relay server address (net_settings.json relay_url; `-- --relay=URL` overrides).
+func relay_url() -> String:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--relay="):
+			return a.trim_prefix("--relay=")
+	return String(settings.get("relay_url", ""))
+
+
+func _relay_hello(extra: Dictionary) -> Dictionary:
+	var h := {"tag": settings.get("game_tag", "PixelEmpire1"), "version": UpdateChecker.current_version()}
+	h.merge(extra)
+	return h
+
+
+func _poll_lister() -> void:
+	_lister.poll()
+	match _lister.get_ready_state():
+		WebSocketPeer.STATE_OPEN:
+			if not _lister_sent:
+				_lister_sent = true
+				var q := _relay_hello({})
+				q["op"] = "list"
+				_lister.send_text(JSON.stringify(q))
+			while _lister.get_available_packet_count() > 0:
+				var msg: Variant = JSON.parse_string(_lister.get_packet().get_string_from_utf8())
+				if msg is Dictionary and msg.get("op", "") == "rooms":
+					online_games_found.emit(msg.get("rooms", []))
+					_lister.close()
+		WebSocketPeer.STATE_CLOSED:
+			if not _lister_sent:
+				online_games_found.emit([])
+			_lister = null
+
+
 func leave() -> void:
+	if _relay_pending != null:
+		_relay_pending.close()
+	_relay_pending = null
+	online_code = ""
 	if _peer != null:
 		_peer.close()
 	_peer = null
@@ -164,10 +266,16 @@ func browse(on: bool) -> void:
 
 
 func _process(delta: float) -> void:
+	if _relay_pending != null:
+		_relay_pending.pump()
+	if _lister != null:
+		_poll_lister()
 	if _connect_timer > 0.0:
 		_connect_timer -= delta
-		if _connect_timer <= 0.0 and role == Role.CLIENT and slots.is_empty():
-			_fail("No answer from the host (check the IP, the VPN and the firewall)")
+		if _connect_timer <= 0.0 and _relay_pending != null:
+			_fail("Could not reach the online server")
+		elif _connect_timer <= 0.0 and role == Role.CLIENT and slots.is_empty():
+			_fail("No answer from the game (check the code)" if _peer is RelayPeer else "No answer from the host (check the IP, the VPN and the firewall)")
 	if role == Role.HOST and not in_match and _udp_send != null:
 		_beacon_timer -= delta
 		if _beacon_timer <= 0.0:
@@ -275,6 +383,13 @@ func _push_lobby() -> void:
 	lobby_changed.emit()
 	if role == Role.HOST:
 		_h_lobby.rpc(slots, match_settings)
+		_relay_info()
+
+
+## Keeps the relay's public list current (player count; hidden once started).
+func _relay_info() -> void:
+	if _peer is RelayPeer and role == Role.HOST:
+		(_peer as RelayPeer).send_info(slots.filter(func(s): return not s["ai"]).size(), not in_match)
 
 
 func set_ready(r: bool) -> void:
@@ -312,6 +427,7 @@ func host_start() -> String:
 	cfg["mode"] = "skirmish"
 	cfg["net"] = true
 	in_match = true
+	_relay_info()
 	for i in slots.size():
 		var peer := int(slots[i]["peer"])
 		if peer > 1:

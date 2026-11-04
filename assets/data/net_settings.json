@@ -6,5 +6,7 @@
   "snapshot_hz": 15,
   "interp_seconds": 0.08,
   "connect_timeout": 8.0,
-  "game_tag": "PixelEmpire1"
+  "game_tag": "PixelEmpire1",
+  "relay_url": "ws://127.0.0.1:8080",
+  "relay_timeout": 60.0
 }

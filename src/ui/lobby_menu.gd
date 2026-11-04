@@ -1,8 +1,9 @@
 class_name LobbyMenu
 extends CanvasLayer
 ## Multiplayer screen (opened from the title menu).
-##   Connect view: player name, "Host a game", join by IP (LAN or VPN address,
-##   optional ":port"), and games found on the local network.
+##   Connect view: player name; Online (through the relay, no ports to open):
+##   create a game, join with its code, open online games; Local network / VPN:
+##   "Host a game", join by IP (optional ":port"), games found on the network.
 ##   Lobby view: up to 8 player slots (host adds computer players, sets
 ##   difficulties and teams, removes slots; each player may pick their own
 ##   team), the host's match options (MatchSettingsForm), ready toggle, chat,
@@ -19,6 +20,8 @@ var _name: LineEdit
 var _ip: LineEdit
 var _status: Label
 var _found_box: VBoxContainer
+var _code: LineEdit
+var _online_box: VBoxContainer
 var _slots_list: PlayerSlotsList
 var _addresses: Label
 var _chat_log: RichTextLabel
@@ -57,8 +60,10 @@ func _ready() -> void:
 		_refresh())
 	Net.chat_received.connect(_on_chat)
 	Net.games_found.connect(_on_found)
+	Net.online_games_found.connect(_on_online_found)
 	Net.match_started.connect(func(_c: Dictionary) -> void: _close())
 	Net.browse(true)
+	Net.browse_online()
 	_refresh()
 
 
@@ -70,6 +75,8 @@ func _build_connect() -> void:
 	_name.custom_minimum_size = Vector2(260, 34)
 	row.add_child(_name)
 	_connect_view.add_child(row)
+	_build_online()
+	_connect_view.add_child(UiStyle.label(tr("Local network or VPN"), 18, UiStyle.GOLD))
 	var host_btn := UiStyle.button(tr("Host a game"), 700)
 	host_btn.pressed.connect(func() -> void:
 		var err := Net.host(_name.text)
@@ -92,6 +99,52 @@ func _build_connect() -> void:
 	var back := UiStyle.button(tr("Back"), 700)
 	back.pressed.connect(_close)
 	_connect_view.add_child(back)
+
+
+func _build_online() -> void:
+	_connect_view.add_child(UiStyle.label(tr("Online (no ports or firewall to set up)"), 18, UiStyle.GOLD))
+	var create := UiStyle.button(tr("Create online game"), 700)
+	create.pressed.connect(func() -> void:
+		var err := Net.host_online(_name.text)
+		_set_status(err if err != "" else tr("Opening an online game... (the server may take up to a minute to wake up)")))
+	_connect_view.add_child(create)
+	var crow := HBoxContainer.new()
+	crow.add_child(UiStyle.label(tr("Game code"), 16, UiStyle.TEXT_DIM))
+	_code = LineEdit.new()
+	_code.placeholder_text = "K7QX2"
+	_code.max_length = 8
+	_code.custom_minimum_size = Vector2(200, 34)
+	_code.text_submitted.connect(func(_t: String) -> void: _join_code(_code.text))
+	crow.add_child(_code)
+	var join := UiStyle.button(tr("Join"), 160)
+	join.pressed.connect(func() -> void: _join_code(_code.text))
+	crow.add_child(join)
+	var refresh := UiStyle.button(tr("Refresh list"), 200)
+	refresh.pressed.connect(func() -> void:
+		_set_status("")
+		Net.browse_online())
+	crow.add_child(refresh)
+	_connect_view.add_child(crow)
+	_online_box = VBoxContainer.new()
+	_connect_view.add_child(_online_box)
+
+
+func _join_code(code: String) -> void:
+	var err := Net.join_online(_name.text, code)
+	_set_status(err if err != "" else tr("Connecting to game %s... (the server may take up to a minute to wake up)") % code.strip_edges().to_upper())
+
+
+func _on_online_found(list: Array) -> void:
+	for c in _online_box.get_children():
+		c.queue_free()
+	if list.is_empty():
+		_online_box.add_child(UiStyle.label(tr("(no open online games - create one or type a code)"), 14, UiStyle.TEXT_DIM))
+		return
+	for g in list:
+		var code := String(g.get("code", ""))
+		var b := UiStyle.button("%s  —  %s  (%d/%d)" % [g.get("name", "?"), code, int(g.get("players", 1)), int(g.get("max", 8))], 700)
+		b.pressed.connect(func() -> void: _join_code(code))
+		_online_box.add_child(b)
 
 
 func _build_lobby() -> void:
@@ -179,7 +232,10 @@ func _refresh() -> void:
 	if not in_lobby:
 		return
 	var host := Net.is_host()
-	_addresses.text = (tr("Your addresses (share one): ") + ", ".join(Net.local_ips()) + "  ·  " + tr("port") + " %d" % Net.port()) if host else tr("Connected. Waiting for the host to start.")
+	if Net.online_code != "":
+		_addresses.text = (tr("Online game code: %s  (share it; it also shows in the online list)") if host else tr("Online game %s. Waiting for the host to start.")) % Net.online_code
+	else:
+		_addresses.text = (tr("Your addresses (share one): ") + ", ".join(Net.local_ips()) + "  ·  " + tr("port") + " %d" % Net.port()) if host else tr("Connected. Waiting for the host to start.")
 	var shown := []
 	for i in Net.slots.size():
 		var sl: Dictionary = Net.slots[i].duplicate()

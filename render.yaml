@@ -1,0 +1,13 @@
+# Render Blueprint for the online relay server (tools/relay). In Render:
+# New > Blueprint > pick this repository. Free plan; the URL becomes
+# wss://<name>.onrender.com and goes into assets/data/net_settings.json relay_url.
+services:
+  - type: web
+    name: pixel-empire-relay
+    runtime: node
+    plan: free
+    rootDir: tools/relay
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /
+    autoDeploy: true

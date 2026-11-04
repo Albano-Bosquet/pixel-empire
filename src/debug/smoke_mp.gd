@@ -3,17 +3,21 @@ extends Node
 ##   host:   -- --mp=host --smoke=mp
 ##   client: -- --mp=client --smoke=mp      (start after the host)
 ##   rejoin: -- --mp=rejoin --smoke=mp      (after the client quit: takes player 2 back)
+## Add `--online --relay=ws://127.0.0.1:8080` to all three to go through the relay
+## server instead (tools/relay: `npm start`): room code, online list, join by code.
 ## Lobby join + ready + start, replicated starting state, client orders
 ## (move, build a house, train a villager) applied by the host and seen by the
 ## client, chat both ways, and the AI taking over when the client leaves.
 ## Each process prints PASS/FAIL lines and exits 0 (pass) / 1 (fail).
 
 const SHOTS := "res://production/qa/screenshots/"
+const CODE_FILE := "user://smoke_online_code.txt"
 
 var role := "host"
 var _main: Node
 var _failures: Array[String] = []
 var _chat_seen := ""
+var online := OS.get_cmdline_user_args().has("--online")
 
 
 func start(main: Node, as_role: String) -> void:
@@ -69,8 +73,18 @@ func _run() -> void:
 # --- Host -------------------------------------------------------------------------------------
 
 func _host() -> void:
-	_check(Net.host("Host") == "", "opens the game on the default port")
-	_check(not Net.local_ips().is_empty(), "lists this machine's addresses for sharing")
+	if online:
+		_check(Net.host_online("Host") == "", "asks the relay for an online game")
+		var opened := await _wait(func(): return Net.online_code != "" and Net.is_host(), 15.0)
+		_check(opened, "the relay gives a room code (%s)" % Net.online_code)
+		if not opened:
+			return
+		var f := FileAccess.open(CODE_FILE, FileAccess.WRITE)
+		f.store_string(Net.online_code)
+		f.close()
+	else:
+		_check(Net.host("Host") == "", "opens the game on the default port")
+		_check(not Net.local_ips().is_empty(), "lists this machine's addresses for sharing")
 	Net.host_set_settings({"map_type": "continental", "size": "tiny", "seed": 4242, "victory": "conquest", "fog": true})
 	var lobby := LobbyMenu.new()
 	_main.add_child(lobby)
@@ -127,7 +141,16 @@ func _host() -> void:
 
 func _client() -> void:
 	await get_tree().create_timer(1.0, true, false, true).timeout
-	_check(Net.join("Cliente", "127.0.0.1") == "", "connects to 127.0.0.1")
+	if online:
+		var rooms: Array = []
+		Net.online_games_found.connect(func(l: Array) -> void: rooms.append_array(l), CONNECT_ONE_SHOT)
+		Net.browse_online()
+		await _wait(func(): return not rooms.is_empty(), 10.0)
+		var code := FileAccess.get_file_as_string(CODE_FILE)
+		_check(rooms.any(func(g): return g.get("code", "") == code), "the host's game is in the online list")
+		_check(Net.join_online("Cliente", code) == "", "joins the online game by its code")
+	else:
+		_check(Net.join("Cliente", "127.0.0.1") == "", "connects to 127.0.0.1")
 	var in_lobby := await _wait(func(): return Net.slots.size() >= 2, 20.0)
 	_check(in_lobby, "receives the lobby")
 	if not in_lobby:
@@ -201,7 +224,10 @@ func _client() -> void:
 
 func _rejoin() -> void:
 	await get_tree().create_timer(1.0, true, false, true).timeout
-	_check(Net.join("Cliente", "127.0.0.1") == "", "reconnects to the running match")
+	if online:
+		_check(Net.join_online("Cliente", FileAccess.get_file_as_string(CODE_FILE)) == "", "reconnects to the running online match")
+	else:
+		_check(Net.join("Cliente", "127.0.0.1") == "", "reconnects to the running match")
 	var started := await _wait(func(): return _game() != null and is_instance_valid(_game()) and _game().config.get("replica", false), 30.0)
 	_check(started, "the running match opens on the returning client")
 	if not started:
