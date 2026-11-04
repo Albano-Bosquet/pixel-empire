@@ -23,6 +23,7 @@ const ROWS := [
 	["F2", "Technology tree"],
 	["F5", "Quick save"],
 	["F10 / Esc / Pause", "Menu"],
+	["F11 / Alt + Enter", "Full screen"],
 	["WASD, arrows, screen edges", "Move the camera"],
 	["Mouse wheel", "Zoom"],
 ]

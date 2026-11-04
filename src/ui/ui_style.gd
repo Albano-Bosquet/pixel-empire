@@ -95,6 +95,18 @@ static func language_option() -> OptionButton:
 	return o
 
 
+## Full-screen switch bound to `Display`; F11 / Alt+Enter keep it in sync.
+static func fullscreen_toggle() -> CheckButton:
+	var c := CheckButton.new()
+	c.text = "Full screen"
+	c.add_theme_font_size_override("font_size", 16)
+	c.add_theme_color_override("font_color", TEXT_DIM)
+	c.button_pressed = Display.fullscreen
+	c.toggled.connect(func(on: bool) -> void: Display.set_fullscreen(on))
+	Display.fullscreen_changed.connect(c.set_pressed_no_signal)
+	return c
+
+
 ## Full-screen dim layer that blocks clicks to the game below.
 static func dimmer(alpha: float = 0.55) -> ColorRect:
 	var r := ColorRect.new()

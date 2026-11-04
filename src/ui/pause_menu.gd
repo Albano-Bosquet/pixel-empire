@@ -54,6 +54,7 @@ func _ready() -> void:
 	pick.custom_minimum_size.x = 0
 	lang.add_child(pick)
 	v.add_child(lang)
+	v.add_child(UiStyle.fullscreen_toggle())
 	(v.get_child(1) as Button).grab_focus()
 
 

@@ -78,6 +78,7 @@ func _ready() -> void:
 	pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lang.add_child(pick)
 	v.add_child(lang)
+	v.add_child(UiStyle.fullscreen_toggle())
 	_update_btn = UiStyle.button(tr("Checking for updates..."), 400)
 	_update_btn.disabled = true
 	_update_btn.pressed.connect(func() -> void: _updater.download_and_install())
