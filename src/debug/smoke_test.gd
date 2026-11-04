@@ -170,7 +170,7 @@ func _stage2() -> void:
 		_mouse_button(MOUSE_BUTTON_RIGHT, true, sp)
 		_mouse_button(MOUSE_BUTTON_RIGHT, false, sp)
 		await _frames(2)
-		_check(u.task.get("type", "") == "gather", "right-click on %s starts a gather task" % kind)
+		_check(u.task.get("type", "") == "gather", "right-click on %s starts a gather task (%s at %s, task %s)" % [kind, node.type_id, node.tile(), u.task])
 	_game.camera.focus_world(tc.position)
 	var t0 := Time.get_ticks_msec()
 	while Time.get_ticks_msec() - t0 < 30000:
@@ -269,7 +269,7 @@ func _stage2() -> void:
 		while not st.is_complete() and Time.get_ticks_msec() - t0 < 25000:
 			await _seconds(0.25)
 		await _seconds(0.3)
-		_check(st.is_complete() and own[1].task.get("type", "") == "gather", "builder starts gathering after finishing the storehouse")
+		_check(st.is_complete() and own[1].task.get("type", "") == "gather", "builder starts gathering after finishing the storehouse (complete %s, task %s, tree %s, store %s)" % [st.is_complete(), own[1].task, tree.tile(), st_origin])
 	Engine.time_scale = 1.0
 	_game.selection.set_selection([])
 	_game.camera.focus_world(tc.position + Vector2(60, 30))
@@ -277,12 +277,13 @@ func _stage2() -> void:
 	await _shot("stage2_05_settlement")
 
 
-## Nearest node of `kind`; with `unobstructed`, only nodes the cursor can pick
-## (not hidden behind a building or another sprite).
+## Nearest land node of `kind` (villagers cannot gather fish); with
+## `unobstructed`, only nodes the cursor can pick (not hidden behind a
+## building or another sprite).
 func _nearest_node(from: Vector2, kind: String, unobstructed: bool = false) -> ResourceNode:
 	var best: ResourceNode = null
 	for c in _game.entities_root.get_children():
-		if c is ResourceNode and c.resource_type == kind and not c.is_depleted():
+		if c is ResourceNode and c.resource_type == kind and not c.is_depleted() and not c.def.get("naval", false):
 			if unobstructed:
 				var saved := _game.camera.position
 				_game.camera.position = c.position

@@ -1834,7 +1834,7 @@
     "classes": [
       "animal"
     ],
-    "food": 100,
+    "food": 400,
     "auto_attack": false,
     "worker": false,
     "sprite": "sheep",
@@ -1859,7 +1859,7 @@
     "classes": [
       "animal"
     ],
-    "food": 70,
+    "food": 280,
     "auto_attack": false,
     "worker": false,
     "sprite": "turkey",
@@ -1884,7 +1884,7 @@
     "classes": [
       "animal"
     ],
-    "food": 140,
+    "food": 560,
     "auto_attack": false,
     "worker": false,
     "sprite": "deer",
@@ -1909,7 +1909,7 @@
     "classes": [
       "animal"
     ],
-    "food": 340,
+    "food": 1360,
     "auto_attack": false,
     "worker": false,
     "sprite": "boar",

@@ -35,9 +35,15 @@ func setup(id: String, node_def: Dictionary, tile_pos: Vector2i, variant_index: 
 	_sprite.region_enabled = true
 	_sprite.region_rect = rect
 	_sprite.centered = false
-	_sprite.offset = -region["anchor"]
+	# Visual-only nudge inside the tile ("jitter_px" = max x/y pixels), seeded by
+	# the tile so every peer and every reload draws the node in the same spot.
+	var jitter: Array = def.get("jitter_px", [0, 0])
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(tile_pos)
+	var nudge := Vector2(roundi(rng.randf_range(-1.0, 1.0) * float(jitter[0])), roundi(rng.randf_range(-1.0, 1.0) * float(jitter[1])))
+	_sprite.offset = -region["anchor"] + nudge
 	add_child(_sprite)
-	pick_rect = Rect2(-region["anchor"], rect.size).grow(-4)
+	pick_rect = Rect2(-region["anchor"] + nudge, rect.size).grow(-4)
 	set_grid_pos(Iso.tile_center(tile_pos))
 
 

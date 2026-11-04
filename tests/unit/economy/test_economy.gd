@@ -33,7 +33,7 @@ func test_resource_take_caps_and_depletes_once() -> void:
 	var count := [0]
 	n.depleted.connect(func(_x): count[0] += 1)
 	var total := 0.0
-	for i in 200:
+	for i in int(GameData.resource_node("berry_bush")["amount"]) + 50:
 		total += n.take(1.0)
 	assert_near(total, float(GameData.resource_node("berry_bush")["amount"]), 0.001, "takes exactly the node amount")
 	assert_true(n.is_depleted(), "node depleted")

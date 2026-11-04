@@ -2,66 +2,90 @@
   "tree_oak": {
     "display_name": "Oak Tree",
     "resource": "wood",
-    "amount": 100,
+    "amount": 400,
     "sprites": [
       "oak_0",
       "oak_1",
       "oak_2",
       "oak_3"
     ],
+    "jitter_px": [
+      6,
+      3
+    ],
     "blocks": true
   },
   "tree_pine": {
     "display_name": "Pine Tree",
     "resource": "wood",
-    "amount": 100,
+    "amount": 400,
     "sprites": [
       "pine_0",
       "pine_1",
       "pine_2",
       "pine_3"
     ],
+    "jitter_px": [
+      6,
+      3
+    ],
     "blocks": true
   },
   "gold_mine": {
     "display_name": "Gold Mine",
     "resource": "gold",
-    "amount": 800,
+    "amount": 3200,
     "sprites": [
       "gold_0",
       "gold_1",
       "gold_2"
+    ],
+    "jitter_px": [
+      8,
+      4
     ],
     "blocks": true
   },
   "stone_mine": {
     "display_name": "Stone Mine",
     "resource": "stone",
-    "amount": 350,
+    "amount": 1400,
     "sprites": [
       "stone_0",
       "stone_1",
       "stone_2"
+    ],
+    "jitter_px": [
+      8,
+      4
     ],
     "blocks": true
   },
   "berry_bush": {
     "display_name": "Forage Bush",
     "resource": "food",
-    "amount": 125,
+    "amount": 500,
     "sprites": [
       "berry_0",
       "berry_1"
+    ],
+    "jitter_px": [
+      5,
+      3
     ],
     "blocks": true
   },
   "fish": {
     "display_name": "Fish",
     "resource": "food",
-    "amount": 225,
+    "amount": 900,
     "sprites": [
       "fish_0",
       "fish_1"
+    ],
+    "jitter_px": [
+      4,
+      2
     ],
     "blocks": true,
     "naval": true
