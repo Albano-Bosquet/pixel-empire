@@ -116,7 +116,13 @@ static func dimmer(alpha: float = 0.55) -> ColorRect:
 	return r
 
 
+## Room kept free above and below a centred panel (its border and padding included).
+const PANEL_SCREEN_MARGIN := 80.0
+
+
 ## Centred panel container with a VBox inside; returns [panel, vbox].
+## Taller than the screen (phones, scaled UI), its content scrolls instead of
+## being cut off: the VBox sits in a ScrollContainer sized to fit the screen.
 static func centered_panel(parent: Control, width: float) -> Array:
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -126,7 +132,22 @@ static func centered_panel(parent: Control, width: float) -> Array:
 	p.add_theme_stylebox_override("panel", panel(20))
 	p.custom_minimum_size = Vector2(width, 0)
 	center.add_child(p)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	p.add_child(scroll)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
-	p.add_child(v)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(v)
+	var fit := func() -> void:
+		if is_instance_valid(scroll) and scroll.is_inside_tree():
+			scroll.custom_minimum_size.y = minf(v.get_combined_minimum_size().y, scroll.get_viewport_rect().size.y - PANEL_SCREEN_MARGIN)
+	v.minimum_size_changed.connect(fit)
+	scroll.tree_entered.connect(func() -> void:
+		if not scroll.get_viewport().size_changed.is_connected(fit):
+			scroll.get_viewport().size_changed.connect(fit)
+		fit.call_deferred())
+	scroll.tree_exiting.connect(func() -> void:
+		if scroll.get_viewport().size_changed.is_connected(fit):
+			scroll.get_viewport().size_changed.disconnect(fit))
 	return [p, v]

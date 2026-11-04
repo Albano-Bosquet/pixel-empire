@@ -13,6 +13,8 @@ const TEXT_DIM := Color("#b5a88e")
 const NOTIFY_SECONDS := 3.5
 ## Right edge of the minimap frame (bottom-left corner).
 const MINIMAP_RIGHT := 306.0
+## Narrowest the unit / building info column may get in the selection panel.
+const INFO_MIN_WIDTH := 300.0
 
 var _game: Game
 var _res_labels: Dictionary = {}
@@ -376,8 +378,9 @@ func _fit_bottom() -> void:
 	var half := maxf(470.0, _bottom.size.x * 0.5)
 	var left := get_viewport().get_visible_rect().size.x * 0.5 - half
 	var shift := maxf(0.0, MINIMAP_RIGHT + 6.0 - left)
-	_bottom.offset_left = -half + shift
-	_bottom.offset_right = half + shift
+	if not is_equal_approx(_bottom.offset_left, -half + shift) or not is_equal_approx(_bottom.offset_right, half + shift):
+		_bottom.offset_left = -half + shift
+		_bottom.offset_right = half + shift
 
 
 func _build_bottom_panel() -> void:
@@ -392,6 +395,7 @@ func _build_bottom_panel() -> void:
 	add_child(_bottom)
 	_fit_bottom.call_deferred()
 	get_viewport().size_changed.connect(_fit_bottom)
+	_bottom.resized.connect(_fit_bottom)
 	var root := HBoxContainer.new()
 	root.add_theme_constant_override("separation", 14)
 	_bottom.add_child(root)
@@ -412,6 +416,8 @@ func _build_bottom_panel() -> void:
 
 	var stack := Control.new()
 	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Room for name, HP and stats: a wide command grid grows the panel instead.
+	stack.custom_minimum_size.x = INFO_MIN_WIDTH
 	root.add_child(stack)
 
 	_single_box = VBoxContainer.new()

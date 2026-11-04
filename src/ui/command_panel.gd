@@ -10,6 +10,10 @@ extends VBoxContainer
 const COLS := 5
 const MAX_ROWS := 2
 const BTN := Vector2(50, 50)
+## Smaller buttons once a page needs more than WIDE_COLS columns (the military
+## building page), so the grid keeps two rows without crowding the unit info.
+const BTN_COMPACT := Vector2(42, 42)
+const WIDE_COLS := 8
 const RES_ORDER: Array[String] = ["food", "wood", "gold", "stone"]
 
 var _game: Game
@@ -73,6 +77,9 @@ func rebuild() -> void:
 		_mode = ""
 	# Widen instead of adding rows: the bottom panel only has height for MAX_ROWS.
 	_grid.columns = maxi(COLS, ceili(_buttons.size() / float(MAX_ROWS)))
+	var size := BTN_COMPACT if _grid.columns > WIDE_COLS else BTN
+	for e in _buttons:
+		e["button"].custom_minimum_size = size
 	_title.text = {"build": tr("Build — %s") % tr(_page.capitalize()), "train": tr("Train & research"), "military": tr("Orders")}.get(_mode, "")
 	visible = _mode != ""
 	_refresh_states()
