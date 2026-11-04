@@ -4,6 +4,8 @@
 
 <p align="center">
   <a href="../../releases/latest"><img src="docs/media/download.png" alt="Descargar Pixel Empire para Windows" width="460"></a>
+  <br>
+  <a href="https://albano-bosquet.github.io/pixel-empire/"><b>🌐 Visita la web del juego</b></a>
 </p>
 
 <p align="center">
