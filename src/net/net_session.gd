@@ -152,6 +152,9 @@ func _end(reason: String) -> void:
 func browse(on: bool) -> void:
 	if on and _udp_listen == null:
 		_udp_listen = PacketPeerUDP.new()
+		# Android only delivers broadcast packets to sockets with broadcast on (it
+		# takes the Wi-Fi multicast lock; CHANGE_WIFI_MULTICAST_STATE permission).
+		_udp_listen.set_broadcast_enabled(true)
 		if _udp_listen.bind(int(settings.get("discovery_port", 24681))) != OK:
 			_udp_listen = null
 	elif not on and _udp_listen != null:
