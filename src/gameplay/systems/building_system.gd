@@ -268,6 +268,8 @@ func destroy(b: Building) -> void:
 	sp.offset = -r["anchor"]
 	sp.position = b.position
 	sp.z_index = -30
+	# Destroyed out of sight: the local player keeps seeing the remembered building.
+	sp.visible = not _game.fog.memory.remembers(b)
 	_game.world.add_child(sp)
 	var tw := sp.create_tween()
 	tw.tween_interval(float(GameData.combat.get("rubble_seconds", 20.0)))

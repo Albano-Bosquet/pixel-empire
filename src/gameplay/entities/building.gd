@@ -364,6 +364,31 @@ func set_xray(items: Array, material: Material) -> void:
 	_body.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW if not items.is_empty() else CanvasItem.CLIP_CHILDREN_DISABLED
 
 
+## A still copy of how the building looks right now (sprites, flames, chimney
+## smoke), for the fog memory: shown in its place while it is out of sight.
+func memory_snapshot() -> Node2D:
+	var root := Node2D.new()
+	root.position = position
+	root.z_index = z_index
+	for c in get_children():
+		var sp := c as Sprite2D
+		if sp == null or not sp.visible:
+			continue
+		var copy := Sprite2D.new()
+		copy.texture = sp.texture
+		copy.region_enabled = sp.region_enabled
+		copy.region_rect = sp.region_rect
+		copy.centered = sp.centered
+		copy.offset = sp.offset
+		copy.position = sp.position
+		copy.modulate = sp.modulate
+		root.add_child(copy)
+	for ps in _fires + _smoke:
+		if ps.emitting:
+			root.add_child(ps.duplicate())
+	return root
+
+
 ## Farm harvesting API (mirrors ResourceNode).
 func is_depleted() -> bool:
 	return not is_farm() or not is_complete() or amount <= 0.0

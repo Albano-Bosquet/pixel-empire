@@ -129,7 +129,13 @@ func pick(screen_pos: Vector2) -> Entity:
 	for dy in range(-1, 6):
 		for dx in range(-1, 6):
 			var e: Entity = _game.static_entity_at(t + Vector2i(dx, dy))
-			if e == null or not e.selectable or not e.visible or not e.hit_test(world):
+			if e == null or not e.selectable:
+				continue
+			if _game.fog.memory.remembers(e):
+				# Shown by its memory snapshot: the real (hidden) sprites can't be hit-tested.
+				if not e.global_pick_rect().has_point(world):
+					continue
+			elif not e.visible or not e.hit_test(world):
 				continue
 			if e.def.get("carcass", false):
 				if carcass == null or e.position.y > carcass.position.y:

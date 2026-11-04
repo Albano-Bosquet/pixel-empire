@@ -3,8 +3,8 @@ extends Node
 ## Fog of war (design/game-brief.md MVP item 1): per-player visible/explored
 ## grids rebuilt at fog_update_hz from every owned unit and building's sight.
 ## The local player's grid feeds the overlay shader; enemy units outside vision
-## are hidden; other players' buildings appear once actually seen and then stay
-## shown (an explored tile alone does not reveal what was built there later). AI players use their
+## are hidden; other players' buildings appear once actually seen and out of sight
+## show as they were last seen (BuildingMemory). AI players use their
 ## own grids, so they never see through the fog either.
 ## Example: if game.fog.is_visible(player_id, enemy): ...
 
@@ -20,17 +20,20 @@ var _h := 0
 var _visible: Dictionary = {}   # player_id -> PackedByteArray (1 = visible now)
 var _explored: Dictionary = {}  # player_id -> PackedByteArray (1 = ever seen)
 var _offsets: Dictionary = {}   # sight radius -> Array[Vector2i]
-var _seen_buildings: Dictionary = {}  # entity_id -> true: other players' buildings the local player has seen
 var _timer := 0.0
 var _interval := 0.125
 var _img: Image
 var _tex: ImageTexture
 var _overlay: Node2D
+## What the local player remembers of other players' buildings out of sight.
+var memory := BuildingMemory.new()
 
 
 func setup(game: Game, cfg: Dictionary, fog_enabled: bool) -> void:
 	_game = game
 	enabled = fog_enabled
+	memory.setup(game)
+	add_child(memory)
 	_w = game.map.width
 	_h = game.map.height
 	_interval = 1.0 / maxf(1.0, float(cfg.get("fog_update_hz", 8)))
@@ -108,7 +111,7 @@ func set_explored(player_id: int, grid: PackedByteArray) -> void:
 	if player_id == _game.local_player:
 		for b in _game.buildings.buildings:
 			if is_explored(player_id, Iso.tile_of(b.grid_pos)):
-				_seen_buildings[b.entity_id] = true
+				memory.mark_seen(b)
 
 
 ## Tiles explored by `player_id` (0..1), for statistics and the AI.
@@ -177,11 +180,7 @@ func _refresh_local() -> void:
 	for u in _game.unit_system.units:
 		if u.owner_id != pid:
 			u.visible = is_visible(pid, u) and u.aboard == null
-	for b in _game.buildings.buildings:
-		if b.owner_id != pid:
-			if is_visible(pid, b):
-				_seen_buildings[b.entity_id] = true
-			b.visible = not enabled or _seen_buildings.has(b.entity_id) or (b.owner_id == Entity.GAIA and is_explored(pid, Iso.tile_of(b.grid_pos)))
+	memory.refresh(pid, self)
 
 
 ## Full-map quad that renders the fog shader.

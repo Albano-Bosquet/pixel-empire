@@ -68,8 +68,12 @@ func set_formation(pid: int, f: String) -> void:
 func _sees(pid: int, target: Entity) -> bool:
 	if target is Unit and (target as Unit).aboard != null:
 		return false
-	if target is Building and _game.fog.is_explored(pid, Iso.tile_of(target.grid_pos)):
-		return true
+	if target is Building:
+		var r: Rect2i = (target as Building).footprint()
+		for y in range(r.position.y, r.end.y):
+			for x in range(r.position.x, r.end.x):
+				if _game.fog.is_explored(pid, Vector2i(x, y)):
+					return true
 	return _game.fog.is_visible(pid, target)
 
 

@@ -116,19 +116,36 @@ func _run() -> void:
 		var far_hunters: Array[Unit] = [far_v]
 		_game.commands.issue(far_hunters, [], far_sheep.grid_pos, far_sheep, 3)
 		_check(hidden and WildlifeSystem.is_hunting(far_v, far_sheep), "a remote player hunts a sheep the host cannot see (hidden=%s task=%s)" % [hidden, far_v.task])
-		# Enemy buildings: hidden until seen, then remembered and attackable but not selectable.
+		# Enemy buildings: hidden until seen, then remembered as last seen, attackable but not
+		# selectable; damage and destruction out of sight stay unknown until seen again.
 		_check(not far_tc.visible, "an enemy building never seen stays hidden")
-		var spy := _game.spawn_unit("scout", 1, _open_spot(far_tc.grid_pos + Vector2(-3, -3), 2))
+		var house_at := Iso.tile_of(_open_spot(far_tc.grid_pos + Vector2(-5, -5), 2)) - Vector2i.ONE
+		var house := _game.buildings.place("house", 3, house_at, true)
+		var spy := _game.spawn_unit("scout", 1, _open_spot(house.grid_pos + Vector2(-2, -2), 1))
 		_game.fog.update_now()
-		_check(far_tc.visible, "an enemy building in sight is shown")
+		_check(far_tc.visible and house.visible, "enemy buildings in sight are shown")
 		_game.selection.set_selection([far_tc])
 		spy.take_damage(spy.hp, null)
 		await _frames(2)
 		_game.fog.update_now()
 		await _frames(2)
-		_check(far_tc.visible and not _game.fog.is_visible(1, far_tc), "a seen enemy building stays shown out of sight")
+		var mem := _game.fog.memory
+		_check(not _game.fog.is_visible(1, far_tc) and mem.remembers(far_tc) and not far_tc.visible, "a seen enemy building out of sight shows its memory snapshot")
 		_check(not _game.selection.selected.has(far_tc), "an enemy building out of sight drops from the selection")
 		_check(_game.commands._sees(1, far_tc), "a remembered enemy building can still be attacked")
+		var snap: Node2D = mem._ghosts[house.entity_id]["node"]
+		var parts_before := snap.get_child_count()
+		house.take_damage(int(house.max_hp * 0.8), null)
+		_game.fog.update_now()
+		_check(house.is_burning() and snap.get_child_count() == parts_before, "damage out of sight does not show on the remembered building (burning=%s)" % house.is_burning())
+		house.take_damage(house.hp, null)
+		await _frames(2)
+		_game.fog.update_now()
+		_check(mem.ghosts().any(func(g): return g["origin"] == house_at) and is_instance_valid(snap), "a building destroyed out of sight is still remembered")
+		_game.spawn_unit("scout", 1, _open_spot(Vector2(house_at) + Vector2(-2, -2), 1))
+		_game.fog.update_now()
+		await _frames(2)
+		_check(not mem.ghosts().any(func(g): return g["origin"] == house_at), "seeing the ground again clears the destroyed building")
 	var spot := _open_spot(tc.grid_pos + Vector2(-10, 6), 2)
 	var victim := _game.spawn_unit("villager", 1, spot)
 	var wolf := _game.spawn_unit("wolf", Entity.GAIA, spot + Vector2(2.5, 0))

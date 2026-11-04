@@ -145,6 +145,8 @@ func _draw() -> void:
 			continue
 		var col := _game.player(b.owner_id).color()
 		draw_rect(Rect2(Vector2(b.origin), Vector2(b.size, b.size)), col.darkened(0.15))
+	for g in _game.fog.memory.ghosts():
+		draw_rect(Rect2(Vector2(g["origin"]), Vector2(g["size"], g["size"])), _game.player(g["owner"]).color().darkened(0.15))
 	for u in _game.unit_system.units:
 		if u.dead or not u.visible:
 			continue
