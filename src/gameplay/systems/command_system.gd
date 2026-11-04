@@ -61,6 +61,15 @@ func set_formation(pid: int, f: String) -> void:
 	formations[pid] = f
 
 
+## Whether `pid` can currently target `target`. Uses `pid`'s own fog, not the node's
+## `visible` flag: that one follows the local player, so on the host it would drop
+## orders from a network client aimed at things only the client sees.
+func _sees(pid: int, target: Entity) -> bool:
+	if target is Unit and (target as Unit).aboard != null:
+		return false
+	return _game.fog.is_visible(pid, target)
+
+
 ## Applies the contextual right-click order. Returns true if anything was ordered.
 ## `pid` is the commanding player (defaults to the owner of the selection).
 ## `queue` (Shift): a ground move is appended as a waypoint instead of replacing the orders.
@@ -94,7 +103,7 @@ func issue(units: Array[Unit], buildings: Array[Building], grid: Vector2, target
 			for ship in loaded:
 				_game.naval.order_unload(ship, grid)
 			return true
-	if target is Unit and Wildlife.is_animal(target) and target.visible and (target.owner_id == pid or Wildlife.is_hostile_animal(target) or CombatSystem.is_enemy(units[0], target)):
+	if target is Unit and Wildlife.is_animal(target) and _sees(pid, target) and (target.owner_id == pid or Wildlife.is_hostile_animal(target) or CombatSystem.is_enemy(units[0], target)):
 		var hunters: Array[Unit] = []
 		var fighters: Array[Unit] = []
 		for u in units:
@@ -112,7 +121,7 @@ func issue(units: Array[Unit], buildings: Array[Building], grid: Vector2, target
 			else:
 				move_group(fighters, target.grid_pos)
 		return true
-	if target != null and target.visible and CombatSystem.is_enemy(units[0], target):
+	if target != null and _sees(pid, target) and CombatSystem.is_enemy(units[0], target):
 		_game.combat.order_attack(units, target)
 		var monks: Array[Unit] = []
 		for u in units:

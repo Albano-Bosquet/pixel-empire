@@ -103,6 +103,19 @@ func _run() -> void:
 		_check(v.carry_type == "food" and v.carry_amount >= 3.0, "the villager gathers food from the carcass (%.1f)" % v.carry_amount)
 		await _shot("features_03_carcass")
 		Engine.time_scale = 1.0
+	# A remote player's hunt order (as the host runs it for a network client) must be judged by
+	# that player's fog, not by what the local player sees.
+	var far_tc := _tc(3)
+	if far_tc != null:
+		var far_spot := _open_spot(far_tc.grid_pos + Vector2(4, 4), 2)
+		var far_v := _game.spawn_unit("villager", 3, far_spot)
+		var far_sheep := _game.spawn_unit("sheep", Entity.GAIA, far_spot + Vector2(1.5, 0))
+		await _seconds(1.5)
+		_game.fog.update_now()
+		var hidden := far_sheep.owner_id == 3 and not _game.fog.is_visible(1, far_sheep)
+		var far_hunters: Array[Unit] = [far_v]
+		_game.commands.issue(far_hunters, [], far_sheep.grid_pos, far_sheep, 3)
+		_check(hidden and WildlifeSystem.is_hunting(far_v, far_sheep), "a remote player hunts a sheep the host cannot see (hidden=%s task=%s)" % [hidden, far_v.task])
 	var spot := _open_spot(tc.grid_pos + Vector2(-10, 6), 2)
 	var victim := _game.spawn_unit("villager", 1, spot)
 	var wolf := _game.spawn_unit("wolf", Entity.GAIA, spot + Vector2(2.5, 0))
