@@ -6,7 +6,7 @@ Capture first (opens a game window, ~1 minute):
 Then:
     python tools/readme/make_readme_media.py <folder>
 
-Writes banner.jpg, download.png, day_night.jpg, the GIFs and the new stills.
+Writes banner.jpg, hero.jpg + title.png (site/), download.png, day_night.jpg, the GIFs and the new stills.
 Needs Pillow. Fonts come from C:/Windows/Fonts (Consolas Bold, Segoe UI).
 """
 import sys
@@ -93,6 +93,13 @@ def banner(src):
     img.convert("RGB").save(OUT / "banner.jpg", quality=92, optimize=True)
 
 
+def site_hero(src):
+    """Text-free hero background and the transparent pixel title for site/."""
+    city = Image.open(src / "city_sunset.png").convert("RGB").resize((1920, 1080), Image.LANCZOS)
+    city.save(OUT / "hero.jpg", quality=88, optimize=True)
+    shadowed(pixel_text("PIXEL EMPIRE", 6, (255, 232, 140), (214, 140, 40), 1), 8, 3).save(OUT / "title.png", optimize=True)
+
+
 def _with_alpha(rgb, mask):
     layer = Image.new("RGBA", mask.size, rgb + (255,))
     layer.putalpha(mask)
@@ -175,6 +182,7 @@ def main():
     src = Path(sys.argv[1])
     OUT.mkdir(parents=True, exist_ok=True)
     banner(src)
+    site_hero(src)
     download_button()
     day_night(src)
     for name, ms in [("battle", 50), ("city_life", 70), ("modern", 50)]:
