@@ -3,8 +3,10 @@ extends RefCounted
 ## Procedural map generation (design/game-brief.md, MVP item 1).
 ## Pure function of (config, size, seed, player count, map type): same inputs, same map.
 ## Map types (map_generation.json "map_types"):
-##   continental — noise terrain, roads join every start through the centre.
-##   coast       — an inland sea fills the centre; a land ring joins the starts.
+##   continental — noise terrain, hidden land corridors join every start through
+##                 the centre; only allies get a visible road between them.
+##   coast       — an inland sea fills the centre; a land ring joins the starts
+##                 (a visible road only between allies).
 ##   islands     — every player on an island of their own (ships needed to meet).
 ## Fish shoals are placed on open water for every type.
 ## Example:
@@ -27,7 +29,9 @@ func _init(config: Dictionary, resource_node_defs: Dictionary = {}) -> void:
 	resource_defs = resource_node_defs
 
 
-func generate(size: int, map_seed: int, player_count: int, map_type: String = "continental") -> MapData:
+## `teams[i]` is player i's team (0 = none); only allies get a road between
+## their starts, so roads never give away an enemy's position.
+func generate(size: int, map_seed: int, player_count: int, map_type: String = "continental", teams: Array = []) -> MapData:
 	_rng.seed = map_seed
 	_map = MapData.new(size, size, map_seed)
 	_reserved.resize(size * size)
@@ -44,9 +48,9 @@ func generate(size: int, map_seed: int, player_count: int, map_type: String = "c
 	_classify_terrain()
 	_place_starts(maxi(player_count, 1))
 	if _type == "continental":
-		_carve_roads()
+		_carve_roads(teams)
 	elif _type == "coast":
-		_carve_ring_road()
+		_carve_ring_road(teams)
 	_place_trees()
 	_place_player_resources()
 	_place_start_woods()
@@ -192,56 +196,101 @@ func _place_starts(count: int) -> void:
 					_reserved[_map.index(n)] = 1
 
 
-## Wobbly dirt roads from each start to the map centre. They guarantee every
-## start is connected by land (roads ford rivers and cut mountain passes).
-func _carve_roads() -> void:
+## Allied start pairs (indices into start_positions) that get a visible road:
+## each team's starts chained in player order. Enemies never share a road, so
+## a road can never lead a player to an enemy base.
+func _allied_pairs(teams: Array) -> Array:
+	var by_team := {}
+	for i in mini(teams.size(), _map.start_positions.size()):
+		var team := int(teams[i])
+		if team != 0:
+			by_team.get_or_add(team, []).append(i)
+	var pairs := []
+	for team in by_team:
+		var members: Array = by_team[team]
+		for k in members.size() - 1:
+			pairs.append([members[k], members[k + 1]])
+	return pairs
+
+
+## Marks one road/corridor tile. A visible road paints PATH; a hidden corridor
+## keeps the natural look and only makes the tile passable (water becomes a
+## sand ford, mountain a rocky pass) and keeps trees and mines off it, so every
+## start stays reachable by land without a trail pointing at it.
+func _carve_tile(t: Vector2i, visible: bool) -> void:
+	if not _map.in_bounds(t):
+		return
+	var cur := _map.get_terrain(t)
+	if cur == T.DEEP_WATER or cur == T.WATER:
+		_map.set_terrain(t, T.SAND)
+	elif visible and cur != T.DIRT:
+		_map.set_terrain(t, T.PATH)
+	elif cur == T.MOUNTAIN:
+		_map.set_terrain(t, T.ROCKY)
+	_reserved[_map.index(t)] = 1
+
+
+## A wobbly line from `from` to `to` (tile space), carved by _carve_tile.
+func _carve_line(from: Vector2, to: Vector2, visible: bool) -> void:
+	var pos := from
+	var heading := (to - pos).normalized()
+	var guard := 0
+	while pos.distance_to(to) > 1.5 and guard < _map.width * 4:
+		guard += 1
+		var to_target := (to - pos).normalized()
+		heading = (heading + to_target * 0.35 + Vector2(_rng.randf_range(-0.6, 0.6), _rng.randf_range(-0.6, 0.6))).normalized()
+		pos += heading * 0.7
+		for o in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)]:
+			_carve_tile(Vector2i(floori(pos.x), floori(pos.y)) + o, visible)
+
+
+## Continental maps: hidden corridors from each start to the map centre keep
+## every start connected by land; only allies get a dirt road between them.
+func _carve_roads(teams: Array) -> void:
 	var center := Vector2(_map.width, _map.height) * 0.5
 	for s in _map.start_positions:
-		var pos := Vector2(s) + Vector2(0.5, 0.5)
-		var heading := (center - pos).normalized()
-		var guard := 0
-		while pos.distance_to(center) > 1.5 and guard < _map.width * 4:
-			guard += 1
-			var to_center := (center - pos).normalized()
-			heading = (heading + to_center * 0.35 + Vector2(_rng.randf_range(-0.6, 0.6), _rng.randf_range(-0.6, 0.6))).normalized()
-			pos += heading * 0.7
-			for o in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)]:
-				var t: Vector2i = Vector2i(floori(pos.x), floori(pos.y)) + o
-				if not _map.in_bounds(t):
-					continue
-				var cur := _map.get_terrain(t)
-				if cur == T.DEEP_WATER or cur == T.WATER:
-					_map.set_terrain(t, T.SAND)
-				elif cur != T.DIRT:
-					_map.set_terrain(t, T.PATH)
-				_reserved[_map.index(t)] = 1
+		_carve_line(Vector2(s) + Vector2(0.5, 0.5), center, false)
+	for pair in _allied_pairs(teams):
+		var a := Vector2(_map.start_positions[pair[0]]) + Vector2(0.5, 0.5)
+		var b := Vector2(_map.start_positions[pair[1]]) + Vector2(0.5, 0.5)
+		_carve_line(a, b, true)
 
 
-## Coast maps: a road along the start ring links every start to its neighbours
-## around the inland sea (fords water, cuts mountains, keeps forests out).
-func _carve_ring_road() -> void:
+## Coast maps: a hidden corridor along the start ring links every start to its
+## neighbours around the inland sea; allies get a visible road along the
+## shorter arc between their starts.
+func _carve_ring_road(teams: Array) -> void:
 	var center := Vector2(_map.width, _map.height) * 0.5
 	var ring := float(cfg.get("start_ring_radius", 0.33)) * _map.width
 	var steps := roundi(TAU * ring * 1.6)
+	var count := _map.start_positions.size()
+	var visible_steps := {}
+	for pair in _allied_pairs(teams):
+		var i0 := int(pair[0]) * steps / count
+		var span := (int(pair[1]) - int(pair[0])) * steps / count
+		if span > steps / 2:
+			span -= steps
+		for k in range(0, span + signi(span), signi(span) if span != 0 else 1):
+			visible_steps[posmod(i0 + k, steps)] = true
 	for i in steps:
 		var a := _start_angle + TAU * i / steps
 		var pos := center + Vector2(cos(a), sin(a)) * ring
 		for o in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)]:
-			var t: Vector2i = Vector2i(floori(pos.x), floori(pos.y)) + o
-			if not _map.in_bounds(t):
-				continue
-			var cur := _map.get_terrain(t)
-			if cur == T.DEEP_WATER or cur == T.WATER:
-				_map.set_terrain(t, T.SAND)
-			elif cur != T.DIRT:
-				_map.set_terrain(t, T.PATH)
-			_reserved[_map.index(t)] = 1
+			_carve_tile(Vector2i(floori(pos.x), floori(pos.y)) + o, visible_steps.has(i))
 
 
 # --- Objects ----------------------------------------------------------------
 
 func _free(t: Vector2i) -> bool:
 	return _map.in_bounds(t) and _map.walkable(t) and _reserved[_map.index(t)] == 0
+
+
+func _cluster_tile_ok(t: Vector2i, start: Vector2i) -> bool:
+	if _free(t):
+		return true
+	if start.x < 0 or not _map.in_bounds(t) or not _map.walkable(t) or _map.get_terrain(t) == T.PATH:
+		return false
+	return Vector2(t - start).length() >= float(cfg.get("start_resource_min_dist", 4.5))
 
 
 func _add_resource(type: String, t: Vector2i) -> void:
@@ -261,29 +310,40 @@ func _place_trees() -> void:
 			if not _free(t):
 				continue
 			var ter := _map.get_terrain(t)
-			var p := 0.0
+			var tree := "tree_pine" if _map.elevation[_map.index(t)] > pine_e or ter == T.ROCKY else "tree_oak"
 			if ter == T.FOREST:
-				p = forest_density
-			elif ter == T.GRASS or ter == T.MEADOW or ter == T.ROCKY:
-				p = lone_density
-			if _rng.randf() < p:
-				var e := _map.elevation[_map.index(t)]
-				_add_resource("tree_pine" if e > pine_e or ter == T.ROCKY else "tree_oak", t)
+				if _rng.randf() < forest_density:
+					_add_resource(tree, t)
+			elif (ter == T.GRASS or ter == T.MEADOW or ter == T.ROCKY) and _rng.randf() < lone_density:
+				# Outside forests trees come as small groves, never alone.
+				_place_cluster(tree, t, _rng.randi_range(int(cfg.get("grove_size_min", 3)), int(cfg.get("grove_size_max", 6))))
 
 
-func _place_cluster(type: String, around: Vector2i, size: int) -> bool:
-	if not _free(around):
+## Grows a clump of `size` nodes of `type` around `around`. Without
+## `allow_partial`, a spot with no room for the whole clump places nothing and
+## returns false, so the caller can try another spot.
+## A player's start clumps pass that player's `start` tile: they may grow into
+## the start's reserved ring (never roads, never within start_resource_min_dist).
+func _place_cluster(type: String, around: Vector2i, size: int, allow_partial := true, start := Vector2i(-1, -1)) -> bool:
+	if not _cluster_tile_ok(around, start):
 		return false
 	var cluster: Array[Vector2i] = [around]
 	var frontier: Array[Vector2i] = [around]
 	var tries := 0
-	while cluster.size() < size and not frontier.is_empty() and tries < size * 12:
+	# Tiles stay within the radius of a disc holding `size` tiles plus
+	# "cluster_radius_slack" (per type in "cluster_radius_slack_by_type"), so
+	# clusters grow as clumps, not snakes; a larger slack gives looser clumps.
+	var slack := float(cfg.get("cluster_radius_slack_by_type", {}).get(type, cfg.get("cluster_radius_slack", 0.6)))
+	var max_r := sqrt(size / PI) + slack
+	while cluster.size() < size and not frontier.is_empty() and tries < size * 30:
 		tries += 1
 		var base: Vector2i = frontier[_rng.randi() % frontier.size()]
 		var n: Vector2i = base + [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)][_rng.randi() % 4]
-		if _free(n) and not cluster.has(n):
+		if Vector2(n - around).length() <= max_r and _cluster_tile_ok(n, start) and not cluster.has(n):
 			cluster.append(n)
 			frontier.append(n)
+	if cluster.size() < size and not allow_partial:
+		return false
 	for t in cluster:
 		_add_resource(type, t)
 	return true
@@ -295,11 +355,12 @@ func _place_player_resources() -> void:
 		for type in rules:
 			var r: Dictionary = rules[type]
 			for c in int(r.get("clusters", 1)):
-				for attempt in 40:
+				# First 40 spots must fit the whole clump; later ones accept a partial one.
+				for attempt in 80:
 					var a := _rng.randf() * TAU
 					var d := _rng.randf_range(r.get("min_dist", 6), r.get("max_dist", 10))
 					var t := s + Vector2i(roundi(cos(a) * d), roundi(sin(a) * d))
-					if _map.in_bounds(t) and _reserved_ok_for_start_resource(t) and _place_cluster(type, t, int(r.get("cluster_size", 4))):
+					if _map.in_bounds(t) and _place_cluster(type, t, int(r.get("cluster_size", 4)), attempt >= 40, s):
 						break
 
 
@@ -319,27 +380,18 @@ func _place_start_woods() -> void:
 					break
 
 
-## Player resources sit at the edge of the cleared start area, so they may use
-## reserved start tiles but never road tiles.
-func _reserved_ok_for_start_resource(t: Vector2i) -> bool:
-	if _map.get_terrain(t) == T.PATH:
-		return false
-	_reserved[_map.index(t)] = 0
-	return true
-
-
 func _place_extra_resources() -> void:
 	var per: Dictionary = cfg.get("extra_resource_clusters_per_100_tiles_side", {})
 	for type in per:
 		var count := roundi(float(per[type]) * _map.width / 100.0)
 		for i in count:
-			for attempt in 60:
+			for attempt in 120:
 				var t := Vector2i(_rng.randi_range(4, _map.width - 5), _rng.randi_range(4, _map.height - 5))
 				var far := true
 				for s in _map.start_positions:
 					if Vector2(s).distance_to(Vector2(t)) < 14.0:
 						far = false
-				if far and _place_cluster(type, t, _rng.randi_range(3, 6)):
+				if far and _place_cluster(type, t, _rng.randi_range(int(cfg.get("extra_cluster_size_min", 3)), int(cfg.get("extra_cluster_size_max", 6))), attempt >= 60):
 					break
 
 

@@ -92,7 +92,8 @@ func start(cfg: Dictionary) -> void:
 		player_defs.append({"name": tr("Computer"), "ai": true})
 
 	seed(map_seed)  # reproducible matches: global randomness follows the map seed
-	map = MapGenerator.new(gen_cfg, GameData.resource_nodes).generate(size, map_seed, player_defs.size(), String(cfg.get("map_type", gen_cfg.get("default_map_type", "continental"))))
+	var map_teams: Array = player_defs.map(func(d: Dictionary) -> int: return int(d.get("team", 0)))
+	map = MapGenerator.new(gen_cfg, GameData.resource_nodes).generate(size, map_seed, player_defs.size(), String(cfg.get("map_type", gen_cfg.get("default_map_type", "continental"))), map_teams)
 	pathfinder = Pathfinder.new(map)
 	naval_pathfinder = Pathfinder.new(map, true)
 	var stock: Dictionary = MatchConfig.starting_resources(String(cfg.get("resources", GameData.rules.get("default_starting_resources", "standard"))))
