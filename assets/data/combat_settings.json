@@ -52,6 +52,12 @@
   "line_hit_width": 0.35,
   "line_overshoot": 2.0,
   "melee_building_reach_extra": 0.3,
+  "melee_building_damage_mult": 2.0,
+  "melee_building_exempt_classes": [
+    "siege",
+    "ship",
+    "animal"
+  ],
   "monk": {
     "heal_interval": 1.0,
     "convert_base_seconds": 4.0,

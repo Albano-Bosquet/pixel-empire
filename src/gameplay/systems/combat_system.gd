@@ -43,6 +43,15 @@ static func compute_damage(attack: int, attack_type: String, bonuses: Dictionary
 	return dmg
 
 
+## Melee swing damage against a building: scaled by "melee_building_damage_mult"
+## unless the attacker has a class in "melee_building_exempt_classes" (rams, ships, animals).
+static func melee_building_damage(dmg: int, attacker_classes: Array, combat_cfg: Dictionary) -> int:
+	for cls in combat_cfg.get("melee_building_exempt_classes", []):
+		if attacker_classes.has(cls):
+			return dmg
+	return maxi(1, roundi(dmg * float(combat_cfg.get("melee_building_damage_mult", 1.0))))
+
+
 ## True if a unit definition may attack `target` ("attack_targets" lists allowed classes; empty = any).
 static func can_target(attacker_def: Dictionary, target: Entity) -> bool:
 	# Melee cannot cross the shoreline: land melee never hits ships, ship melee never hits land units.
@@ -263,6 +272,8 @@ func _land_melee(u: Unit) -> void:
 		_explode(u, _aim_point(u, t))
 		return
 	var dmg := compute_damage(_attack_of(u), u.def.get("attack_type", "melee"), u.def.get("bonuses", {}), t)
+	if t is Building:
+		dmg = melee_building_damage(dmg, u.classes(), _cfg)
 	_apply(t, dmg, u)
 	_game.fx.burst(t.position + Vector2(0, -14), "blood" if t is Unit else "chips", SoundRules.melee_hit_key(GameData.audio, u.type_id, u.def, t is Building))
 

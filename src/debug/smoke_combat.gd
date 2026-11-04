@@ -109,6 +109,10 @@ func _combat() -> void:
 	_game.fog.update_now()
 	_check(CombatSystem.compute_damage(3, "melee", {"cavalry": 15}, kn) == 16, "spearman vs knight: max(1, 3 - 2 armor) + 15 bonus = 16")
 	_check(CombatSystem.compute_damage(4, "pierce", {}, kn) == 2, "knight pierce armor reduces arrows to 2")
+	var ccfg: Dictionary = GameData.combat
+	var bmult := float(ccfg.get("melee_building_damage_mult", 1.0))
+	_check(CombatSystem.melee_building_damage(8, ["infantry"], ccfg) == roundi(8 * bmult), "swordsman melee vs building scaled by melee_building_damage_mult")
+	_check(CombatSystem.melee_building_damage(127, ["siege", "ram"], ccfg) == 127, "rams are exempt from the melee building multiplier")
 
 	# 4. Right-click attack order (knight hunts the swordsman).
 	_game.selection.set_selection([kn])
@@ -150,6 +154,29 @@ func _combat() -> void:
 	_check(_game.static_entity_at(h_origin) == null, "destroyed house frees its tiles")
 	await _seconds(0.5)
 	await _shot("stage3_04_rubble")
+
+	# 5b. Swordsmen raze a house: melee swings use melee_building_damage_mult.
+	if is_instance_valid(cat) and not cat.dead:
+		cat.die()  # the catapult would otherwise shell the next house too
+	var h2_origin := _find_build_spot("house", Iso.tile_of(tc.grid_pos) + Vector2i(-12, 14))
+	var house2 := _game.buildings.place("house", 2, h2_origin, true)
+	var swords := _spawn_group("swordsman", 1, house2.grid_pos + Vector2(2.5, 0), 5)
+	_game.fog.update_now()
+	_game.combat.order_attack(swords, house2)
+	_game.camera.focus_world(house2.position)
+	var expected_hit := CombatSystem.melee_building_damage(CombatSystem.compute_damage(int(GameData.units["swordsman"]["attack_damage"]), "melee", {}, house2), ["infantry"], GameData.combat)
+	var first_hit := 0
+	t0 = Time.get_ticks_msec()
+	while house2.hp == house2.max_hp and Time.get_ticks_msec() - t0 < 10000:
+		await _seconds(0.02)
+	first_hit = house2.max_hp - house2.hp
+	_check(first_hit > 0 and first_hit % expected_hit == 0, "swordsman hit on a house deals %d (got %d)" % [expected_hit, first_hit])
+	await _seconds(2.0)
+	await _shot("stage3_04b_swordsmen_raze_house")
+	var start_ms := Time.get_ticks_msec()
+	while is_instance_valid(house2) and not house2.dead and Time.get_ticks_msec() - start_ms < 60000:
+		await _seconds(0.1)
+	_check(not is_instance_valid(house2) or house2.dead, "5 swordsmen raze a house in %.1f s" % ((Time.get_ticks_msec() - start_ms) / 1000.0 + 2.0))
 
 	# 6. Our watch tower shoots an intruder.
 	me.age = 1
