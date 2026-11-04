@@ -47,7 +47,17 @@ func set_fullscreen(on: bool) -> void:
 	fullscreen_changed.emit(fullscreen)
 
 
+## Exclusive full screen, with the cursor confined to the window so it cannot
+## drift onto a second monitor (edge scrolling needs the screen edges).
 func _apply() -> void:
-	var mode := DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
+	var mode := DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
 	if DisplayServer.window_get_mode() != mode:
 		DisplayServer.window_set_mode(mode)
+	Input.mouse_mode = Input.MOUSE_MODE_CONFINED if fullscreen else Input.MOUSE_MODE_VISIBLE
+
+
+## Windows drops the cursor clip when the game loses focus (Alt+Tab), so it
+## is set again when the window comes back.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_IN and fullscreen:
+		Input.mouse_mode = Input.MOUSE_MODE_CONFINED

@@ -18,7 +18,8 @@ func run_mode(game: Game, _mode: String) -> void:
 
 
 func _is_full() -> bool:
-	return DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+	return DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN \
+			and Input.mouse_mode == Input.MOUSE_MODE_CONFINED
 
 
 func _saved() -> bool:
@@ -42,7 +43,7 @@ func _run_display() -> void:
 	_key(KEY_F11, true)
 	_key(KEY_F11, false)
 	await _frames(20)
-	_check(_is_full() and Display.fullscreen, "F11 enters full screen")
+	_check(_is_full() and Display.fullscreen, "F11 enters exclusive full screen, cursor confined")
 	_check(_saved(), "full screen saved in settings.cfg")
 	var full := get_viewport().get_visible_rect().size
 	_check(full.x >= windowed.x and full.y >= windowed.y, "viewport grows (%s -> %s)" % [windowed, full])
@@ -58,6 +59,7 @@ func _run_display() -> void:
 		t.button_pressed = false
 	await _frames(20)
 	_check(not _is_full() and not _saved(), "pause menu switch leaves full screen")
+	_check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "cursor free again in a window")
 	_main._close_pause()
 
 	var e := InputEventKey.new()
