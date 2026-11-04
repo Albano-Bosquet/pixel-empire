@@ -18,7 +18,7 @@ var cfg: Dictionary
 var resource_defs: Dictionary
 var _rng := RandomNumberGenerator.new()
 var _map: MapData
-var _reserved: PackedByteArray  # tiles that must stay free (start areas, roads)
+var _reserved: PackedByteArray  # tiles that must stay free: 1 = start area, 2 = road or corridor
 var _type := "continental"
 var _type_cfg: Dictionary = {}
 var _start_angle := NAN
@@ -227,7 +227,7 @@ func _carve_tile(t: Vector2i, visible: bool) -> void:
 		_map.set_terrain(t, T.PATH)
 	elif cur == T.MOUNTAIN:
 		_map.set_terrain(t, T.ROCKY)
-	_reserved[_map.index(t)] = 1
+	_reserved[_map.index(t)] = 2
 
 
 ## A wobbly line from `from` to `to` (tile space), carved by _carve_tile.
@@ -288,7 +288,7 @@ func _free(t: Vector2i) -> bool:
 func _cluster_tile_ok(t: Vector2i, start: Vector2i) -> bool:
 	if _free(t):
 		return true
-	if start.x < 0 or not _map.in_bounds(t) or not _map.walkable(t) or _map.get_terrain(t) == T.PATH:
+	if start.x < 0 or not _map.in_bounds(t) or not _map.walkable(t) or _reserved[_map.index(t)] == 2:
 		return false
 	return Vector2(t - start).length() >= float(cfg.get("start_resource_min_dist", 4.5))
 
@@ -323,7 +323,7 @@ func _place_trees() -> void:
 ## `allow_partial`, a spot with no room for the whole clump places nothing and
 ## returns false, so the caller can try another spot.
 ## A player's start clumps pass that player's `start` tile: they may grow into
-## the start's reserved ring (never roads, never within start_resource_min_dist).
+## the start's reserved ring (never roads or corridors, never within start_resource_min_dist).
 func _place_cluster(type: String, around: Vector2i, size: int, allow_partial := true, start := Vector2i(-1, -1)) -> bool:
 	if not _cluster_tile_ok(around, start):
 		return false
