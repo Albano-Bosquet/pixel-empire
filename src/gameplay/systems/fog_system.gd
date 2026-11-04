@@ -3,7 +3,8 @@ extends Node
 ## Fog of war (design/game-brief.md MVP item 1): per-player visible/explored
 ## grids rebuilt at fog_update_hz from every owned unit and building's sight.
 ## The local player's grid feeds the overlay shader; enemy units outside vision
-## are hidden, enemy buildings stay shown once explored. AI players use their
+## are hidden; other players' buildings appear once actually seen and then stay
+## shown (an explored tile alone does not reveal what was built there later). AI players use their
 ## own grids, so they never see through the fog either.
 ## Example: if game.fog.is_visible(player_id, enemy): ...
 
@@ -19,6 +20,7 @@ var _h := 0
 var _visible: Dictionary = {}   # player_id -> PackedByteArray (1 = visible now)
 var _explored: Dictionary = {}  # player_id -> PackedByteArray (1 = ever seen)
 var _offsets: Dictionary = {}   # sight radius -> Array[Vector2i]
+var _seen_buildings: Dictionary = {}  # entity_id -> true: other players' buildings the local player has seen
 var _timer := 0.0
 var _interval := 0.125
 var _img: Image
@@ -102,6 +104,11 @@ func explored_grid(player_id: int) -> PackedByteArray:
 func set_explored(player_id: int, grid: PackedByteArray) -> void:
 	if _explored.has(player_id) and grid.size() == _explored[player_id].size():
 		_explored[player_id] = grid.duplicate()
+	# Saves keep no building memory: count what stands on explored ground as seen.
+	if player_id == _game.local_player:
+		for b in _game.buildings.buildings:
+			if is_explored(player_id, Iso.tile_of(b.grid_pos)):
+				_seen_buildings[b.entity_id] = true
 
 
 ## Tiles explored by `player_id` (0..1), for statistics and the AI.
@@ -172,7 +179,9 @@ func _refresh_local() -> void:
 			u.visible = is_visible(pid, u) and u.aboard == null
 	for b in _game.buildings.buildings:
 		if b.owner_id != pid:
-			b.visible = not enabled or is_explored(pid, Iso.tile_of(b.grid_pos)) or is_visible(pid, b)
+			if is_visible(pid, b):
+				_seen_buildings[b.entity_id] = true
+			b.visible = not enabled or _seen_buildings.has(b.entity_id) or (b.owner_id == Entity.GAIA and is_explored(pid, Iso.tile_of(b.grid_pos)))
 
 
 ## Full-map quad that renders the fog shader.

@@ -82,6 +82,8 @@ func select_in_screen_rect(screen_rect: Rect2, additive: bool) -> void:
 
 func _click(screen_pos: Vector2, additive: bool, same_type: bool = false) -> void:
 	var e := pick(screen_pos)
+	if e != null and _hidden_foreign(e):
+		e = null  # a remembered enemy building: attackable, but its panel would leak what it does now
 	var now := Time.get_ticks_msec()
 	var is_double := e != null and (same_type or now - _last_click_ms < DOUBLE_CLICK_MS and _last_click_type == e.type_id)
 	_last_click_ms = now
@@ -147,6 +149,21 @@ func set_selection(list: Array) -> void:
 			e.ring_color = _ring_color(e)
 			e.selected = true
 			selected.append(e)
+	EventBus.selection_changed.emit(selected)
+
+
+## Whether `e` belongs to another player and is out of the local player's sight.
+func _hidden_foreign(e: Entity) -> bool:
+	return e.owner_id != _game.local_player and e.owner_id != Entity.GAIA and not _game.fog.is_visible(_game.local_player, e)
+
+
+func _physics_process(_delta: float) -> void:
+	var gone := selected.filter(func(e): return is_instance_valid(e) and _hidden_foreign(e))
+	if gone.is_empty():
+		return
+	for e in gone:
+		e.selected = false
+		selected.erase(e)
 	EventBus.selection_changed.emit(selected)
 
 

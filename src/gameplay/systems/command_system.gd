@@ -63,10 +63,13 @@ func set_formation(pid: int, f: String) -> void:
 
 ## Whether `pid` can currently target `target`. Uses `pid`'s own fog, not the node's
 ## `visible` flag: that one follows the local player, so on the host it would drop
-## orders from a network client aimed at things only the client sees.
+## orders from a network client aimed at things only the client sees. Buildings
+## on explored ground stay targetable from memory.
 func _sees(pid: int, target: Entity) -> bool:
 	if target is Unit and (target as Unit).aboard != null:
 		return false
+	if target is Building and _game.fog.is_explored(pid, Iso.tile_of(target.grid_pos)):
+		return true
 	return _game.fog.is_visible(pid, target)
 
 
