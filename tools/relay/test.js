@@ -1,13 +1,15 @@
 // Protocol test for server.js: starts the relay on a free port and drives a
 // host and two clients through hosting, listing, joining, forwarding, kicking
 // and the host leaving. Run: npm test
+// Against another relay (e.g. the Cloudflare one under `wrangler dev`):
+//   RELAY_URL=ws://127.0.0.1:8787 node test.js
 "use strict";
 const { spawn } = require("child_process");
 const WebSocket = require("ws");
 const assert = require("assert");
 
 const PORT = 18000 + Math.floor(Math.random() * 1000);
-const URL = `ws://127.0.0.1:${PORT}`;
+const URL = process.env.RELAY_URL || `ws://127.0.0.1:${PORT}`;
 const HELLO = { tag: "PixelEmpire1", version: "9.9.9" };
 
 function open() {
@@ -45,8 +47,8 @@ function frame(peer, payload) {
 const closed = (ws) => new Promise((r) => (ws.readyState === ws.CLOSED ? r() : ws.on("close", r)));
 
 async function main() {
-  const srv = spawn(process.execPath, [__dirname + "/server.js"], { env: { ...process.env, PORT: String(PORT) } });
-  await new Promise((r) => srv.stdout.once("data", r));
+  const srv = process.env.RELAY_URL ? null : spawn(process.execPath, [__dirname + "/server.js"], { env: { ...process.env, PORT: String(PORT) } });
+  if (srv) await new Promise((r) => srv.stdout.once("data", r));
   try {
     const host = await open();
     host.send(JSON.stringify({ op: "host", name: "Ana", max: 4, ...HELLO }));
@@ -105,7 +107,7 @@ async function main() {
     lister.close();
     console.log("RELAY TEST: PASS");
   } finally {
-    srv.kill();
+    if (srv) srv.kill();
   }
 }
 

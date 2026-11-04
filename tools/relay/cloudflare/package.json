@@ -1,0 +1,13 @@
+{
+  "name": "pixel-empire-relay-cloudflare",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pixel Empire relay on Cloudflare Workers + Durable Objects (free plan)",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.157.0"
+  }
+}

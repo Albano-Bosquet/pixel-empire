@@ -184,3 +184,6 @@ tools/godot/
 .github/FUNDING.yml
 # Stray duplicate launcher.
 /-run_game.bat
+
+# Cloudflare relay local dev state
+.wrangler/

@@ -4,29 +4,51 @@ Este servidor permite crear partidas online y unirse a ellas **sin abrir puertos
 Funciona también desde móviles con datos.
 
 Todos los jugadores, anfitrión incluido, se conectan **hacia** el servidor por WebSocket
-seguro (`wss://`, puerto 443). El servidor reenvía los paquetes dentro de cada sala y
-nunca lee los datos del juego. La partida la sigue simulando el ordenador del anfitrión.
+seguro (`wss://`). El servidor reenvía los paquetes dentro de cada sala y nunca lee los
+datos del juego. La partida la sigue simulando el ordenador del anfitrión.
 
-- `server.js`: el servidor (Node.js con la librería `ws`).
-- `test.js`: prueba del protocolo (`npm test`).
-- `Dockerfile`: para desplegarlo en un VPS con Docker.
-- `../../render.yaml`: despliegue en Render con un clic.
+Hay dos versiones del servidor con el mismo protocolo. El juego no distingue una de otra:
 
-## Opción A: Render (gratis, sin tarjeta)
+| Carpeta | Dónde corre | Para qué |
+|---|---|---|
+| `cloudflare/` | Cloudflare Workers + Durable Objects | **Recomendado**: gratis, sin tarjeta y no se duerme |
+| `server.js` | Node.js (PC, VPS, Docker) | Pruebas en local o un servidor propio |
 
-1. Crea una cuenta en <https://render.com> entrando con tu cuenta de GitHub.
-2. **New → Blueprint** y elige el repositorio `pixel-empire`. Render lee `render.yaml`
-   y crea el servicio `pixel-empire-relay`. Pulsa **Apply**.
-3. Cuando aparezca *Live*, copia la dirección del servicio
-   (por ejemplo `https://pixel-empire-relay.onrender.com`).
-4. En `assets/data/net_settings.json`, pon `relay_url` con `wss://` en lugar de `https://`:
-   `"relay_url": "wss://pixel-empire-relay.onrender.com"`.
+`test.js` prueba el protocolo contra cualquiera de las dos (`npm test`).
 
-En el plan gratuito, el servidor **se duerme tras 15 minutos sin uso**. La primera
-conexión después de eso tarda hasta un minuto en despertarlo (el juego espera
-`relay_timeout` segundos). Con el plan de pago más barato no se duerme.
+## Opción A: Cloudflare (recomendada, 100 % gratis)
 
-## Opción B: un VPS propio (Docker)
+Solo hay que hacerlo una vez:
+
+1. Crea una cuenta gratuita en <https://dash.cloudflare.com/sign-up>. No pide tarjeta.
+2. En una terminal, desde la carpeta del proyecto:
+
+   ```bash
+   cd tools/relay/cloudflare
+   npm install
+   npx wrangler login
+   npx wrangler deploy
+   ```
+
+   `wrangler login` abre el navegador para que autorices tu cuenta. La primera vez,
+   Cloudflare te pide elegir un subdominio `workers.dev`.
+3. `deploy` termina mostrando la dirección, por ejemplo
+   `https://pixel-empire-relay.tu-usuario.workers.dev`.
+4. En `assets/data/net_settings.json`, pon esa dirección en `relay_url` con `wss://`:
+   `"relay_url": "wss://pixel-empire-relay.tu-usuario.workers.dev"`.
+
+**Límites del plan gratuito:** 100.000 peticiones al día. Cloudflare cuenta 1 petición por
+cada 20 mensajes que *llegan* al servidor, y los mensajes que salen no cuentan. Eso da
+para unas **12 horas de partidas de 4 jugadores al día** (más de 30 h si son de 2). Si se
+supera, el servidor online deja de funcionar hasta las 00:00 UTC. Sin tarjeta no se puede
+cobrar nada.
+
+Para ver el uso: panel de Cloudflare → Workers & Pages → `pixel-empire-relay`.
+
+Para actualizar el servidor después de cambiar `cloudflare/src/index.js`, vuelve a ejecutar
+`npx wrangler deploy`.
+
+## Opción B: un servidor propio (Node.js / Docker)
 
 ```bash
 docker build -t pixel-empire-relay tools/relay
@@ -46,28 +68,37 @@ Luego `"relay_url": "wss://relay.tudominio.com"`.
 
 ## Probar en local
 
+Servidor Node:
+
 ```bash
-cd tools/relay
-npm install
-npm test
-npm start
+cd tools/relay && npm install && npm test && npm start
 ```
 
-Partida de prueba completa a través del relay local (anfitrión, cliente y reconexión):
+Versión Cloudflare en local, con el mismo test:
 
 ```bash
-tools/godot/Godot_v4.7.2-stable_win64_console.exe --path . -- --mp=host --smoke=mp --online --relay=ws://127.0.0.1:8080
+cd tools/relay/cloudflare && npm install && npm run dev
+```
+
+En otra terminal:
+
+```bash
+cd tools/relay && RELAY_URL=ws://127.0.0.1:8787 node test.js
+```
+
+Partida de prueba completa del juego a través de un relay local (anfitrión, cliente y
+reconexión). Usa el puerto 8080 para Node o 8787 para Cloudflare:
+
+```bash
+tools/godot/Godot_v4.7.2-stable_win64_console.exe --path . -- --mp=host --smoke=mp --online --relay=ws://127.0.0.1:8787
 ```
 
 Lanza después el mismo comando con `--mp=client` y luego con `--mp=rejoin`.
 
-## Límites
+## Límites del servidor
 
-Están en `server.js` y en variables de entorno:
-
-- `MAX_ROOMS`: 300 salas.
+- 300 salas.
 - Hasta 8 jugadores por sala.
 - Paquetes de 1 MB como máximo.
 
-Las conexiones muertas se cierran tras unos 15–30 s sin respuesta. Si el anfitrión se
-va, la sala se cierra.
+Si el anfitrión se va, la sala se cierra.

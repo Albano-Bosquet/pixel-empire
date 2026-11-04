@@ -1,0 +1,12 @@
+// Pixel Empire relay on Cloudflare Workers. Deploy: npm install && npx wrangler deploy
+// The address becomes wss://pixel-empire-relay.<your-subdomain>.workers.dev
+{
+  "name": "pixel-empire-relay",
+  "main": "src/index.js",
+  "compatibility_date": "2025-09-01",
+  "durable_objects": {
+    "bindings": [{ "name": "RELAY", "class_name": "Relay" }]
+  },
+  // SQLite-backed class: the kind the Workers Free plan allows.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Relay"] }]
+}
