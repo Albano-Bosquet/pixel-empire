@@ -2,7 +2,8 @@ class_name PlacementController
 extends Node2D
 ## Building placement mode: a translucent ghost follows the cursor snapped to
 ## the grid, tinted green/red by validity. Left click places (Shift keeps the
-## mode for another), right click or Esc cancels. Placement itself goes through
+## mode for another), right click or Esc cancels. On touch screens the ghost
+## follows the finger and the building is placed where it is lifted. Placement itself goes through
 ## BuildingSystem.try_place (UI never mutates game state directly).
 ## "line_build" buildings (walls): press, drag and release to lay an 8-connected
 ## line of pieces (straight or diagonal); the selected workers start on the first and chain along it.
@@ -95,20 +96,17 @@ func _unhandled_input(event: InputEvent) -> void:
 			_place_line(event.shift_pressed)
 		get_viewport().set_input_as_handled()
 		return
+	if _game.is_touch_pointer(event) and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		# Touch: the ghost follows the finger and the building goes where it is lifted.
+		_update_origin(event.position)
+		if not event.pressed:
+			_place_single(false, true)
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			_update_origin(event.position)
-			var builders := _game.selection.own_units().filter(func(u): return u.is_worker)
-			var typed: Array[Unit] = []
-			typed.assign(builders)
-			var ok := _game.buildings.placement_error(type_id, _origin) == "" and _game.buildings.requirement_error(_game.local_state(), type_id) == ""
-			if not ok:
-				var why := _game.buildings.requirement_error(_game.local_state(), type_id)
-				EventBus.notify.emit(_game.local_player, why if why != "" else _game.buildings.placement_error(type_id, _origin))
-			else:
-				_game.orders.submit({"t": "place", "type": type_id, "origins": [_origin], "builders": OrderRouter.ids(typed)})
-			if not event.shift_pressed or not ok and _game.buildings.requirement_error(_game.local_state(), type_id) != "":
-				cancel()
+			_place_single(event.shift_pressed)
 			get_viewport().set_input_as_handled()
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			cancel()
@@ -116,6 +114,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		cancel()
 		get_viewport().set_input_as_handled()
+
+
+## Places one building at the current ghost position. `keep` (Shift) stays in
+## placement mode for another one; `retry_blocked` (touch) stays when the spot
+## is blocked so the player can drag the ghost elsewhere.
+func _place_single(keep: bool, retry_blocked: bool = false) -> void:
+	var builders := _game.selection.own_units().filter(func(u): return u.is_worker)
+	var typed: Array[Unit] = []
+	typed.assign(builders)
+	var req := _game.buildings.requirement_error(_game.local_state(), type_id)
+	var spot := _game.buildings.placement_error(type_id, _origin)
+	if req != "" or spot != "":
+		EventBus.notify.emit(_game.local_player, req if req != "" else spot)
+	else:
+		_game.orders.submit({"t": "place", "type": type_id, "origins": [_origin], "builders": OrderRouter.ids(typed)})
+	if req != "" or not keep and not (retry_blocked and spot != ""):
+		cancel()
 
 
 func _place_line(keep: bool) -> void:

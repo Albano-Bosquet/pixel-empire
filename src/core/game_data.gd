@@ -24,6 +24,8 @@ var audio: Dictionary = {}
 var wildlife: Dictionary = {}
 ## Day/night cycle and ambient life (ambience_settings.json).
 var ambience: Dictionary = {}
+## Touch-screen gestures: thresholds and timings (touch_settings.json).
+var touch: Dictionary = {}
 
 var _errors: PackedStringArray = []
 
@@ -51,6 +53,7 @@ func reload() -> void:
 	audio = _load("audio_settings.json")
 	wildlife = _load("wildlife_settings.json")
 	ambience = _load("ambience_settings.json")
+	touch = _load("touch_settings.json")
 	_validate()
 	for e in _errors:
 		push_error("GameData: " + e)

@@ -31,6 +31,8 @@ var buildings: BuildingSystem
 var economy: EconomySystem
 var production: ProductionSystem
 var placement: PlacementController
+## Touch-screen gestures (phones, tablets); idle on mouse-only machines.
+var touch: TouchControls
 var combat: CombatSystem
 var techs: TechSystem
 var market: MarketSystem
@@ -288,6 +290,10 @@ func _build_scene() -> void:
 	victory.name = "VictorySystem"
 	systems.add_child(victory)
 	victory.setup(self, GameData.rules, String(config.get("victory", GameData.rules.get("default_victory", "conquest"))))
+	touch = TouchControls.new()
+	touch.name = "TouchControls"
+	systems.add_child(touch)
+	touch.setup(self, GameData.touch, bool(config.get("touch", false)) or OS.get_cmdline_user_args().has("--touch"))
 	# Added after the systems so it receives unhandled input first.
 	placement = PlacementController.new()
 	placement.name = "Placement"
@@ -405,10 +411,17 @@ func kill_unit(u: Unit) -> void:
 func _make_showcase() -> void:
 	hud.visible = false
 	camera.input_enabled = false
-	for n in [selection, commands, placement]:
+	for n in [selection, commands, placement, touch]:
 		n.set_process_unhandled_input(false)
+	touch.set_process_input(false)
 	victory.set_physics_process(false)
 	set_process_unhandled_key_input(false)
+
+
+## Whether `event` is a finger's emulated mouse that TouchControls handles
+## (the mouse-driven systems leave those alone).
+func is_touch_pointer(event: InputEvent) -> bool:
+	return touch != null and touch.handles(event)
 
 
 ## The live entity with `id`, or null.

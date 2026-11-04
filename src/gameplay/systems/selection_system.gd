@@ -42,7 +42,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				box_changed.emit(Rect2(), false)
 				select_in_screen_rect(_rect(_press_pos, event.position), event.shift_pressed)
 			else:
-				_click(event.position, event.shift_pressed, event.ctrl_pressed)
+				click(event.position, event.shift_pressed, event.ctrl_pressed)
 			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion and _pressing:
 		if not _box_active and event.position.distance_to(_press_pos) > DRAG_THRESHOLD_PX:
@@ -80,7 +80,15 @@ func select_in_screen_rect(screen_rect: Rect2, additive: bool) -> void:
 	set_selection(found)
 
 
-func _click(screen_pos: Vector2, additive: bool, same_type: bool = false) -> void:
+## Draws (or hides) the selection rectangle; used by touch box selection.
+func show_box(screen_rect: Rect2, active: bool) -> void:
+	box_changed.emit(screen_rect, active)
+
+
+## A left click / tap at `screen_pos`: selects what is there. A quick second click
+## on the same type (or `same_type`) selects all of that type on screen.
+## `additive` toggles the unit in the current selection (Shift).
+func click(screen_pos: Vector2, additive: bool, same_type: bool = false) -> void:
 	var e := pick(screen_pos)
 	if e != null and _hidden_foreign(e):
 		e = null  # a remembered enemy building: attackable, but its panel would leak what it does now

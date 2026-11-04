@@ -27,20 +27,28 @@ func setup(game: Game, movement_cfg: Dictionary) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
-		var world := _game.world_from_screen(event.position)
-		var target := _game.selection.pick(event.position)
-		var units := _game.selection.own_units()
-		var blds := _game.selection.own_buildings()
-		if units.is_empty() and blds.is_empty():
-			return
-		_game.orders.submit({"t": "issue", "units": OrderRouter.ids(units), "buildings": OrderRouter.ids(blds),
-			"grid": Iso.world_to_grid(world), "target": target.entity_id if target != null else 0, "queue": event.shift_pressed})
-		if target != null and target.visible:
-			_game.ground_fx.add_target_marker(target, _hostile_to(target))
-		else:
-			_game.ground_fx.add_move_marker(world)
-		EventBus.local_order.emit(units)
-		get_viewport().set_input_as_handled()
+		if order_at(event.position, event.shift_pressed):
+			get_viewport().set_input_as_handled()
+
+
+## The local player's contextual order at `screen_pos` (right click, or a tap on
+## touch screens) for the current selection. Returns false when nothing is selected.
+## Example: commands.order_at(tap_position, false)
+func order_at(screen_pos: Vector2, queue: bool) -> bool:
+	var world := _game.world_from_screen(screen_pos)
+	var target := _game.selection.pick(screen_pos)
+	var units := _game.selection.own_units()
+	var blds := _game.selection.own_buildings()
+	if units.is_empty() and blds.is_empty():
+		return false
+	_game.orders.submit({"t": "issue", "units": OrderRouter.ids(units), "buildings": OrderRouter.ids(blds),
+		"grid": Iso.world_to_grid(world), "target": target.entity_id if target != null else 0, "queue": queue})
+	if target != null and target.visible:
+		_game.ground_fx.add_target_marker(target, _hostile_to(target))
+	else:
+		_game.ground_fx.add_move_marker(world)
+	EventBus.local_order.emit(units)
+	return true
 
 
 ## Whether a right-clicked target is something the local player fights (red ring).

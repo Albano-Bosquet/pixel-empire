@@ -1,0 +1,7 @@
+{
+  "drag_threshold_px": 14,
+  "long_press_ms": 450,
+  "double_tap_ms": 350,
+  "long_press_vibrate_ms": 25,
+  "pinch_min_zoom_step": 0.02
+}

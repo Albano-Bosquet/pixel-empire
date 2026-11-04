@@ -3,7 +3,7 @@ extends Node
 ## pause / end screens -> back to the title or a rematch.
 ## Command line (skips the menu):
 ##   -- --mode=sandbox|skirmish --difficulty=easy|normal|hard --size=small --map=continental|coast|islands
-##      --seed=123 --victory=conquest|town_center --nofog --smoke[=combat|ai|fx|stage4|naval|modern|military|lang|audio|features|work] --lang=es|en
+##      --seed=123 --victory=conquest|town_center --nofog --smoke[=combat|ai|fx|stage4|naval|modern|military|lang|audio|features|work|touch] --lang=es|en
 ##   multiplayer smoke: -- --mp=host --smoke=mp  /  -- --mp=client --smoke=mp
 
 var game: Game
@@ -72,6 +72,8 @@ func _start_smoke(mode: Variant) -> void:
 		script = "res://src/debug/smoke_work.gd"
 	if mode is String and mode == "occlusion":
 		script = "res://src/debug/smoke_occlusion.gd"
+	if mode is String and mode == "touch":
+		script = "res://src/debug/smoke_touch.gd"
 	if mode is String and mode == "display":
 		script = "res://src/debug/smoke_display.gd"
 	if mode is String and mode == "showcase":

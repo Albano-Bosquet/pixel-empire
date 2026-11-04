@@ -2,6 +2,7 @@ class_name RtsCamera
 extends Camera2D
 ## RTS camera: WASD/arrow pan, screen-edge scroll, middle-mouse drag,
 ## mouse-wheel zoom towards the cursor, clamped to the map bounds.
+## Touch screens drive it through pan_screen() and pinch_zoom() (TouchControls).
 ## Settings come from camera_settings.json.
 ## Example: cam.configure(Iso.map_world_rect(w, h)); cam.focus_world(pos)
 
@@ -10,6 +11,8 @@ var bounds := Rect2()
 var zoom_levels: Array = [1.0, 2.0, 3.0]
 var zoom_index := 1
 var input_enabled := true
+## Off on touch screens: the last touch would otherwise keep scrolling at the edge.
+var edge_scroll_enabled := true
 
 var _target_zoom := 2.0
 var _zoom_anchor_screen := Vector2.ZERO
@@ -69,7 +72,7 @@ func _process(delta: float) -> void:
 		dir.y -= 1
 	if Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN):
 		dir.y += 1
-	if settings.get("edge_scroll", true) and DisplayServer.window_is_focused() and not _dragging:
+	if edge_scroll_enabled and settings.get("edge_scroll", true) and DisplayServer.window_is_focused() and not _dragging:
 		var vp := get_viewport()
 		var m := vp.get_mouse_position()
 		var size := vp.get_visible_rect().size
@@ -94,6 +97,28 @@ func _process(delta: float) -> void:
 		zoom = Vector2.ONE * z
 		position += before - _screen_to_world(_zoom_anchor_screen)
 	_clamp()
+
+
+## Moves the view so the world follows a finger that moved `screen_delta` pixels.
+## Example: cam.pan_screen(drag.relative)
+func pan_screen(screen_delta: Vector2) -> void:
+	position -= screen_delta / zoom.x
+	_clamp()
+
+
+## Pinch zoom: multiplies the zoom by `factor` (>1 zooms in) around `anchor_screen`,
+## limited to the configured zoom range. zoom_index follows the nearest level.
+## Example: cam.pinch_zoom(new_distance / old_distance, finger_midpoint)
+func pinch_zoom(factor: float, anchor_screen: Vector2) -> void:
+	var lo := float(zoom_levels.min())
+	var hi := float(zoom_levels.max())
+	_target_zoom = clampf(_target_zoom * factor, lo, hi)
+	_zoom_anchor_screen = anchor_screen
+	var best := 0
+	for i in zoom_levels.size():
+		if absf(float(zoom_levels[i]) - _target_zoom) < absf(float(zoom_levels[best]) - _target_zoom):
+			best = i
+	zoom_index = best
 
 
 func _screen_to_world(screen: Vector2) -> Vector2:
