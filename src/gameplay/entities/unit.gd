@@ -48,6 +48,12 @@ var cargo: Array[Unit] = []
 var ammo := -1
 ## Flying height in pixels (0 for ground and sea units).
 var altitude := 0.0
+## Pixels below `altitude` the plane currently flies (attack dives, AirSystem).
+var flight_dip := 0.0
+## Speed multiplier while flying (faster in a dive, slower in the climb).
+var air_speed_factor := 1.0
+## Last flight velocity (tiles/s); planes keep it between two legs (UnitSystem).
+var cruise := Vector2.ZERO
 
 # --- Combat (driven by CombatSystem) ---
 ## Current attack target; null when not fighting.
@@ -198,15 +204,16 @@ func face(dir: int) -> void:
 	facing_target = posmod(dir, Iso.DIR_COUNT)
 
 
-## Plays `anim` from its first frame and locks it for one full cycle.
-func play_once(anim: String) -> void:
+## Plays `anim` from its first frame and locks it for one full cycle
+## (`with_sound` false replays an attack cycle silently, e.g. a strafing plane).
+func play_once(anim: String, with_sound: bool = true) -> void:
 	if not _anim_rows.has(anim):
 		return
 	_anim = anim
 	_anim_time = 0.0
 	var info: Dictionary = _anim_rows[anim]
 	anim_lock = float(info["frames"]) / maxf(1.0, info["fps"])
-	if anim == "attack":
+	if anim == "attack" and with_sound:
 		EventBus.sound_at.emit(SoundRules.attack_key(GameData.audio, type_id, def), position)
 
 
@@ -247,6 +254,11 @@ func final_death_frame() -> int:
 	return (int(info["row"]) + sd.x) * _sprite.hframes + int(info["frames"]) - 1
 
 
+## Current height of the sprite above its shadow (cruise altitude minus any dive).
+func flight_height() -> float:
+	return maxf(0.0, altitude - flight_dip)
+
+
 func has_anim(anim: String) -> bool:
 	return _anim_rows.has(anim)
 
@@ -278,7 +290,7 @@ func animate(delta: float) -> void:
 		frame = mini(int(_anim_time * info["fps"]), int(info["frames"]) - 1)
 	_sprite.frame = (int(info["row"]) + sd.x) * _sprite.hframes + frame
 	if altitude > 0.0 and not dead:
-		_sprite.position.y = -altitude + sin(_anim_time * 2.2) * 1.5
+		_sprite.position.y = -flight_height() + sin(_anim_time * 2.2) * 1.5
 	_sprite.flip_h = sd.y == 1
 	if not dead and (_anim in WORK_ANIMS or (task.get("type", "") == "gather" and def.get("naval", false) and state == State.IDLE)):
 		_work_sound(info)

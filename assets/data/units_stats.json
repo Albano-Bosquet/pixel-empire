@@ -1385,6 +1385,7 @@
     "rearm_seconds": 8.0,
     "loiter": true,
     "projectile": "bullet",
+    "attack_anim_loop": true,
     "sprite": "biplane_fighter"
   },
   "biplane_bomber": {
@@ -1768,6 +1769,7 @@
     "age": 6,
     "auto_attack": true,
     "worker": false,
+    "attack_anim_loop": true,
     "sprite": "jet_fighter"
   },
   "jet_bomber": {

@@ -91,14 +91,54 @@ func _run() -> void:
 	_game.combat.order_attack(fgl, foe)
 	Engine.time_scale = 6.0
 	var t2 := Time.get_ticks_msec()
+	var samples := 0
+	var moving := 0
+	var attack_frames := 0
+	var facings := {}
+	var phases := {}
+	var low := INF
+	var high := 0.0
+	var dive_shot := false
+	var climb_shot := false
 	while fighter.ammo != 0 and Time.get_ticks_msec() - t2 < 45000:
 		await _seconds(0.1)
+		if samples > 0 or fighter.velocity.length() > 0.5:  # count from take-off
+			samples += 1
+			if fighter.velocity.length() > 0.5:
+				moving += 1
+		if fighter._anim == "attack":
+			attack_frames += 1
+		facings[fighter.facing] = true
+		phases[_game.air.run_phase(fighter)] = true
+		low = minf(low, fighter.flight_height())
+		high = maxf(high, fighter.flight_height())
+		var d := fighter.grid_pos.distance_to(foe.grid_pos)
+		if (not dive_shot and fighter.flight_height() < fighter.altitude * 0.65 and d < 1.0) or (dive_shot and not climb_shot and d > 2.5 and fighter.ammo < 25):
+			Engine.time_scale = 1.0
+			_game.camera.position = foe.position
+			await _shot("modern_03_fighter_dive" if not dive_shot else "modern_04_fighter_climb")
+			if dive_shot:
+				climb_shot = true
+			dive_shot = true
+			Engine.time_scale = 6.0
+	_check(moving == samples, "the engaged fighter never hangs still (%d/%d samples moving)" % [moving, samples])
+	_check(phases.has("dive") and phases.has("lap"), "it alternates dives and climbing laps")
+	_check(low < fighter.altitude * 0.7 and high > fighter.altitude * 0.95, "it drops towards the target and climbs back (%.0f..%.0f px)" % [low, high])
+	_check(facings.size() >= 6, "it turns right round between passes")
+	_check(attack_frames >= 5, "it plays its attack animation on the passes")
 	_check(foe.hp < 2000, "the fighter strafes the swordsman")
 	_check(fighter.ammo == 0, "the fighter runs out of ammunition")
 	var t3 := Time.get_ticks_msec()
+	var rearm_samples := 0
+	var rearm_moving := 0
 	while fighter.ammo == 0 and Time.get_ticks_msec() - t3 < 45000:
 		await _seconds(0.1)
+		if _game.air.phase(fighter) == "rearming":
+			rearm_samples += 1
+			if fighter.velocity.length() > 0.5:
+				rearm_moving += 1
 	Engine.time_scale = 1.0
+	_check(rearm_samples > 0 and rearm_moving == rearm_samples, "it circles the airfield while rearming (%d/%d)" % [rearm_moving, rearm_samples])
 	_check(fighter.ammo == int(GameData.unit("biplane_fighter")["ammo"]), "it rearms at the airfield")
 	_game.kill_unit(foe)
 	# Flies straight over obstacles to a far point.
@@ -110,6 +150,12 @@ func _run() -> void:
 		await _seconds(0.1)
 	Engine.time_scale = 1.0
 	_check(fighter.grid_pos.distance_to(far) <= 2.5, "the fighter flies straight to a far point")
+	var idle_moving := 0
+	for i in 10:
+		await _seconds(0.2)
+		if fighter.velocity.length() > 0.5:
+			idle_moving += 1
+	_check(idle_moving == 10, "with nothing to do it keeps circling (%d/10)" % idle_moving)
 	_game.kill_unit(fighter)
 
 	# 6. Bomber hits an enemy house.

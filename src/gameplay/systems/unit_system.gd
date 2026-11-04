@@ -79,7 +79,7 @@ func _serve_paths() -> void:
 		if is_instance_valid(u) and u.path_pending:
 			if u.altitude > 0.0:
 				# Aircraft fly straight over everything (kept inside the map).
-				u.order_path(PackedVector2Array([_clamp_to_map(r["dest"])]))
+				u.order_path(PackedVector2Array([clamp_to_map(r["dest"])]))
 			else:
 				u.order_path(_pf(u).find_path(u.grid_pos, r["dest"], u.owner_id))
 
@@ -123,6 +123,12 @@ func _step(u: Unit, delta: float) -> void:
 	var desired := Vector2.ZERO
 	if u.state == Unit.State.MOVING and not u.path_pending:
 		desired = _follow_path(u, delta)
+	if u.altitude > 0.0 and u.def.get("loiter", false):
+		# Planes never hang still: between two legs they hold their last heading.
+		if desired == Vector2.ZERO:
+			desired = u.cruise
+		else:
+			u.cruise = desired
 
 	# Separation: push overlapping units apart; moving units yield less.
 	var push := Vector2.ZERO
@@ -148,10 +154,11 @@ func _step(u: Unit, delta: float) -> void:
 	u.velocity = vel
 	if vel.length_squared() > 0.000001:
 		if u.altitude > 0.0:
-			u.set_grid_pos(_clamp_to_map(u.grid_pos + vel * delta))
+			u.set_grid_pos(clamp_to_map(u.grid_pos + vel * delta))
 		else:
 			u.set_grid_pos(_slide(u.grid_pos, u.grid_pos + vel * delta, u.owner_id, _pf(u)))
-	if desired.length_squared() > 0.0001 and u.anim_lock <= 0.0:
+	# Aircraft always nose along their flight line, even mid-attack.
+	if desired.length_squared() > 0.0001 and (u.anim_lock <= 0.0 or u.altitude > 0.0):
 		u.face(Iso.direction_index(desired))
 	u.play(_pick_anim(u))
 
@@ -161,7 +168,7 @@ func _follow_path(u: Unit, delta: float) -> Vector2:
 	var target := u.path[u.path_index]
 	var to := target - u.grid_pos
 	var dist := to.length()
-	var reach: float = _cfg.get("arrive_radius", 0.08) if last else _cfg.get("waypoint_radius", 0.35)
+	var reach: float = _cfg.get("arrive_radius", 0.08) if last and u.altitude <= 0.0 else _cfg.get("waypoint_radius", 0.35)
 	if dist <= reach:
 		u.path_index += 1
 		if u.path_index >= u.path.size():
@@ -171,6 +178,9 @@ func _follow_path(u: Unit, delta: float) -> Vector2:
 		to = target - u.grid_pos
 		dist = to.length()
 		last = u.path_index >= u.path.size() - 1
+	if u.altitude > 0.0:
+		# Aircraft never get stuck and keep full speed into the next leg.
+		return to / maxf(dist, 0.0001) * u.speed * u.air_speed_factor
 	# Progress tracking towards the final destination for crowd/stuck handling.
 	var final_dist := u.grid_pos.distance_to(u.final_destination())
 	if final_dist < u.last_progress_dist - 0.03:
@@ -192,7 +202,7 @@ func _follow_path(u: Unit, delta: float) -> Vector2:
 
 
 ## Moves towards `to` but never into an unwalkable tile (slides along walls).
-func _clamp_to_map(p: Vector2) -> Vector2:
+func clamp_to_map(p: Vector2) -> Vector2:
 	return Vector2(clampf(p.x, 0.5, _map.width - 0.5), clampf(p.y, 0.5, _map.height - 0.5))
 
 

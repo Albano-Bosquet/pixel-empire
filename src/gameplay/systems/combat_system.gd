@@ -173,6 +173,9 @@ func _fight(u: Unit) -> void:
 			return
 	var dist := _distance(u, t)
 	var rng := u.attack_range()
+	if u.altitude > 0.0 and u.def.get("loiter", false):
+		_fight_air(u, t, dist, rng)
+		return
 	var reach := rng + (0.25 if rng <= 0.5 else 0.0)
 	if t is Building and rng <= 0.5:
 		# Approach tiles can be diagonal to a footprint corner (unit centre ~0.47 tiles
@@ -202,6 +205,19 @@ func _fight(u: Unit) -> void:
 				_lose_target(u)
 				return
 		_game.unit_system.request_path(u, goal)
+
+
+## Aircraft never hover over a target: AirSystem flies dive-and-climb passes
+## over it and they fire whenever the pass brings it within range.
+func _fight_air(u: Unit, t: Entity, dist: float, rng: float) -> void:
+	var point := _aim_point(u, t)
+	_game.air.attack_run(u, point, rng)
+	if dist > rng + 0.25 or not _game.air.nose_on(u, point):
+		return
+	if u.def.get("attack_anim_loop", false) and u.anim_lock <= 0.0:
+		u.play_once("attack", false)
+	if u.attack_timer <= 0.0:
+		_start_attack(u, t)
 
 
 func _lose_target(u: Unit) -> void:
@@ -381,8 +397,8 @@ func _buildings_fire(delta: float) -> void:
 
 func _spawn_projectile(src: Entity, t: Entity, kind: String, dmg: int, attack_type: String, bonuses: Dictionary, area: float, jitter: Vector2 = Vector2.ZERO, line: bool = false) -> void:
 	var start := src.grid_pos + jitter
-	var start_h: float = (18.0 + (src as Unit).altitude) if src is Unit else -src.top_offset().y
-	var end_h: float = (10.0 + (t as Unit).altitude) if t is Unit else 10.0
+	var start_h: float = (18.0 + (src as Unit).flight_height()) if src is Unit else -src.top_offset().y
+	var end_h: float = (10.0 + (t as Unit).flight_height()) if t is Unit else 10.0
 	if kind == "bomb":
 		end_h = 0.0
 	var dest: Vector2 = t.grid_pos if not (t is Building) else t.closest_point(src.grid_pos)
