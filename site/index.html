@@ -195,9 +195,10 @@
         <svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><path d="M3 0h2v3h2v1H6v1H5v1H3V5H2V4H1V3h2zM0 7h8v1H0z"/></svg>
         Descargar gratis para Windows
       </a>
+      <a class="btn ghost dl-apk" href="https://github.com/Albano-Bosquet/pixel-empire/releases/latest">Android (APK)</a>
       <a class="btn ghost" href="#edades">Ver el juego</a>
     </div>
-    <p class="meta"><span id="ver"><b>Pixel Empire 1.4</b></span> · Windows 10 y 11 (64 bits) · Español e inglés</p>
+    <p class="meta"><span id="ver"><b>Pixel Empire 1.5</b></span> · Windows 10 y 11 (64 bits) y Android · Juego cruzado PC–móvil · Español e inglés</p>
   </div>
 </div>
 
@@ -297,7 +298,7 @@
     <div class="eyebrow">Gratis</div>
     <h2>Empieza tu imperio</h2>
     <div class="steps" style="text-align:left">
-      <div><b>Descarga el instalador</b><p id="file">PixelEmpire_Setup_1.4.0.exe desde la última versión.</p></div>
+      <div><b>Descarga el instalador</b><p id="file">PixelEmpire_Setup_1.5.0.exe desde la última versión.</p></div>
       <div><b>Ejecútalo</b><p>No necesita permisos de administrador. Las versiones nuevas se instalan encima.</p></div>
       <div><b>Si Windows avisa</b><p>El instalador no está firmado: pulsa <i>Más información → Ejecutar de todas formas</i>.</p></div>
     </div>
@@ -306,6 +307,17 @@
       Descargar para Windows
     </a>
     <p class="req">Windows 10 u 11 de 64 bits</p>
+
+    <div class="steps" style="text-align:left; margin-top:48px">
+      <div><b>En Android</b><p id="apk">Descarga PixelEmpire_1.5.0.apk desde el móvil y ábrelo.</p></div>
+      <div><b>Permite la instalación</b><p>Android pedirá permiso para instalar apps de esta fuente: actívalo una vez.</p></div>
+      <div><b>Juega con el PC</b><p>Misma versión en todos los equipos. Mejor que el PC sea el anfitrión.</p></div>
+    </div>
+    <a class="btn dl-apk" href="https://github.com/Albano-Bosquet/pixel-empire/releases/latest">
+      <svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><path d="M3 0h2v3h2v1H6v1H5v1H3V5H2V4H1V3h2zM0 7h8v1H0z"/></svg>
+      Descargar para Android
+    </a>
+    <p class="req">Android 7 o superior, 64 bits (ARM)</p>
 
     <div class="keys" style="text-align:left; margin-top:64px">
       <div><span>Mover la cámara</span><span><kbd>WASD</kbd> o bordes</span></div>
@@ -316,6 +328,7 @@
       <div><span>Árbol tecnológico</span><span><kbd>F2</kbd></span></div>
       <div><span>Guardado rápido</span><span><kbd>F5</kbd></span></div>
       <div><span>Pantalla completa</span><span><kbd>F11</kbd></span></div>
+      <div><span>En el móvil</span><span>tocar: seleccionar u ordenar · arrastrar: cámara · pellizcar: zoom</span></div>
     </div>
   </div>
 </section>
@@ -363,7 +376,12 @@
     .then(r => r.ok ? r.json() : Promise.reject())
     .then(rel => {
       const exe = (rel.assets || []).find(a => a.name.endsWith(".exe"));
+      const apk = (rel.assets || []).find(a => a.name.endsWith(".apk"));
       document.getElementById("ver").innerHTML = `<b>${rel.name || rel.tag_name}</b>`;
+      if (apk) {
+        document.querySelectorAll("a.dl-apk").forEach(a => a.href = apk.browser_download_url);
+        document.getElementById("apk").textContent = `Descarga ${apk.name} (${Math.round(apk.size / 1048576)} MB) desde el móvil y ábrelo.`;
+      }
       if (!exe) return;
       document.querySelectorAll("a.dl").forEach(a => a.href = exe.browser_download_url);
       document.getElementById("file").textContent = `${exe.name} (${Math.round(exe.size / 1048576)} MB).`;

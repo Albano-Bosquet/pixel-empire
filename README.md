@@ -12,6 +12,7 @@
   <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/Albano-Bosquet/pixel-empire?style=for-the-badge&label=versi%C3%B3n&color=e0a83c&labelColor=2a1f14" alt="Última versión"></a>
   <a href="../../releases"><img src="https://img.shields.io/github/downloads/Albano-Bosquet/pixel-empire/total?style=for-the-badge&label=descargas&color=e0a83c&labelColor=2a1f14" alt="Descargas"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-e0a83c?style=for-the-badge&logo=windows&logoColor=white&labelColor=2a1f14" alt="Windows 10 y 11">
+  <img src="https://img.shields.io/badge/Android-7%2B-e0a83c?style=for-the-badge&logo=android&logoColor=white&labelColor=2a1f14" alt="Android 7 o superior">
   <img src="https://img.shields.io/badge/Godot-4.7-e0a83c?style=for-the-badge&logo=godotengine&logoColor=white&labelColor=2a1f14" alt="Godot 4.7">
   <img src="https://img.shields.io/badge/idiomas-ES%20%7C%20EN-e0a83c?style=for-the-badge&labelColor=2a1f14" alt="Español e inglés">
 </p>
@@ -144,6 +145,18 @@ huyen, jabalíes que se defienden y lobos, tigres y osos que atacan.
 
 Requisitos: Windows 10 u 11 de 64 bits. Las versiones nuevas se instalan
 encima de la anterior, o desde el botón **Actualizar** del menú principal.
+
+### Android
+
+1. En el móvil, descarga `PixelEmpire_<versión>.apk` desde
+   **[la última versión](../../releases/latest)** y ábrelo.
+2. Android pedirá permiso para instalar apps de esa fuente: actívalo una vez.
+
+Requisitos: Android 7 o superior, 64 bits (ARM). Se juega con el dedo: tocar
+para seleccionar u ordenar, arrastrar para mover la cámara, pellizcar para el
+zoom y mantener pulsado para seleccionar edificios. **Juego cruzado:** PC y
+Android juegan juntos en red si todos tienen la misma versión (mejor que el PC
+sea el anfitrión).
 
 ## 🎮 Controles
 

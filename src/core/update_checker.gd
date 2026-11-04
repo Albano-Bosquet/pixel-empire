@@ -51,6 +51,15 @@ static func same_version(a: String, b: String) -> bool:
 	return a != "" and b != "" and compare_versions(a, b) == 0
 
 
+## Release asset name [prefix, suffix] for this platform: the Windows installer,
+## or the APK on Android (`android` true).
+## Example: UpdateChecker.asset_pattern(_cfg, OS.has_feature("android"))
+static func asset_pattern(cfg: Dictionary, android: bool) -> Array:
+	if android:
+		return [String(cfg.get("apk_prefix", "PixelEmpire_")), String(cfg.get("apk_suffix", ".apk"))]
+	return [String(cfg.get("installer_prefix", "")), String(cfg.get("installer_suffix", ".exe"))]
+
+
 ## Picks the installer asset from a GitHub release JSON: {"version", "url", "name"},
 ## or an empty dictionary when the release has no installer.
 static func parse_release(release: Dictionary, prefix: String, suffix: String) -> Dictionary:
@@ -78,8 +87,13 @@ func check() -> void:
 
 
 ## Downloads the installer of the newest release, runs it and quits the game.
+## On Android the APK opens in the browser instead (the system installs it).
 func download_and_install() -> void:
 	if state != State.AVAILABLE:
+		return
+	if OS.has_feature("android"):
+		OS.shell_open(installer_url)
+		_set_state(State.LAUNCHED)
 		return
 	_set_state(State.DOWNLOADING)
 	var dir := String(_cfg.get("download_dir", "user://updates"))
@@ -115,7 +129,8 @@ func _on_checked(result: int, code: int, _headers_in: PackedStringArray, body: P
 		_set_state(State.FAILED)
 		return
 	var raw: Variant = JSON.parse_string(body.get_string_from_utf8())
-	var info := parse_release(raw if raw is Dictionary else {}, String(_cfg.get("installer_prefix", "")), String(_cfg.get("installer_suffix", ".exe")))
+	var pattern := asset_pattern(_cfg, OS.has_feature("android"))
+	var info := parse_release(raw if raw is Dictionary else {}, pattern[0], pattern[1])
 	if info.is_empty():
 		_set_state(State.FAILED)
 		return

@@ -26,6 +26,17 @@ func test_parse_release_finds_installer() -> void:
 	assert_eq(info.get("url", ""), "https://x/setup.exe", "installer asset url")
 
 
+func test_android_picks_the_apk_and_pc_the_installer() -> void:
+	var cfg := {"installer_prefix": "PixelEmpire_Setup_", "installer_suffix": ".exe", "apk_prefix": "PixelEmpire_", "apk_suffix": ".apk"}
+	var release := {"tag_name": "v1.5.0", "assets": [
+		{"name": "PixelEmpire_Setup_1.5.0.exe", "browser_download_url": "https://x/setup.exe"},
+		{"name": "PixelEmpire_1.5.0.apk", "browser_download_url": "https://x/game.apk"}]}
+	var pc: Array = UpdateChecker.asset_pattern(cfg, false)
+	var phone: Array = UpdateChecker.asset_pattern(cfg, true)
+	assert_eq(UpdateChecker.parse_release(release, pc[0], pc[1]).get("url", ""), "https://x/setup.exe", "PC gets the installer")
+	assert_eq(UpdateChecker.parse_release(release, phone[0], phone[1]).get("url", ""), "https://x/game.apk", "Android gets the APK")
+
+
 func test_release_without_installer_is_ignored() -> void:
 	var info := UpdateChecker.parse_release({"tag_name": "v2.0.0", "assets": []}, "PixelEmpire_Setup_", ".exe")
 	assert_true(info.is_empty(), "no installer -> nothing to offer")

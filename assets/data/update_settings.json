@@ -2,6 +2,8 @@
   "latest_release_api": "https://api.github.com/repos/Albano-Bosquet/pixel-empire/releases/latest",
   "installer_prefix": "PixelEmpire_Setup_",
   "installer_suffix": ".exe",
+  "apk_prefix": "PixelEmpire_",
+  "apk_suffix": ".apk",
   "user_agent": "PixelEmpire-Updater",
   "check_timeout": 10.0,
   "download_dir": "user://updates"
