@@ -504,6 +504,7 @@
   "Up to date (%s)": "Actualizado (%s)",
   "Update": "Actualizar",
   "Update to %s": "Actualizar a %s",
+  "Version mismatch: the host has %s and you have %s": "Versiones distintas: el anfitrión tiene la %s y tú la %s",
   "Very fast": "Muy rápida",
   "Very fast jet with cannons that rules the sky. Out of ammunition it flies home to rearm.": "Reactor muy rápido con cañones que domina el cielo. Sin munición vuelve a la base a rearmarse.",
   "Very high": "Muy altos",

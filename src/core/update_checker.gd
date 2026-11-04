@@ -45,6 +45,12 @@ static func compare_versions(a: String, b: String) -> int:
 	return 0
 
 
+## True when two builds can play together online (PC and Android alike):
+## the same version, and neither unknown (clients older than this check send "").
+static func same_version(a: String, b: String) -> bool:
+	return a != "" and b != "" and compare_versions(a, b) == 0
+
+
 ## Picks the installer asset from a GitHub release JSON: {"version", "url", "name"},
 ## or an empty dictionary when the release has no installer.
 static func parse_release(release: Dictionary, prefix: String, suffix: String) -> Dictionary:

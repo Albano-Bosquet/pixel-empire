@@ -10,6 +10,13 @@ func test_newer_versions_compare_greater() -> void:
 	assert_eq(UpdateChecker.compare_versions("0.7.0", "1.0.0"), -1, "older is smaller")
 
 
+func test_only_the_same_version_plays_online() -> void:
+	assert_true(UpdateChecker.same_version("1.4.0", "1.4.0"), "same build on PC and Android")
+	assert_true(UpdateChecker.same_version("1.4", "v1.4.0"), "same version, different spelling")
+	assert_true(not UpdateChecker.same_version("1.4.0", "1.3.2"), "different versions are rejected")
+	assert_true(not UpdateChecker.same_version("", "1.4.0"), "a client that sends no version is rejected")
+
+
 func test_parse_release_finds_installer() -> void:
 	var release := {"tag_name": "v1.2.0", "assets": [
 		{"name": "notes.txt", "browser_download_url": "https://x/notes.txt"},

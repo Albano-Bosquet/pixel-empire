@@ -201,7 +201,7 @@ func _on_peer_connected(_id: int) -> void:
 
 func _on_connected() -> void:
 	_connect_timer = float(settings.get("connect_timeout", 8.0))
-	_c_hello.rpc_id(1, my_name)
+	_c_hello.rpc_id(1, my_name, UpdateChecker.current_version())
 
 
 func _on_peer_disconnected(id: int) -> void:
@@ -339,11 +339,17 @@ func peer_of_player(pid: int) -> int:
 
 # --- RPCs: client -> host -------------------------------------------------------------------
 
+## A joining client introduces itself. Every platform (PC, Android) must run the
+## same game version: the host simulates the match with its own data files.
 @rpc("any_peer", "reliable")
-func _c_hello(player_name: String) -> void:
+func _c_hello(player_name: String, version: String = "") -> void:
 	if role != Role.HOST:
 		return
 	var peer := multiplayer.get_remote_sender_id()
+	var mine := UpdateChecker.current_version()
+	if not UpdateChecker.same_version(version, mine):
+		_kick.rpc_id(peer, Loc.msg("Version mismatch: the host has %s and you have %s", [mine, version if version != "" else "?"]))
+		return
 	if in_match:
 		# Rejoin: a dropped human with the same name gets their civilisation back.
 		for i in slots.size():
