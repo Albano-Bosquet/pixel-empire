@@ -158,6 +158,13 @@ zoom y mantener pulsado para seleccionar edificios. **Juego cruzado:** PC y
 Android juegan juntos en red si todos tienen la misma versión (mejor que el PC
 sea el anfitrión).
 
+### Jugar online
+
+En **Multijugador → Crear partida online** el juego da un código de 5 letras.
+Los demás lo escriben en **Código → Unirse**, o eligen la partida de la lista.
+No hace falta abrir puertos, tocar el firewall ni usar una VPN, y funciona con
+datos móviles. El servidor está en [`tools/relay`](tools/relay/README.md).
+
 ## 🎮 Controles
 
 <details>

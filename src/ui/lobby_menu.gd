@@ -106,7 +106,7 @@ func _build_online() -> void:
 	var create := UiStyle.button(tr("Create online game"), 700)
 	create.pressed.connect(func() -> void:
 		var err := Net.host_online(_name.text)
-		_set_status(err if err != "" else tr("Opening an online game... (the server may take up to a minute to wake up)")))
+		_set_status(err if err != "" else tr("Opening an online game...")))
 	_connect_view.add_child(create)
 	var crow := HBoxContainer.new()
 	crow.add_child(UiStyle.label(tr("Game code"), 16, UiStyle.TEXT_DIM))
@@ -131,7 +131,7 @@ func _build_online() -> void:
 
 func _join_code(code: String) -> void:
 	var err := Net.join_online(_name.text, code)
-	_set_status(err if err != "" else tr("Connecting to game %s... (the server may take up to a minute to wake up)") % code.strip_edges().to_upper())
+	_set_status(err if err != "" else tr("Connecting to game %s...") % code.strip_edges().to_upper())
 
 
 func _on_online_found(list: Array) -> void:
