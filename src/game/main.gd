@@ -74,6 +74,8 @@ func _start_smoke(mode: Variant) -> void:
 		script = "res://src/debug/smoke_occlusion.gd"
 	if mode is String and mode == "display":
 		script = "res://src/debug/smoke_display.gd"
+	if mode is String and mode == "showcase":
+		script = "res://src/debug/smoke_showcase.gd"
 	var smoke: Node = load(script).new()
 	smoke.name = "SmokeTest"
 	add_child(smoke)

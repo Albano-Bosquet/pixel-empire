@@ -1,87 +1,152 @@
-<h1 align="center">Pixel Empire</h1>
-
 <p align="center">
-  Estrategia en tiempo real en pixel art HD, hecha con Godot 4.
-  <br />
-  Recolecta · Construye · Avanza · Conquista
+  <img src="docs/media/banner.jpg" alt="Pixel Empire — Recolecta, Construye, Avanza, Conquista" width="100%">
 </p>
 
 <p align="center">
-  <a href="../../releases/latest"><b>⬇ Descargar el instalador para Windows</b></a>
+  <a href="../../releases/latest"><img src="docs/media/download.png" alt="Descargar Pixel Empire para Windows" width="460"></a>
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/02_aldea.png" alt="Una aldea en la Edad Oscura" width="900">
+  <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/Albano-Bosquet/pixel-empire?style=for-the-badge&label=versi%C3%B3n&color=e0a83c&labelColor=2a1f14" alt="Última versión"></a>
+  <a href="../../releases"><img src="https://img.shields.io/github/downloads/Albano-Bosquet/pixel-empire/total?style=for-the-badge&label=descargas&color=e0a83c&labelColor=2a1f14" alt="Descargas"></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-e0a83c?style=for-the-badge&logo=windows&logoColor=white&labelColor=2a1f14" alt="Windows 10 y 11">
+  <img src="https://img.shields.io/badge/Godot-4.7-e0a83c?style=for-the-badge&logo=godotengine&logoColor=white&labelColor=2a1f14" alt="Godot 4.7">
+  <img src="https://img.shields.io/badge/idiomas-ES%20%7C%20EN-e0a83c?style=for-the-badge&labelColor=2a1f14" alt="Español e inglés">
 </p>
 
-## El juego
+<p align="center">
+  <b>Un RTS clásico de construcción de imperios en pixel art HD.</b><br>
+  Empieza con un centro urbano y un puñado de aldeanos. Termina con tanques, reactores y una Maravilla.<br>
+  Gratis · Sin conexión · Contra la IA o con tus amigos por red local
+</p>
 
-Pixel Empire es un RTS clásico de construcción de imperios. Empiezas con un
-centro urbano y un puñado de aldeanos. Desde ahí recolectas comida, madera, oro
-y piedra, levantas tu ciudad, avanzas por siete edades y te enfrentas a la IA o a
-tus amigos por red local.
+<p align="center">
+  <img src="docs/media/battle.gif" alt="Caballeros, espadachines y arqueros chocan con piqueros y ballesteros enemigos" width="100%">
+</p>
 
-- **Siete edades**: Oscura, Feudal, de los Castillos, Imperial, de la Pólvora,
-  Industrial y Militar. Cada una desbloquea unidades, edificios y tecnologías nuevos.
-- **50 unidades**: infantería, arqueros, caballería, asedio, monjes, barcos,
-  armas de fuego, artillería, biplanos y, en la Edad Militar, tanques, aviones a
-  reacción, ametralladoras y bazucas.
-- **30 edificios**: desde la casa y el molino hasta castillos, murallas,
-  puertas, mercados, puertos, aeródromos, fábricas de tanques y la Maravilla.
-- **Combate completo**: posturas, formaciones, armaduras y bonificaciones,
-  proyectiles visibles, daño en área, edificios en llamas y conversión con monjes.
-- **Economía**: granjas, comercio entre mercados, compraventa de recursos y
-  más de 30 tecnologías.
-- **Mapas generados**: continental, costa o islas, en cinco tamaños, con
-  niebla de guerra.
-- **Partidas a medida**: hasta 8 jugadores con equipos y alianzas (los aliados
-  comparten visión y ganan juntos), dificultad por cada IA, recursos y edad
-  iniciales, límite de población, velocidad, visibilidad del mapa, cantidad
-  de animales y ciclo de día y noche. Igual en solitario y en multijugador.
-- **Fauna**: ovejas y pavos que son de quien pase cerca, ciervos que huyen,
-  jabalíes que se defienden y lobos, tigres y osos que atacan. Los animales
-  cazados dejan comida.
-- **Sonido en todo**: música por edades que cambia durante las batallas,
-  voces de selección y órdenes, golpes, disparos, explosiones, trabajo de los
-  aldeanos, animales, ambiente de viento, agua, bosque y noche. Todo
-  sintetizado por el propio proyecto.
-- **Mundo vivo**: ciclo de día y noche con luces en las ventanas, pájaros,
-  sombras de nubes, mariposas y luciérnagas.
-- **Guardar y cargar** partidas, guardado rápido (F5) y autoguardado.
-- **IA** en tres dificultades: gestiona su economía, avanza de edad, ataca en
-  oleadas e invade por mar.
-- **Multijugador** para hasta 8 jugadores por LAN o VPN (Radmin, ZeroTier,
-  Hamachi…). La IA toma el control si alguien se desconecta.
-- **Español e inglés**: se elige en el menú principal o en el de pausa.
+## ⚔️ Siete edades de guerra
 
-## Capturas
+De la Edad Oscura a la Edad Militar. Cada edad desbloquea unidades, edificios y
+tecnologías nuevos, y la música cambia contigo.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/batalla.jpg" alt="Batalla medieval junto a una torre enemiga"></td>
+    <td width="50%"><img src="docs/media/modern.gif" alt="Tanques, infantería y reactores atacan una base enemiga"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Edad de los Castillos</b> · caballería, infantería, arqueros y catapultas</sub></td>
+    <td align="center"><sub><b>Edad Militar</b> · tanques, bazucas, ametralladoras y reactores</sub></td>
+  </tr>
+</table>
+
+## 🏰 Levanta tu ciudad
+
+<p align="center">
+  <img src="docs/media/city_life.gif" alt="Aldeanos trabajando en granjas, minas y bosques alrededor de una ciudad amurallada" width="100%">
+</p>
+
+Granjas, molinos, mercados, monasterios, universidades, castillos, murallas y
+puertos. **30 edificios**, cada uno pintado en pixel art con su propia
+animación de construcción y sus llamas cuando arde.
+
+## 🌅 Un mundo vivo
+
+<p align="center">
+  <img src="docs/media/day_night.jpg" alt="La misma ciudad de día, al atardecer y de noche" width="100%">
+</p>
+
+Ciclo de día y noche con luces en las ventanas, pájaros, sombras de nubes,
+mariposas y luciérnagas. Ovejas y pavos que son de quien pase cerca, ciervos que
+huyen, jabalíes que se defienden y lobos, tigres y osos que atacan.
+
+## ✨ Todo lo que trae
+
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h3>🛡️ 50 unidades</h3>
+      Infantería, arqueros, caballería, asedio, monjes, barcos, armas de fuego,
+      artillería, biplanos, tanques, reactores y bazucas. Animadas en 16 direcciones.
+    </td>
+    <td width="33%" valign="top">
+      <h3>🗡️ Combate completo</h3>
+      Posturas, formaciones, armaduras y bonificaciones, proyectiles visibles,
+      daño en área, edificios en llamas y conversión con monjes.
+    </td>
+    <td width="33%" valign="top">
+      <h3>💰 Economía</h3>
+      Comida, madera, oro y piedra. Granjas, comercio entre mercados,
+      compraventa de recursos y más de 30 tecnologías.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h3>🗺️ Mapas generados</h3>
+      Continental, costa o islas, en cinco tamaños, con niebla de guerra.
+      Semilla aleatoria o elegida por ti.
+    </td>
+    <td valign="top">
+      <h3>🤖 IA en tres niveles</h3>
+      Gestiona su economía, avanza de edad, ataca en oleadas e invade por mar.
+    </td>
+    <td valign="top">
+      <h3>🌐 Multijugador</h3>
+      Hasta 8 jugadores por LAN o VPN (Radmin, ZeroTier, Hamachi…). La IA toma
+      el control si alguien se desconecta.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h3>⚙️ Partidas a medida</h3>
+      Equipos y alianzas, dificultad por cada IA, recursos y edad iniciales,
+      población, velocidad, animales y día y noche.
+    </td>
+    <td valign="top">
+      <h3>🎵 Sonido en todo</h3>
+      Música por edades que cambia en las batallas, voces, golpes, disparos,
+      explosiones y ambiente. Todo sintetizado por el propio proyecto.
+    </td>
+    <td valign="top">
+      <h3>💾 Guarda y sigue</h3>
+      Guardar y cargar partidas, guardado rápido (F5), autoguardado,
+      pantalla completa (F11) y español o inglés.
+    </td>
+  </tr>
+</table>
+
+## 📸 Galería
 
 | | |
 |---|---|
+| ![Ciudad en la Edad Imperial](docs/media/ciudad.jpg) | ![Ofensiva de la Edad Militar](docs/media/guerra_moderna.jpg) |
+| Una ciudad de la Edad Imperial en pleno trabajo | Ofensiva de la Edad Militar contra un fuerte antiaéreo |
 | ![Menú principal](docs/screenshots/01_menu.png) | ![Monasterio, murallas y monje](docs/screenshots/03_monasterio.png) |
 | Menú principal con la aldea animada de fondo | Monasterio, murallas y un monje convirtiendo |
 | ![La Maravilla](docs/screenshots/04_maravilla.png) | ![Puerto y barcos](docs/screenshots/05_naval.png) |
 | La Maravilla: mantenla en pie y ganas | Mapa de islas, puerto y barcos |
 | ![Edad Industrial](docs/screenshots/06_era_industrial.png) | ![Árbol tecnológico](docs/screenshots/07_tecnologias.png) |
 | Edad Industrial: aeródromo, artillería y fusileros | Árbol tecnológico (F2) |
+| ![Edad Militar](docs/screenshots/10_era_militar.png) | ![Partida a medida](docs/screenshots/12_partida.png) |
+| Fábrica de tanques, tanques, reactores e infantería moderna | Hasta 8 jugadores, equipos y opciones |
 | ![Pantalla de victoria](docs/screenshots/08_victoria.png) | ![Animaciones de unidades](docs/screenshots/09_unidades.png) |
-| Estadísticas al final de la partida | Algunas animaciones de unidades en 16 direcciones |
-| ![Edad Militar](docs/screenshots/10_era_militar.png) | ![La aldea de noche](docs/screenshots/11_noche.png) |
-| Edad Militar: fábrica de tanques, tanques, reactores e infantería moderna | De noche: luces en las ventanas, faroles y ovejas del rebaño |
-| ![Partida a medida](docs/screenshots/12_partida.png) | |
-| Partida de un jugador: hasta 8 jugadores, equipos y opciones | |
+| Estadísticas al final de la partida | Animaciones de unidades en 16 direcciones |
 
-## Instalar
+## ⬇️ Instalar
 
 1. Descarga `PixelEmpire_Setup_<versión>.exe` desde
-   [Releases](../../releases/latest).
+   **[la última versión](../../releases/latest)**.
 2. Ejecútalo. No necesita permisos de administrador.
 3. Windows SmartScreen puede avisar porque el instalador no está firmado:
    pulsa *Más información → Ejecutar de todas formas*.
 
-Requisitos: Windows 10 u 11 de 64 bits.
+Requisitos: Windows 10 u 11 de 64 bits. Las versiones nuevas se instalan
+encima de la anterior, o desde el botón **Actualizar** del menú principal.
 
-## Controles
+## 🎮 Controles
+
+<details>
+<summary><b>Ver todos los controles</b></summary>
 
 | Acción | Tecla / ratón |
 |---|---|
@@ -106,6 +171,7 @@ Requisitos: Windows 10 u 11 de 64 bits.
 | Árbol tecnológico | F2 |
 | Contador de FPS | F3 |
 | Guardado rápido | F5 |
+| Pantalla completa | F11 o Alt + Intro |
 | Ayuda de controles | F1 |
 | Menú de pausa | F10, Esc o Pausa |
 | Chat (multijugador) | Intro |
@@ -113,7 +179,9 @@ Requisitos: Windows 10 u 11 de 64 bits.
 Los botones de construcción, entrenamiento y tecnologías muestran su tecla
 rápida en la esquina.
 
-## Compilar desde el código
+</details>
+
+## 🛠️ Compilar desde el código
 
 1. Descarga [Godot 4.7.2](https://godotengine.org/download/archive/4.7.2-stable/)
    (versión estándar, no .NET) y descomprímelo en `tools/godot/`.
@@ -125,9 +193,11 @@ rápida en la esquina.
 
 El código del juego está en `src/`, los datos de juego (unidades, edificios,
 tecnologías, edades) en `assets/data/*.json` y las traducciones en
-`assets/i18n/`.
+`assets/i18n/`. Las imágenes de este README salen de una partida real:
+`--smoke=showcase` monta las escenas y `tools/readme/make_readme_media.py`
+compone el banner, los GIFs y las capturas.
 
-## Cómo se hizo
+## 🤖 Cómo se hizo
 
 Todo el juego (código, arte procedural en pixel art y datos) se ha creado con
 [Claude Code](https://claude.com/claude-code) usando el framework
@@ -136,7 +206,11 @@ agentes especializados. El arte lo generan scripts propios
 (`tools/art/generate_art.gd`) y el sonido y la música se sintetizan
 (`tools/audio/generate_audio.gd`), sin recursos de otros juegos.
 
-## Licencia
+## 📜 Licencia
 
 El framework Claude Code Game Studios incluido en `.claude/` se distribuye
 bajo la licencia MIT (ver [LICENSE](LICENSE)).
+
+<p align="center">
+  <a href="../../releases/latest"><img src="docs/media/download.png" alt="Descargar Pixel Empire para Windows" width="360"></a>
+</p>

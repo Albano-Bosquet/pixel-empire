@@ -60,8 +60,8 @@ func _bodies(view: Rect2) -> Array:
 		if not u.dead and u.aboard == null and u.altitude <= 0.0:
 			_add(out, u, view)
 	for c in _game.unit_system.corpses:
-		var cu: Unit = c["unit"]
-		if is_instance_valid(cu) and cu.z_index == 0:
+		var cu: Variant = c["unit"]
+		if is_instance_valid(cu) and (cu as Unit).z_index == 0:
 			_add(out, cu, view)
 	_game.carcasses = _game.carcasses.filter(func(n): return is_instance_valid(n) and not n.is_queued_for_deletion())
 	for n in _game.carcasses:
