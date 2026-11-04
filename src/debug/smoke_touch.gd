@@ -13,14 +13,20 @@ func run_mode(game: Game, _mode: String) -> void:
 	for ai in game.ai_players:
 		ai.set_physics_process(false)
 	game.touch.setup(game, GameData.touch, true)
+	game.rebuild_hud()  # the HUD was built before touch mode was forced on
 	_touch.call_deferred()
+
+
+## Viewport (logical) position -> window pixels, where touch events live (UI scale).
+func _win(pos: Vector2) -> Vector2:
+	return get_viewport().get_screen_transform() * pos
 
 
 func _finger(index: int, pressed: bool, pos: Vector2) -> void:
 	var e := InputEventScreenTouch.new()
 	e.index = index
 	e.pressed = pressed
-	e.position = pos
+	e.position = _win(pos)
 	Input.parse_input_event(e)
 
 
@@ -28,8 +34,8 @@ func _drag(index: int, from: Vector2, to: Vector2, steps: int = 8) -> void:
 	for i in range(1, steps + 1):
 		var e := InputEventScreenDrag.new()
 		e.index = index
-		e.position = from.lerp(to, float(i) / steps)
-		e.relative = (to - from) / steps
+		e.position = _win(from.lerp(to, float(i) / steps))
+		e.relative = _win(to - from) / steps - _win(Vector2.ZERO) / steps
 		Input.parse_input_event(e)
 		await _frames(1)
 
@@ -56,9 +62,12 @@ func _touch() -> void:
 	var v := vils[0]
 	await _tap(_game.screen_from_world(v.position + Vector2(0, -14)))
 	_check(_game.selection.selected == [v], "tapping a villager selects it")
-	var dest := _open_spot(v.grid_pos + Vector2(4, 0), 1)
+	# Ground well inside the world area (clear of the HUD at any UI scale).
+	var vp := get_viewport().get_visible_rect().size
+	var ground := _game.screen_from_world(Iso.grid_to_world(_open_spot(Iso.world_to_grid(_game.world_from_screen(vp * Vector2(0.62, 0.32))), 1)))
 	var start := v.grid_pos
-	await _tap(_game.screen_from_world(Iso.grid_to_world(dest)))
+	await _tap(ground)
+	_check(not _game.placement.is_active(), "the ground tap did not hit a HUD button")
 	await _seconds(1.0)
 	_check(_game.selection.selected == [v], "tapping the ground keeps the selection")
 	_check(v.grid_pos.distance_to(start) > 0.5, "tapping the ground moves the selected villager (%.2f tiles)" % v.grid_pos.distance_to(start))
@@ -89,11 +98,11 @@ func _touch() -> void:
 	for i in range(1, 9):
 		var e1 := InputEventScreenDrag.new()
 		e1.index = 1
-		e1.position = mid + Vector2(60 + i * 20, 0)
+		e1.position = _win(mid + Vector2(60 + i * 20, 0))
 		Input.parse_input_event(e1)
 		var e0 := InputEventScreenDrag.new()
 		e0.index = 0
-		e0.position = mid - Vector2(60 + i * 20, 0)
+		e0.position = _win(mid - Vector2(60 + i * 20, 0))
 		Input.parse_input_event(e0)
 		await _frames(1)
 	_finger(1, false, mid + Vector2(220, 0))
@@ -117,6 +126,12 @@ func _touch() -> void:
 	var picked := _game.selection.own_units().size()
 	_check(picked >= 2, "box mode drag selects the units inside (%d)" % picked)
 	_check(not _game.touch.box_mode, "box mode turns itself off after one box")
+	var area_btn: Button = _find_button(_game.hud, tr("Area"))
+	_check(area_btn != null, "the HUD shows the Area button on touch screens")
+	if area_btn != null:
+		area_btn.pressed.emit()
+		_check(_game.touch.box_mode and area_btn.button_pressed, "the Area button arms box mode and shows it pressed")
+		_game.touch.box_mode = false
 
 	# --- Long press selects a building; back clears ---------------------------------------
 	var at_tc := _game.screen_from_world(tc.position + Vector2(0, -30))
@@ -146,7 +161,16 @@ func _touch() -> void:
 
 	# --- The PC mouse keeps working in touch mode ------------------------------------------
 	_game.selection.set_selection([])
-	await _click(_game.screen_from_world(v.position + Vector2(0, -14)))
+	await _click(_win(_game.screen_from_world(v.position + Vector2(0, -14))))
 	_check(_game.selection.selected == [v], "a real mouse click still selects in touch mode")
 	_finish()
 
+
+func _find_button(n: Node, text: String) -> Button:
+	if n is Button and n.text == text:
+		return n
+	for c in n.get_children():
+		var b := _find_button(c, text)
+		if b != null:
+			return b
+	return null

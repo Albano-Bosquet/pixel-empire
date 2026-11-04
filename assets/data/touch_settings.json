@@ -1,7 +1,8 @@
 {
   "drag_threshold_px": 14,
   "long_press_ms": 450,
-  "double_tap_ms": 350,
   "long_press_vibrate_ms": 25,
-  "pinch_min_zoom_step": 0.02
+  "pinch_min_zoom_step": 0.02,
+  "mobile_target_height": 640,
+  "max_ui_scale": 3.0
 }

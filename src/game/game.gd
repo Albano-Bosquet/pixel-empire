@@ -293,7 +293,7 @@ func _build_scene() -> void:
 	touch = TouchControls.new()
 	touch.name = "TouchControls"
 	systems.add_child(touch)
-	touch.setup(self, GameData.touch, bool(config.get("touch", false)) or OS.get_cmdline_user_args().has("--touch"))
+	touch.setup(self, GameData.touch, bool(config.get("touch", false)))
 	# Added after the systems so it receives unhandled input first.
 	placement = PlacementController.new()
 	placement.name = "Placement"

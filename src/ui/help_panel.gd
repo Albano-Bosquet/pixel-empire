@@ -1,6 +1,7 @@
 class_name HelpPanel
 extends CanvasLayer
-## Keyboard and mouse reference (F1 in a match). Closes with F1, Esc or the button.
+## Keyboard and mouse reference (F1 in a match), or the touch gestures on touch
+## screens. Closes with F1, Esc or the button.
 
 const ROWS := [
 	["Left click / drag", "Select (Shift adds)"],
@@ -28,6 +29,17 @@ const ROWS := [
 	["Mouse wheel", "Zoom"],
 ]
 
+const TOUCH_ROWS := [
+	["Tap", "Select a unit (twice: all of that type)"],
+	["Tap with units selected", "Move, gather, build, attack"],
+	["Hold", "Select anything (buildings too)"],
+	["Drag", "Move the camera"],
+	["Two fingers", "Move the camera and pinch to zoom"],
+	["Area button, then drag", "Select an area"],
+	["Building: drag, then lift", "Place it where you lift the finger"],
+	["Back button", "Cancel / clear the selection / menu"],
+]
+
 
 func _ready() -> void:
 	layer = 35
@@ -44,7 +56,7 @@ func _ready() -> void:
 	grid.add_theme_constant_override("h_separation", 24)
 	grid.add_theme_constant_override("v_separation", 3)
 	v.add_child(grid)
-	for row in ROWS:
+	for row in TOUCH_ROWS if Display.touch_screen() else ROWS:
 		grid.add_child(UiStyle.label(tr(row[0]), 15, UiStyle.GOLD))
 		grid.add_child(UiStyle.label(tr(row[1]), 15, UiStyle.TEXT))
 	var close := UiStyle.button(tr("Close"), 680)

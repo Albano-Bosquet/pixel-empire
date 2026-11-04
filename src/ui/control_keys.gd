@@ -50,14 +50,14 @@ func handle(event: InputEventKey) -> bool:
 		KEY_SPACE:
 			if event.ctrl_pressed:
 				return _center_selection()
-			return _jump_to_alert()
+			return jump_to_alert()
 		KEY_COMMA:
 			return _next_idle_military()
 		KEY_HOME:
 			return _select_town_center()
 		KEY_A:
 			if event.ctrl_pressed:
-				return _select_military()
+				return select_military()
 		KEY_PLUS, KEY_KP_ADD, KEY_EQUAL:
 			return _change_speed(1)
 		KEY_MINUS, KEY_KP_SUBTRACT:
@@ -68,7 +68,8 @@ func handle(event: InputEventKey) -> bool:
 	return false
 
 
-func _jump_to_alert() -> bool:
+## Centres the camera on the latest "under attack" alert (cycles back through recent ones).
+func jump_to_alert() -> bool:
 	if _alerts.is_empty():
 		EventBus.notify.emit(_game.local_player, "No recent attacks")
 		return true
@@ -118,7 +119,8 @@ func _select_town_center() -> bool:
 	return true
 
 
-func _select_military() -> bool:
+## Selects every military unit of the local player.
+func select_military() -> bool:
 	var army := _game.unit_system.units.filter(func(u): return u.owner_id == _game.local_player and not u.dead and not u.is_worker and u.aboard == null and not u.def.has("animal"))
 	_game.selection.set_selection(army)
 	return true

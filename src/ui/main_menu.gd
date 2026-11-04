@@ -90,7 +90,8 @@ func _ready() -> void:
 	var quit := UiStyle.button(tr("Quit"), 400)
 	quit.pressed.connect(func() -> void: quit_requested.emit())
 	v.add_child(quit)
-	var hint := UiStyle.label(tr("WASD / edges: camera · Wheel: zoom · Left: select · Right: order · F2: technologies · F10: menu"), 13, UiStyle.TEXT_DIM)
+	var keys := "Tap: select or order · Drag: camera · Pinch: zoom · Hold: select · Back: menu" if Display.touch_screen() 		else "WASD / edges: camera · Wheel: zoom · Left: select · Right: order · F2: technologies · F10: menu"
+	var hint := UiStyle.label(tr(keys), 13, UiStyle.TEXT_DIM)
 	hint.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.offset_left = -600

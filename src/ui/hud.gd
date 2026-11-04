@@ -11,6 +11,8 @@ const PANEL_BORDER := Color("#8a6d3b")
 const TEXT := Color("#f1e6cf")
 const TEXT_DIM := Color("#b5a88e")
 const NOTIFY_SECONDS := 3.5
+## Right edge of the minimap frame (bottom-left corner).
+const MINIMAP_RIGHT := 306.0
 
 var _game: Game
 var _res_labels: Dictionary = {}
@@ -302,7 +304,7 @@ func _build_minimap() -> void:
 	frame.add_theme_stylebox_override("panel", panel_style())
 	frame.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	frame.offset_left = 6
-	frame.offset_right = 6 + 300
+	frame.offset_right = MINIMAP_RIGHT
 	frame.offset_top = -176
 	frame.offset_bottom = -6
 	add_child(frame)
@@ -310,22 +312,52 @@ func _build_minimap() -> void:
 	minimap.custom_minimum_size = Vector2(280, 150)
 	frame.add_child(minimap)
 	minimap.setup(_game)
-	_idle_button = Button.new()
-	_idle_button.focus_mode = Control.FOCUS_NONE
-	_idle_button.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	_idle_button.offset_left = 8
-	_idle_button.offset_top = -214
-	_idle_button.offset_right = 150
-	_idle_button.offset_bottom = -182
-	_idle_button.tooltip_text = tr("Select the next idle villager  [.]")
-	_idle_button.add_theme_font_size_override("font_size", 14)
+	# Quick bar above the minimap: the most used shortcuts as buttons, so they
+	# are one tap away on phones and discoverable on PC (tooltips show the keys).
+	var bar := VBoxContainer.new()
+	bar.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	bar.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	bar.offset_left = 8
+	bar.offset_right = 304
+	bar.offset_top = -182
+	bar.offset_bottom = -182
+	bar.add_theme_constant_override("separation", 4)
+	add_child(bar)
+	if _game.touch.enabled:
+		var touch_row := _quick_row(bar)
+		var area := _quick_button(touch_row, "Area", "Draw a box to select an area", func() -> void: _game.touch.box_mode = not _game.touch.box_mode)
+		area.toggle_mode = true
+		_game.touch.box_mode_changed.connect(func(on: bool) -> void: area.set_pressed_no_signal(on))
+		_quick_button(touch_row, "Deselect", "Clear the selection  [Esc]", func() -> void: _game.selection.set_selection([]))
+	var row := _quick_row(bar)
+	_idle_button = _quick_button(row, "", "Select the next idle villager  [.]", func() -> void: _game.selection.select_idle_worker())
 	var r := SpriteLibrary.prop("icon_pop")
 	var at := AtlasTexture.new()
 	at.atlas = SpriteLibrary.props_texture()
 	at.region = r["rect"]
 	_idle_button.icon = at
-	_idle_button.pressed.connect(func() -> void: _game.selection.select_idle_worker())
-	add_child(_idle_button)
+	_quick_button(row, "Army", "Select every military unit  [Ctrl+A]", func() -> void: controls.select_military())
+	_quick_button(row, "Alert", "Jump to the latest attack  [Space]", func() -> void: controls.jump_to_alert())
+
+
+func _quick_row(bar: VBoxContainer) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	bar.add_child(row)
+	return row
+
+
+func _quick_button(row: HBoxContainer, text: String, tip: String, action: Callable) -> Button:
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.text = tr(text) if text != "" else ""
+	b.tooltip_text = tr(tip)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.custom_minimum_size = Vector2(0, 32)
+	b.add_theme_font_size_override("font_size", 14)
+	b.pressed.connect(action)
+	row.add_child(b)
+	return b
 
 
 func _idle_count() -> int:
@@ -334,6 +366,18 @@ func _idle_count() -> int:
 		if u.owner_id == _game.local_player and u.is_worker and not u.dead and u.task.is_empty() and u.state == Unit.State.IDLE:
 			n += 1
 	return n
+
+
+## Keeps the centred selection panel clear of the minimap on narrow screens
+## (phones, scaled UI) by sliding it right just enough.
+func _fit_bottom() -> void:
+	if not is_instance_valid(_bottom):
+		return
+	var half := maxf(470.0, _bottom.size.x * 0.5)
+	var left := get_viewport().get_visible_rect().size.x * 0.5 - half
+	var shift := maxf(0.0, MINIMAP_RIGHT + 6.0 - left)
+	_bottom.offset_left = -half + shift
+	_bottom.offset_right = half + shift
 
 
 func _build_bottom_panel() -> void:
@@ -346,6 +390,8 @@ func _build_bottom_panel() -> void:
 	_bottom.offset_bottom = -6
 	_bottom.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_bottom)
+	_fit_bottom.call_deferred()
+	get_viewport().size_changed.connect(_fit_bottom)
 	var root := HBoxContainer.new()
 	root.add_theme_constant_override("separation", 14)
 	_bottom.add_child(root)

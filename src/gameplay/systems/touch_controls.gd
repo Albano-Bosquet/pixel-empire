@@ -43,7 +43,7 @@ var _pinch_mid := Vector2.ZERO
 func setup(game: Game, cfg: Dictionary, force: bool = false) -> void:
 	_game = game
 	_cfg = cfg
-	enabled = force or DisplayServer.is_touchscreen_available()
+	enabled = force or Display.touch_screen()
 	if enabled:
 		_game.camera.edge_scroll_enabled = false
 

@@ -3,12 +3,26 @@ extends Node
 ## anywhere in the game, and the menus show a switch bound to the same state.
 ## The choice is stored in user://settings.cfg [display] fullscreen; the
 ## command line can force it with `-- --fullscreen` or `-- --windowed`.
+## Interface scale: 1 on PC; on phones and tablets the whole game is drawn larger
+## so the HUD fits a logical screen height (touch_settings.json); `-- --ui-scale=1.5`
+## forces a value (tests, small PC screens).
 
 signal fullscreen_changed(on: bool)
 
 const SETTINGS_PATH := "user://settings.cfg"
 
 var fullscreen := false
+## Factor applied to the root window's content (1 = native pixels).
+var ui_scale := 1.0
+
+
+## Scale that makes a screen `short_side_px` tall show `target_height` logical
+## pixels: never below 1 (PC layouts stay as designed), at most `max_scale`.
+## Example: Display.scale_for(1080, 640, 3.0) -> 1.6875
+static func scale_for(short_side_px: int, target_height: int, max_scale: float) -> float:
+	if target_height <= 0:
+		return 1.0
+	return clampf(float(short_side_px) / float(target_height), 1.0, max_scale)
 
 
 func _ready() -> void:
@@ -23,6 +37,30 @@ func _ready() -> void:
 			fullscreen = false
 	if DisplayServer.get_name() != "headless":
 		_apply()
+		_apply_scale()
+
+
+## Whether the player plays with fingers: a touch screen, or `-- --touch` (tests).
+func touch_screen() -> bool:
+	return DisplayServer.is_touchscreen_available() or OS.get_cmdline_user_args().has("--touch")
+
+
+func _apply_scale() -> void:
+	var cfg: Dictionary = GameData.touch
+	if OS.has_feature("mobile"):
+		var screen := DisplayServer.screen_get_size()
+		ui_scale = scale_for(mini(screen.x, screen.y), int(cfg.get("mobile_target_height", 640)), float(cfg.get("max_ui_scale", 3.0)))
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--ui-scale="):
+			ui_scale = maxf(float(a.trim_prefix("--ui-scale=")), 0.5)
+	if is_equal_approx(ui_scale, 1.0):
+		return
+	# Layout at window / scale logical pixels, then drawn scaled up: the HUD keeps
+	# its anchors and fits the screen instead of being zoomed past its edges.
+	var root := get_tree().root
+	root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	root.content_scale_size = Vector2i(Vector2(root.size) / ui_scale)
 
 
 func _input(event: InputEvent) -> void:
