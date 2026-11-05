@@ -2,7 +2,7 @@
 ; (exports the game first, then compiles this script with ISCC).
 
 #define AppName "Pixel Empire"
-#define AppVersion "1.5.3"
+#define AppVersion "1.5.4"
 #define AppExe "PixelEmpire.exe"
 
 [Setup]
