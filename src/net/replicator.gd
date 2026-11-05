@@ -39,12 +39,27 @@ const VANISH_GRACE_MS := 600
 const MAX_SNAPSHOT := 1 << 24
 ## Size of the last snapshot sent: [raw bytes, wire bytes] (diagnostics / tests).
 var last_snapshot_size := [0, 0]
+## Client-side prediction of own ground moves, so an order shows at once instead
+## of a relay round trip later: entity_id -> {"path", "i", "start", "until",
+## "phase": "lead" | "blend", "offset", "b"}. "lead": the replica walks the path
+## itself and ignores host positions; once the host's unit is seen heading off
+## (or after predict_max_seconds) "blend" fades the lead out over
+## predict_blend_seconds while host positions drive it again.
+var _predict: Dictionary = {}
+var _predict_on := true
+var _predict_max_ms := 1500
+var _predict_blend := 0.6
+var _predict_snap := 2.5
 
 
 func setup(game: Game) -> void:
 	_game = game
 	_hz = float(Net.settings.get("snapshot_hz", 15))
 	_interval = 1.0 / maxf(1.0, _hz)
+	_predict_on = bool(Net.settings.get("predict_moves", true))
+	_predict_max_ms = int(float(Net.settings.get("predict_max_seconds", 1.5)) * 1000.0)
+	_predict_blend = maxf(0.05, float(Net.settings.get("predict_blend_seconds", 0.6)))
+	_predict_snap = float(Net.settings.get("predict_snap_distance", 2.5))
 	_unit_types = GameData.units.keys()
 	_unit_types.sort()
 	_bld_types = GameData.buildings.keys()
@@ -216,15 +231,89 @@ func build_snapshot(pid: int) -> Dictionary:
 
 func _client_submit(order: Dictionary) -> void:
 	Net.send_order(order)
-	# Immediate feedback: units turn towards a ground order right away.
-	if order.get("t", "") == "issue" and int(order.get("target", 0)) == 0:
+	# Immediate feedback: own units start walking to a ground order right away.
+	if order.get("t", "") == "issue" and int(order.get("target", 0)) == 0 and not order.get("queue", false):
 		for id in order.get("units", []):
 			var u: Unit = _game.entity(int(id)) as Unit
 			if u != null and not u.dead:
-				var d: Vector2 = order["grid"] - u.grid_pos
-				if d.length_squared() > 0.01:
-					u.face(Iso.direction_index(d))
-					u.play("walk")
+				predict_move(u, order["grid"])
+
+
+## Starts walking `u` towards `goal` on the replica before the host answers.
+## Example: replicator.predict_move(villager, Vector2(40, 22))
+func predict_move(u: Unit, goal: Vector2) -> void:
+	var d := goal - u.grid_pos
+	if d.length_squared() <= 0.01:
+		return
+	u.face(Iso.direction_index(d))
+	u.play("walk")
+	if not _predict_on or u.altitude > 0.0 or u.aboard != null or u.speed <= 0.0:
+		_predict.erase(u.entity_id)
+		return
+	var path := _game.nav_for(u.def).find_path(u.grid_pos, goal, u.owner_id)
+	if path.is_empty():
+		return
+	var it: Dictionary = _interp.get(u.entity_id, {})
+	_predict[u.entity_id] = {"path": path, "i": 0, "start": it.get("to", u.grid_pos), "until": Time.get_ticks_msec() + _predict_max_ms,
+		"phase": "lead", "offset": Vector2.ZERO, "b": 0.0}
+	_interp.erase(u.entity_id)
+
+
+## Whether `u` is walking ahead of the host on this replica (tests / diagnostics).
+func is_predicting(u: Unit) -> bool:
+	return _predict.has(u.entity_id)
+
+
+# Host position `pos` arrives for a predicted unit. Returns true while the replica
+# keeps leading (the host position, animation and state are ignored).
+func _predict_snapshot(u: Unit, pos: Vector2, moving: bool) -> bool:
+	var pr: Dictionary = _predict[u.entity_id]
+	if pr["phase"] == "lead":
+		var start: Vector2 = pr["start"]
+		var path: PackedVector2Array = pr["path"]
+		var goal: Vector2 = path[path.size() - 1]
+		var gone := moving and pos.distance_to(start) > 0.15 and (pos - start).dot(goal - start) > 0.0
+		if not gone and Time.get_ticks_msec() < int(pr["until"]):
+			return true
+		# The host has the unit going: fade our lead out from here.
+		var offset := u.grid_pos - pos
+		if offset.length() > _predict_snap:
+			_predict.erase(u.entity_id)
+			_interp.erase(u.entity_id)
+			return false
+		pr["phase"] = "blend"
+		pr["offset"] = offset
+		pr["b"] = 0.0
+		_interp[u.entity_id] = {"from": pos, "to": pos, "t": 1.0}
+	return false
+
+
+# One frame of a unit walking its predicted path.
+func _predict_step(u: Unit, pr: Dictionary, delta: float) -> void:
+	var path: PackedVector2Array = pr["path"]
+	var i := int(pr["i"])
+	var step := u.speed * delta
+	var p := u.grid_pos
+	var dir := Vector2.ZERO
+	while i < path.size() and step > 0.0:
+		var to := path[i] - p
+		var dist := to.length()
+		if dist <= step:
+			p = path[i]
+			step -= dist
+			i += 1
+		else:
+			dir = to / dist
+			p += dir * step
+			step = 0.0
+	pr["i"] = i
+	if dir != Vector2.ZERO:
+		u.face(Iso.direction_index(dir))
+		u.velocity = dir * u.speed
+		u.play("walk")
+	else:
+		u.velocity = Vector2.ZERO
+	u.set_grid_pos(p)
 
 
 func receive_snapshot(data: PackedByteArray) -> void:
@@ -307,6 +396,11 @@ func _apply_unit(row: Array) -> void:
 		u.change_owner(int(row[2]), _game.color_slot_of(int(row[2])))
 	u.hp = int(row[5])
 	u.max_hp = int(row[6])
+	if _predict.has(id) and _predict_snapshot(u, pos, int(row[13]) == 1):
+		u.carry_type = row[9]
+		u.carry_amount = float(row[10])
+		u.ammo = int(row[12])
+		return
 	var anim: String = row[7]
 	if anim != u._anim:
 		if anim == "attack":
@@ -327,7 +421,11 @@ func _apply_unit(row: Array) -> void:
 	var task: String = row[14]
 	u.task = {} if task == "" else {"type": task.get_slice(":", 0), "kind": task.get_slice(":", 1)}
 	var it: Dictionary = _interp.get(id, {})
-	if it.is_empty() or u.grid_pos.distance_to(pos) > 3.0:
+	if _predict.has(id):
+		# Blending out a prediction: interpolate in host space, the lead is added on top.
+		var host_now: Vector2 = Vector2(it["from"]).lerp(it["to"], float(it["t"])) if not it.is_empty() else pos
+		_interp[id] = {"from": host_now, "to": pos, "t": 0.0}
+	elif it.is_empty() or u.grid_pos.distance_to(pos) > 3.0:
 		u.set_grid_pos(pos)
 		_interp[id] = {"from": pos, "to": pos, "t": 1.0}
 	else:
@@ -414,18 +512,31 @@ func receive_events(events: Array) -> void:
 				EventBus.game_over.emit(w)
 
 
-## Smooth movement between snapshots.
+## Smooth movement between snapshots (and predicted own moves).
 func _interpolate(delta: float) -> void:
+	for id in _predict.keys():
+		var pr: Dictionary = _predict[id]
+		var pu: Unit = _game.entity(id) as Unit
+		if pu == null or pu.dead:
+			_predict.erase(id)
+		elif pr["phase"] == "lead":
+			_predict_step(pu, pr, delta)
 	for id in _interp.keys():
 		var it: Dictionary = _interp[id]
 		var u: Unit = _game.entity(id) as Unit
 		if u == null or u.dead:
 			_interp.erase(id)
 			continue
-		if float(it["t"]) >= 1.0:
+		var pr: Dictionary = _predict.get(id, {})
+		if pr.is_empty() and float(it["t"]) >= 1.0:
 			u.velocity = Vector2.ZERO
 			continue
 		it["t"] = minf(1.0, float(it["t"]) + delta / _interval)
 		var p: Vector2 = it["from"].lerp(it["to"], it["t"])
 		u.velocity = (it["to"] - it["from"]) / _interval
+		if not pr.is_empty():
+			pr["b"] = minf(1.0, float(pr["b"]) + delta / _predict_blend)
+			p += Vector2(pr["offset"]) * (1.0 - float(pr["b"]))
+			if float(pr["b"]) >= 1.0:
+				_predict.erase(id)
 		u.set_grid_pos(p)

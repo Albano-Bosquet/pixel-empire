@@ -183,7 +183,13 @@ func _client() -> void:
 	var start_pos := v.grid_pos
 	var goal := start_pos + Vector2(4, 0)
 	g.orders.submit({"t": "issue", "units": [v.entity_id], "buildings": [], "grid": goal, "target": 0})
+	_check(g.replicator.is_predicting(v), "the replica predicts its own move order")
+	await get_tree().create_timer(0.15, true, false, true).timeout
+	_check(v.grid_pos.distance_to(start_pos) > 0.1, "the villager starts walking before the host answers (%.2f tiles)" % v.grid_pos.distance_to(start_pos))
 	_check(await _wait(func(): return v.grid_pos.distance_to(start_pos) > 1.5, 10.0), "the villager moves after a move order")
+	_check(await _wait(func(): return not g.replicator.is_predicting(v), 5.0), "the prediction hands back to host positions")
+	await _wait(func(): return v.state == Unit.State.IDLE, 8.0)
+	_check(v.grid_pos.distance_to(goal) < 1.0, "the predicted villager ends where the host put it (%.2f from the goal)" % v.grid_pos.distance_to(goal))
 	# Build a house with the other villagers.
 	var spot := _house_spot(g, tc)
 	var builders := OrderRouter.ids(vills.slice(1))
