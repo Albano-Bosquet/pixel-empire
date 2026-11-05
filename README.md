@@ -126,13 +126,13 @@ huyen, jabalíes que se defienden y lobos, tigres y osos que atacan.
 | Una ciudad de la Edad Imperial en pleno trabajo | Ofensiva de la Edad Militar contra un fuerte antiaéreo |
 | ![Menú principal](docs/screenshots/01_menu.png) | ![Monasterio, murallas y monje](docs/screenshots/03_monasterio.png) |
 | Menú principal con la aldea animada de fondo | Monasterio, murallas y un monje convirtiendo |
-| ![La Maravilla](docs/screenshots/04_maravilla.png) | ![Puerto y barcos](docs/screenshots/05_naval.png) |
+| ![La Maravilla](docs/media/maravilla.jpg) | ![Puerto y barcos](docs/media/naval.jpg) |
 | La Maravilla: mantenla en pie y ganas | Mapa de islas, puerto y barcos |
-| ![Edad Industrial](docs/screenshots/06_era_industrial.png) | ![Árbol tecnológico](docs/screenshots/07_tecnologias.png) |
+| ![Edad Industrial](docs/media/industrial.jpg) | ![Árbol tecnológico](docs/media/tecnologias.jpg) |
 | Edad Industrial: aeródromo, artillería y fusileros | Árbol tecnológico (F2) |
 | ![Edad Militar](docs/screenshots/10_era_militar.png) | ![Partida a medida](docs/screenshots/12_partida.png) |
 | Fábrica de tanques, tanques, reactores e infantería moderna | Hasta 8 jugadores, equipos y opciones |
-| ![Pantalla de victoria](docs/screenshots/08_victoria.png) | ![Animaciones de unidades](docs/screenshots/09_unidades.png) |
+| ![Pantalla de victoria](docs/media/victoria.jpg) | ![Animaciones de unidades](docs/screenshots/09_unidades.png) |
 | Estadísticas al final de la partida | Animaciones de unidades en 16 direcciones |
 
 ## ⬇️ Instalar
