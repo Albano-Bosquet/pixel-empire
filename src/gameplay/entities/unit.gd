@@ -11,7 +11,7 @@ extends Entity
 enum State { IDLE, MOVING }
 
 ## Animations whose tool strikes make a sound (audio_settings.json "work").
-const WORK_ANIMS := ["chop", "mine", "build", "forage"]
+const WORK_ANIMS := ["chop", "mine", "build", "farm", "forage"]
 
 var state: State = State.IDLE
 var speed := 1.5

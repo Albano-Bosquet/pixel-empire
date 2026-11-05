@@ -10,6 +10,8 @@
   "gather_animations": {
     "wood": "chop",
     "food": "forage",
+    "farm": "farm",
+    "farm_basket": "forage",
     "gold": "mine",
     "stone": "mine"
   },
@@ -19,6 +21,8 @@
   "farm_inset": 0.3,
   "farm_rows": 3,
   "farm_walk_speed": 0.32,
+  "farm_hoe_seconds": 8.0,
+  "farm_basket_seconds": 8.0,
   "search_radius": 10,
   "builder_count_formula": "aoe",
   "repair_rate_hp_per_second": 25,

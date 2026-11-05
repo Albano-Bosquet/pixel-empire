@@ -123,10 +123,11 @@ func _tick_gather(u: Unit, delta: float) -> void:
 				u.work_anim = ""
 				_move_to_target(u)
 				return
-			u.work_anim = "build" if node is Building else String(_cfg.get("gather_animations", {}).get(node.resource_type, "forage"))
+			var anims: Dictionary = _cfg.get("gather_animations", {})
 			if node is Building:
-				_farm_walk(u, node, delta)
+				_farm_work(u, node, delta, anims)
 			else:
+				u.work_anim = String(anims.get(node.resource_type, "forage"))
 				_face(u, node.grid_pos)
 			# Units may override the per-resource rate (fishing ships: "gather_rate").
 			var rate := float(u.def.get("gather_rate", _cfg.get("gather_rates", {}).get(node.resource_type, 0.3))) * _game.gather_multiplier(u.owner_id, node.resource_type)
@@ -327,6 +328,44 @@ func _at_node(u: Unit, node: Entity) -> bool:
 
 ## Farmer work: walks the field in a serpentine along `farm_rows` rows while
 ## hoeing (AoE-style), instead of standing still at its edge.
+## Farming cycle: hoe while walking the furrows for `farm_hoe_seconds`, then
+## stand still filling a basket for `farm_basket_seconds`, forever. Food is
+## gathered at the same rate in both halves (economy_settings.json).
+func _farm_work(u: Unit, farm: Building, delta: float, anims: Dictionary) -> void:
+	var cycle := farm_cycle()
+	var t := u.task
+	t["farm_t"] = farm_clock(float(t.get("farm_t", 0.0)), delta, cycle)
+	if is_hoeing(u):
+		u.work_anim = String(anims.get("farm", "farm"))
+		_farm_walk(u, farm, delta)
+	else:
+		u.work_anim = String(anims.get("farm_basket", "forage"))
+		# Kneel facing the camera so the basket is in view.
+		u.face(Iso.direction_index(Vector2(1, 1)))
+
+
+## (hoe seconds, basket seconds) of the farming cycle.
+func farm_cycle() -> Vector2:
+	return Vector2(maxf(0.0, float(_cfg.get("farm_hoe_seconds", 8.0))), maxf(0.0, float(_cfg.get("farm_basket_seconds", 8.0))))
+
+
+## Whether a farmer is in the hoeing half of the farming cycle.
+func is_hoeing(u: Unit) -> bool:
+	return farm_hoeing(float(u.task.get("farm_t", 0.0)), farm_cycle())
+
+
+## Farming clock `t` advanced by `delta`, wrapping at hoe + basket seconds.
+## Example: farm_clock(15.5, 1.0, Vector2(8, 8)) == 0.5 (back to hoeing).
+static func farm_clock(t: float, delta: float, cycle: Vector2) -> float:
+	return fmod(t + delta, maxf(cycle.x + cycle.y, 0.001))
+
+
+## Whether clock `t` falls in the hoeing part of `cycle` (hoe, basket seconds).
+## Example: farm_hoeing(9.0, Vector2(8, 8)) == false (filling the basket).
+static func farm_hoeing(t: float, cycle: Vector2) -> bool:
+	return t < cycle.x
+
+
 func _farm_walk(u: Unit, farm: Building, delta: float) -> void:
 	var t := u.task
 	var r := Rect2(farm.footprint()).grow(-float(_cfg.get("farm_inset", 0.3)))

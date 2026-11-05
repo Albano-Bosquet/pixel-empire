@@ -43,6 +43,10 @@
           "frames": 10,
           "fps": 20.0
         },
+        "farm": {
+          "frames": 12,
+          "fps": 11.0
+        },
         "carry_wood": {
           "frames": 12,
           "fps": 16.5

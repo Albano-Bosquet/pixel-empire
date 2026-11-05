@@ -65,7 +65,8 @@ static func building_key(cfg: Dictionary, building_id: String) -> String:
 
 
 ## Work-loop sound for an animation; returns {} when the animation is silent.
-## `gathering_food_on_farm`: villagers hoe farms with the "build" animation.
+## Farmers play the "farm" (hoe) animation, whose entry is "farm"; `farming` also
+## maps a "build" animation on a farm to it (saves made before the hoe existed).
 static func work_entry(cfg: Dictionary, anim: String, farming: bool) -> Dictionary:
 	var key := "farm" if farming and anim == "build" else anim
 	return cfg.get("work", {}).get(key, {})

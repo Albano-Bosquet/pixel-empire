@@ -9,7 +9,7 @@ extends RefCounted
 ## "grenade" (overarm throw); helmets "tricorn", "shako", "cap" are cloth hats.
 ## Military age: weapons "assault_rifle", "machine_gun" (rapid flashes), "bazooka"
 ## (shoulder tube with backblast); helmet "steel" (olive dome with a brim).
-## Animations: idle, walk, chop, mine, forage, build, carry_<res>, attack.
+## Animations: idle, walk, chop, mine, forage, build, farm (hoeing), carry_<res>, attack.
 ## "die" is derived by SheetBuilder.
 
 const PixelCanvas := preload("res://tools/art/pixel_canvas.gd")
@@ -25,6 +25,11 @@ const SWING_KEYS := {
 	"greatsword": [110, 150, 165, 120, 20, -40, -20, 60],
 	"axe": [95, 130, 145, 60, -20, 25],
 }
+## Hoeing a farm: the hoe rises past the head, chops down into the soil and is
+## dragged back towards the feet (arm angle per keyframe; strike below -50).
+const HOE_KEYS := [5, 40, 80, 105, 100, 55, -20, -58, -62, -55, -35, -10]
+const SOIL := Color("#6b4a2c")
+const SOIL_LIGHT := Color("#9a7448")
 ## Javelin throw: arm angle per frame (wind-up behind the head, release low).
 const THROW := [70, 120, 150, 160, 90, 20, -10, 30]
 ## Crossbow recoil and hand-cannon muzzle flash (px / intensity) per frame.
@@ -81,6 +86,12 @@ static func paint(c: PixelCanvas, p: Dictionary, dir: int, anim: String, frame: 
 			tool = {"chop": "axe", "mine": "pick", "build": "hammer"}[anim]
 			theta = deg_to_rad(SheetBuilder.sample(SWING_KEYS[anim], frame, frames))
 			bob = 1.0 if theta < 0.2 else 0.0
+		"farm":
+			tool = "hoe"
+			theta = deg_to_rad(SheetBuilder.sample(HOE_KEYS, frame, frames))
+			# Bent over the furrow while the blade is down.
+			bob = 2.0 if theta < -0.6 else (1.0 if theta < 0.3 else 0.0)
+			reach = 1.5 if theta < -0.6 else 0.0
 		"forage":
 			bob = 2.0 + (1.0 if cyc >= 0.33 and cyc < 0.67 else 0.0)
 			carry = "basket_low"
@@ -334,7 +345,9 @@ static func paint(c: PixelCanvas, p: Dictionary, dir: int, anim: String, frame: 
 		if not behind:
 			_tool(c, hand, dir_v, tool, pull)
 		_arm_to(c, near_shoulder, hand, tunic[1] if not has_mail else mail[2], skin[2])
-		var two_handed := tool in ["axe", "pick", "hammer", "greatsword", "pike", "crossbow", "gun", "petard", "blunderbuss", "musket", "rifle", "assault_rifle", "machine_gun", "bazooka"] or (tool == "bow" and pull > 0.0)
+		if tool == "hoe" and theta < -0.85:
+			_soil_puff(c, hand + dir_v.normalized() * 12.0 + Vector2(-dir_v.y, dir_v.x).normalized() * 3.0, frame)
+		var two_handed := tool in ["axe", "pick", "hammer", "hoe", "greatsword", "pike", "crossbow", "gun", "petard", "blunderbuss", "musket", "rifle", "assault_rifle", "machine_gun", "bazooka"] or (tool == "bow" and pull > 0.0)
 		if side < 0.3 and two_handed and not shield:
 			var other := hand + Vector2(-1, 1)
 			if tool == "bow":
@@ -397,6 +410,15 @@ static func _shield(c: PixelCanvas, at: Vector2, team: Color, side: float) -> vo
 	c.put(roundi(at.x), roundi(at.y), METAL)
 
 
+## Clods of earth flung up where the hoe bites into the furrow.
+static func _soil_puff(c: PixelCanvas, at: Vector2, frame: int) -> void:
+	var k := float(frame % 3)
+	for o in [Vector2(-3.0, -1.5 - k), Vector2(2.0, -2.5 - k * 0.5), Vector2(4.0, -0.5), Vector2(-1.0, 0.5)]:
+		c.rect(roundi(at.x + o.x), roundi(at.y + o.y), 2, 2, SOIL)
+	c.rect(roundi(at.x), roundi(at.y - 4.0 - k), 2, 1, SOIL_LIGHT)
+	c.put(roundi(at.x - 4.0), roundi(at.y - 3.5 - k), SOIL_LIGHT)
+
+
 ## Tool or weapon held at `hand`, pointing along `dir` (screen space).
 static func _tool(c: PixelCanvas, hand: Vector2, dir: Vector2, tool: String, pull: float = 0.0) -> void:
 	var d := dir.normalized() if dir.length() > 0.01 else Vector2(0, -1)
@@ -414,6 +436,17 @@ static func _tool(c: PixelCanvas, hand: Vector2, dir: Vector2, tool: String, pul
 				c.thick_line((tip - perp * 5.0).x, (tip - perp * 5.0 + d).y, (tip + perp * 5.0).x, (tip + perp * 5.0 + d).y, 1.6, METAL)
 			else:
 				c.thick_line((tip - perp * 2.5).x, (tip - perp * 2.5).y, (tip + perp * 2.5).x, (tip + perp * 2.5).y, 2.6, METAL_DARK)
+		"hoe":
+			# Long ash handle with a flat iron blade bent back towards the farmer.
+			var butt_h := hand - d * 3.0
+			var end := hand + d * 12.0
+			c.thick_line(butt_h.x, butt_h.y, end.x, end.y, 1.4, Color("#9a6a3c"))
+			# Wide plate: two strokes side by side, bright cutting edge.
+			var bl := end + perp * 4.5 - d * 1.0
+			c.thick_line(end.x, end.y, bl.x, bl.y, 2.6, METAL_DARK)
+			c.thick_line(end.x - d.x * 1.5, end.y - d.y * 1.5, bl.x - d.x * 1.5, bl.y - d.y * 1.5, 1.6, METAL_DARK)
+			c.put(roundi(bl.x), roundi(bl.y), METAL)
+			c.put(roundi(bl.x - d.x), roundi(bl.y - d.y), METAL)
 		"sword":
 			var guard := hand + d * 1.5
 			var tip2 := hand + d * 12.0

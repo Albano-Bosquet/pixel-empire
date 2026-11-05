@@ -99,3 +99,24 @@ func test_farm_built_by_progress_holds_food() -> void:
 	assert_eq(f.remaining(), int(GameData.building("farm")["farm_food"]), "completed farm holds its food")
 	assert_true(not f.is_depleted(), "completed farm is harvestable")
 	f.free()
+
+
+func test_farming_alternates_hoe_and_basket() -> void:
+	# Arrange: the cycle from economy_settings.json (8 s hoe, 8 s basket).
+	var cycle := Vector2(float(GameData.economy["farm_hoe_seconds"]), float(GameData.economy["farm_basket_seconds"]))
+	assert_true(cycle.x > 0.0 and cycle.y > 0.0, "both halves of the farming cycle last a while")
+	# Act: step the clock at 20 Hz through two full cycles.
+	var t := 0.0
+	var phases: Array[bool] = []
+	for i in int((cycle.x + cycle.y) * 2.0 * 20.0):
+		phases.append(EconomySystem.farm_hoeing(t, cycle))
+		t = EconomySystem.farm_clock(t, 0.05, cycle)
+	# Assert: hoe, basket, hoe, basket - each half as long as configured.
+	var switches := 0
+	for i in range(1, phases.size()):
+		if phases[i] != phases[i - 1]:
+			switches += 1
+	assert_eq(switches, 3, "hoe -> basket -> hoe -> basket over two cycles")
+	assert_eq(phases.slice(0, int(cycle.x * 20.0)).count(true), int(cycle.x * 20.0), "starts with the hoe for the whole hoe time")
+	assert_true(not EconomySystem.farm_hoeing(cycle.x + 0.01, cycle), "then the basket")
+	assert_near(EconomySystem.farm_clock(cycle.x + cycle.y - 0.5, 1.0, cycle), 0.5, 0.0001, "the clock wraps back to hoeing")

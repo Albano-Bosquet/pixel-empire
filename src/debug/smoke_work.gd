@@ -42,11 +42,36 @@ func _work() -> void:
 		span = maxf(span, p.distance_to(seen[0]))
 	_check(span > 0.6, "farmer walks along the field while farming (%.2f tiles)" % span)
 	_check(inside, "farmer never leaves the field while working")
-	_check(farmer.work_anim == "build" and farmer.state == Unit.State.IDLE, "farmer plays the hoeing animation, not walk")
+	_check(farmer.work_anim == "farm" and farmer.state == Unit.State.IDLE, "farmer plays the hoeing animation, not walk")
 	_check(farmer.carry_amount > 0.0, "farmer gathers food while walking (%.1f)" % farmer.carry_amount)
 	_game.camera.focus_world(farm.position)
 	await _frames(3)
 	await _shot("work_01_farmer")
+	# Close-up of the hoe: blade raised, then biting into the soil.
+	_game.camera.set_zoom_index(_game.camera.zoom_levels.size() - 1)
+	_game.camera.focus_world(farmer.position)
+	await _seconds(0.8)
+	for k in 3:
+		await _shot("work_01%s_farmer_hoe" % ["b", "c", "d"][k])
+		await _seconds(0.3)
+	# After the hoe time: standing still with the basket, then the hoe again.
+	var cycle := _game.economy.farm_cycle()
+	t0 = Time.get_ticks_msec()
+	while _game.economy.is_hoeing(farmer) and Time.get_ticks_msec() - t0 < int(cycle.x * 1000.0) + 2000:
+		await _seconds(0.1)
+	await _seconds(0.3)
+	var still := farmer.grid_pos
+	var food := farmer.carry_amount
+	_check(farmer.work_anim == String(econ["gather_animations"].get("farm_basket", "forage")), "after %.0f s of hoeing the farmer fills a basket (%s)" % [cycle.x, farmer.work_anim])
+	await _shot("work_01e_farmer_basket")
+	await _seconds(2.0)
+	_check(farmer.grid_pos.distance_to(still) < 0.01, "the farmer stands still while filling the basket")
+	_check(farmer.carry_amount > food, "food keeps coming in with the basket (%.1f -> %.1f)" % [food, farmer.carry_amount])
+	t0 = Time.get_ticks_msec()
+	while not _game.economy.is_hoeing(farmer) and Time.get_ticks_msec() - t0 < int(cycle.y * 1000.0) + 2000:
+		await _seconds(0.1)
+	await _seconds(0.2)
+	_check(farmer.work_anim == "farm", "after %.0f s with the basket the farmer hoes again" % cycle.y)
 
 	# --- 2. Woodcutter stands against the tree ---------------------------------------------
 	var spot := _open_spot(tc.grid_pos + Vector2(-7, 4), 2)
