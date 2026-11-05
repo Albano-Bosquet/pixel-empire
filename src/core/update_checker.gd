@@ -6,6 +6,7 @@ extends Node
 ##
 ## States: IDLE -> CHECKING -> (UP_TO_DATE | AVAILABLE | FAILED)
 ##         AVAILABLE -> DOWNLOADING -> (LAUNCHED | FAILED)
+##         LAUNCHED -> AVAILABLE (Android, after android_retry_seconds)
 
 signal state_changed(state: State)
 
@@ -21,6 +22,8 @@ var installer_url := ""
 var installer_name := ""
 var _cfg: Dictionary = {}
 var _http: HTTPRequest
+## Installer already downloaded this session (res path), reopened on retry.
+var _downloaded := ""
 
 
 func _ready() -> void:
@@ -86,19 +89,23 @@ func check() -> void:
 		_set_state(State.FAILED)
 
 
-## Downloads the installer of the newest release, runs it and quits the game.
-## On Android the APK opens in the browser instead (the system installs it).
+## Downloads the installer of the newest release into `download_dir` and starts it.
+##   PC: runs the Windows installer and quits the game so its files can be replaced.
+##   Android: opens the APK with the system package installer (OS.shell_open on a
+##   local file goes through Godot's FileProvider; the export declares
+##   REQUEST_INSTALL_PACKAGES). The game keeps running; if the player backs out of
+##   the installer the button works again and reopens the same file.
 func download_and_install() -> void:
 	if state != State.AVAILABLE:
 		return
-	if OS.has_feature("android"):
-		OS.shell_open(installer_url)
-		_set_state(State.LAUNCHED)
+	var dir := String(_cfg.get("download_dir", "user://updates"))
+	var path := dir.path_join(installer_name)
+	if path == _downloaded:
+		_launch(path)
 		return
 	_set_state(State.DOWNLOADING)
-	var dir := String(_cfg.get("download_dir", "user://updates"))
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
-	var path := dir.path_join(installer_name)
+	_remove_old_downloads(dir)
 	_http = _new_request()
 	_http.download_file = path
 	_http.request_completed.connect(func(result: int, code: int, _h: PackedStringArray, _b: PackedByteArray) -> void:
@@ -106,14 +113,40 @@ func download_and_install() -> void:
 		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 			_set_state(State.FAILED)
 			return
-		var pid := OS.create_process(ProjectSettings.globalize_path(path), [])
-		if pid <= 0:
+		_downloaded = path
+		_launch(path))
+	if _http.request(installer_url, _headers([])) != OK:
+		_set_state(State.FAILED)
+
+
+func _launch(path: String) -> void:
+	var abs_path := ProjectSettings.globalize_path(path)
+	if OS.has_feature("android"):
+		if OS.shell_open(abs_path) != OK:
 			_set_state(State.FAILED)
 			return
 		_set_state(State.LAUNCHED)
-		get_tree().quit())
-	if _http.request(installer_url, _headers([])) != OK:
+		# Back to "Update" so a cancelled install can be retried without re-downloading.
+		get_tree().create_timer(float(_cfg.get("android_retry_seconds", 4.0))).timeout.connect(func() -> void:
+			if state == State.LAUNCHED:
+				_set_state(State.AVAILABLE))
+		return
+	var pid := OS.create_process(abs_path, [])
+	if pid <= 0:
 		_set_state(State.FAILED)
+		return
+	_set_state(State.LAUNCHED)
+	get_tree().quit()
+
+
+## Deletes installers left by earlier updates (an APK is ~90 MB).
+func _remove_old_downloads(dir: String) -> void:
+	var d := DirAccess.open(dir)
+	if d == null:
+		return
+	for f in d.get_files():
+		if f.ends_with(".apk") or f.ends_with(".exe"):
+			d.remove(f)
 
 
 ## Download progress 0..1 (0 when the size is not known yet).

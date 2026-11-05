@@ -6,5 +6,6 @@
   "apk_suffix": ".apk",
   "user_agent": "PixelEmpire-Updater",
   "check_timeout": 10.0,
-  "download_dir": "user://updates"
+  "download_dir": "user://updates",
+  "android_retry_seconds": 4.0
 }
