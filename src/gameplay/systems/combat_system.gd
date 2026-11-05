@@ -339,9 +339,11 @@ func _on_damaged(e: Entity, attacker: Entity, _amount: int) -> void:
 
 
 ## True when `victim` took the hit in a fight its own side started, so it is no
-## "under attack" alert: the victim was attacking or hunting `attacker`, the attacker
-## is on the victim's own side (villagers butchering a herded sheep), or it is wild
-## game (boar, deer), which only strikes back when hunted.
+## "under attack" alert: the victim was ordered to attack or hunt `attacker`, the
+## attacker is on the victim's own side (villagers butchering a herded sheep), or it
+## is wild game (boar, deer), which only strikes back when hunted.
+## Soldiers that spotted or answered an enemy on their own keep a guard post, so an
+## enemy reaching them still counts as an attack: only orders clear guard_pos.
 ## Predators and other players' units attacking unprovoked return false.
 static func provoked(victim: Entity, attacker: Entity) -> bool:
 	if attacker.owner_id == victim.owner_id:
@@ -350,7 +352,7 @@ static func provoked(victim: Entity, attacker: Entity) -> bool:
 		return true
 	if victim is Unit:
 		var u: Unit = victim
-		return u.target == attacker or WildlifeSystem.is_hunting(u, attacker)
+		return WildlifeSystem.is_hunting(u, attacker) or (u.target == attacker and u.guard_pos == Vector2.INF)
 	return false
 
 

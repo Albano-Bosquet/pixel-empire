@@ -118,6 +118,12 @@ func _audio() -> void:
 	await _frames(2)
 	_check(int(Audio.ui_played.get("rally", 0)) > 0, "setting a rally point plants a flag")
 
+	# End the battle above: its blows are real attacks and would raise the alerts checked next.
+	for u: Unit in _game.unit_system.units.duplicate():
+		if u.owner_id == 2 and u.is_alive():
+			u.take_damage(u.hp, null)
+	await _seconds(0.5)
+
 	# Hunting a boar: it strikes back, but that is no "under attack" alert.
 	var hunt_at := _open_spot(tc.grid_pos + Vector2(-4, 6))
 	var hunter: Unit = _spawn_group("villager", 1, hunt_at, 1)[0]
@@ -155,6 +161,25 @@ func _audio() -> void:
 	_check(cut[0], "the villager butchered our own sheep")
 	_check(pings[0] == 0, "no under-attack ping for butchering our own sheep (%d)" % pings[0])
 	_check(int(Audio.ui_played.get("under_attack", 0)) == alerts, "no under-attack horn for butchering our own sheep (%d -> %d)" % [alerts, int(Audio.ui_played.get("under_attack", 0))])
+
+	# An enemy walks up to an idle soldier: it spots and engages him first, yet this IS an attack.
+	for bystander: Unit in [hunter, boar, butcher]:  # the raider must have only the soldier to hit
+		if bystander.is_alive():
+			bystander.take_damage(bystander.hp, null)
+	var post := _open_spot(tc.grid_pos + Vector2(-10, 8))
+	var sentry: Unit = _spawn_group("swordsman", 1, post, 1)[0]
+	var raider: Unit = _spawn_group("swordsman", 2, post + Vector2(4, 0), 1)[0]
+	var struck := [false]
+	sentry.damaged.connect(func(_e, attacker, _a) -> void: struck[0] = struck[0] or attacker == raider)
+	_game.fog.update_now()
+	_game.combat._attack_notice.erase(1)
+	alerts = int(Audio.ui_played.get("under_attack", 0))
+	t0 = Time.get_ticks_msec()
+	while not struck[0] and Time.get_ticks_msec() - t0 < 15000:
+		await _seconds(0.25)
+	await _seconds(0.25)
+	_check(struck[0] and sentry.target == raider, "the raider hit a soldier already fighting him")
+	_check(int(Audio.ui_played.get("under_attack", 0)) > alerts, "the under-attack horn sounds when an enemy attacks our soldier")
 
 	# Ambience loops run.
 	var running := 0

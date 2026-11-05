@@ -80,6 +80,22 @@ func test_no_under_attack_alert_for_fights_we_started() -> void:
 		e.free()
 
 
+func test_soldier_defending_its_post_still_raises_the_alert() -> void:
+	var guard := _unit("swordsman", 1)
+	var enemy := _unit("swordsman", 2)
+	var wolf := _unit("wolf", Entity.GAIA)
+	guard.guard_pos = guard.grid_pos  # what auto-acquire and retaliation leave behind
+	guard.target = enemy
+	assert_true(not CombatSystem.provoked(guard, enemy), "an enemy we only spotted and engaged is an attack")
+	guard.target = wolf
+	assert_true(not CombatSystem.provoked(guard, wolf), "a wolf we only spotted and engaged is an attack")
+	guard.guard_pos = Vector2.INF  # what order_attack and attack-move leave behind
+	guard.target = enemy
+	assert_true(CombatSystem.provoked(guard, enemy), "an enemy we were ordered to attack is no attack")
+	for e in [guard, enemy, wolf]:
+		e.free()
+
+
 func test_butchering_own_sheep_is_no_attack_but_an_enemy_doing_it_is() -> void:
 	var sheep := _unit("sheep", 1)
 	var vil := _unit("villager", 1)
