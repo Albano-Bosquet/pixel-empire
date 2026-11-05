@@ -34,16 +34,113 @@ func _showcase() -> void:
 	_game.day_night.time = 0.45
 	_game.day_night._apply()
 
-	await _city(base, 4)
+	await _city(base, 3)
 	await _battle(base)
 	await _modern(base)
+	await _gallery(base)
 	_finish()
+
+
+## Extra stills for the web gallery: a Wonder, a sea fight, an Industrial Age
+## battle, the tech tree and the end-of-match screen.
+func _gallery(base: Vector2i) -> void:
+	_game.hud.visible = true
+
+	# The Wonder rising beside the Imperial city.
+	_set_age(3)
+	var wspot := _find_build_spot("wonder", base + Vector2i(-4, -14))
+	var wonder := _game.buildings.place("wonder", 1, wspot, true)
+	if wonder:
+		_game.camera.set_zoom_index(1)
+		_game.camera.focus_world(Iso.grid_to_world(Iso.tile_center(Iso.tile_of(wonder.grid_pos)) + Vector2(1, 1)))
+		await _frames(30)
+		await _save("gallery_wonder")
+
+	# Galleys clash off the home shore while a fishing boat works.
+	var dock_at := _shore_spot(base)
+	if dock_at.x >= 0:
+		var dock := _game.buildings.place("dock", 1, dock_at, true)
+		var sea := _game.naval_pathfinder.approach(dock.footprint(), dock.grid_pos + Vector2(3, 3))
+		var mine: Array[Unit] = []
+		var theirs: Array[Unit] = []
+		for i in 3:
+			var g := _game.spawn_unit("war_galley", 1, sea + Vector2(i * 0.9, -0.8))
+			if g: mine.append(g)
+		_game.spawn_unit("fishing_ship", 1, sea + Vector2(-1.5, 1.5))
+		_game.spawn_unit("transport_ship", 1, sea + Vector2(-2.5, -0.5))
+		var far := Iso.tile_center(_game.naval_pathfinder.nearest_walkable(Iso.tile_of(sea + Vector2(7, 3)), 10, sea))
+		for i in 3:
+			var g := _game.spawn_unit(["war_galley", "fire_ship", "war_galley"][i], 2, far + Vector2(i * 0.9, 0))
+			if g: theirs.append(g)
+		_game.combat.order_attack_move(mine, far)
+		_game.combat.order_attack_move(theirs, sea)
+		_game.camera.set_zoom_index(2)
+		_game.camera.focus_world(Iso.grid_to_world(sea.lerp(far, 0.45)))
+		await _seconds(2.5)
+		await _save("gallery_naval")
+		for u in mine + theirs:
+			if is_instance_valid(u) and not u.dead:
+				_game.kill_unit(u)
+
+	# Riflemen, field guns and biplanes against a musket line in the Industrial Age.
+	_set_age(5)
+	var field := _clearing([Iso.tile_center(base), _battle_at], 18.0)
+	var ft := Iso.tile_of(field)
+	_game.buildings.place("airfield", 1, _find_build_spot("airfield", ft + Vector2i(-9, -4)), true)
+	_game.buildings.place("foundry", 1, _find_build_spot("foundry", ft + Vector2i(-8, 4)), true)
+	_game.buildings.place("tower", 2, _find_build_spot("tower", ft + Vector2i(6, -2)), true)
+	var army: Array[Unit] = []
+	army.append_array(_spawn_group("rifleman", 1, field + Vector2(-5, -1), 9))
+	army.append_array(_spawn_group("field_cannon", 1, field + Vector2(-8, 0.5), 2))
+	army.append_array(_spawn_group("dragoon", 1, field + Vector2(-5, 2), 3))
+	army.append_array(_spawn_group("biplane_fighter", 1, field + Vector2(-7, -3), 2))
+	_spawn_group("observation_balloon", 1, field + Vector2(-9, -1), 1)
+	var foes: Array[Unit] = []
+	foes.append_array(_spawn_group("musketeer", 2, field + Vector2(2, -1), 9))
+	foes.append_array(_spawn_group("grenadier", 2, field + Vector2(3, 1.5), 3))
+	_game.camera.set_zoom_index(2)
+	_game.camera.focus_world(Iso.grid_to_world(field + Vector2(-2, 0)))
+	await _frames(10)
+	_game.combat.order_attack_move(army, field + Vector2(5, 0))
+	_game.combat.order_attack_move(foes, field + Vector2(-5, 0))
+	await _seconds(2.0)
+	await _save("gallery_industrial")
+	for u in army + foes:
+		if is_instance_valid(u) and not u.dead:
+			_game.kill_unit(u)
+
+	# Tech tree over the city.
+	_game.camera.set_zoom_index(1)
+	_game.camera.focus_world(Iso.grid_to_world(Iso.tile_center(base)))
+	_game.hud.tech_panel.toggle()
+	await _frames(20)
+	await _save("gallery_techs")
+	_game.hud.tech_panel.toggle()
+
+	# End-of-match statistics.
+	var end := EndScreen.new()
+	get_tree().root.add_child(end)
+	end.show_results(_game, [_game.local_player])
+	await _frames(20)
+	await _save("gallery_victory")
+
+
+## Nearest valid dock origin to `home` (ring search), or (-1, -1).
+func _shore_spot(home: Vector2i) -> Vector2i:
+	for r in range(4, 40):
+		for dy in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				if absi(dx) != r and absi(dy) != r:
+					continue
+				var o := home + Vector2i(dx, dy)
+				if _game.buildings.placement_error("dock", o) == "":
+					return o
+	return Vector2i(-1, -1)
 
 
 ## A walled Imperial city with villagers at work; stills by day, sunset and night.
 func _city(base: Vector2i, age: int) -> void:
-	var me := _game.local_state()
-	me.age = age
+	_set_age(age)
 	var plan := [["castle", Vector2i(7, -6)], ["market", Vector2i(-9, 2)], ["monastery", Vector2i(-6, -9)],
 		["blacksmith", Vector2i(6, 4)], ["university", Vector2i(-2, 7)], ["mill", Vector2i(-8, 8)],
 		["house", Vector2i(4, 8)], ["house", Vector2i(2, -6)], ["house", Vector2i(-3, -5)],
@@ -128,8 +225,7 @@ func _battle(base: Vector2i) -> void:
 
 ## Tanks, infantry and jets push into an enemy base in the Military Age.
 func _modern(base: Vector2i) -> void:
-	var me := _game.local_state()
-	me.age = 6
+	_set_age(6)
 	var field := _clearing([Iso.tile_center(base), _battle_at], 22.0)
 	var ft := Iso.tile_of(field)
 	_game.buildings.place("tank_factory", 1, _find_build_spot("tank_factory", ft + Vector2i(-9, -5)), true)
@@ -203,3 +299,10 @@ func _clip(name: String, n: int, every: int) -> void:
 		var img := get_viewport().get_texture().get_image()
 		img.resize(GIF_SIZE.x, GIF_SIZE.y, Image.INTERPOLATE_LANCZOS)
 		img.save_png(dir.path_join("%03d.png" % i))
+
+
+## Sets the local age and nudges the resources so the HUD label refreshes.
+func _set_age(age: int) -> void:
+	var me := _game.local_state()
+	me.age = age
+	me.add("food", 1)

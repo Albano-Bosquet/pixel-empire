@@ -190,6 +190,13 @@ def main():
     still(src, "battle_charge", "batalla")
     still(src, "city_day", "ciudad")
     still(src, "modern", "guerra_moderna")
+    # Web gallery (site/index.html).
+    for name, out_name in [("city_day_hud", "ciudad_hud"), ("city_night", "noche"), ("city_sunset", "atardecer"),
+                           ("battle_late", "batalla_final"), ("modern_early", "avance_moderno"),
+                           ("gallery_wonder", "maravilla"), ("gallery_naval", "naval"),
+                           ("gallery_industrial", "industrial"), ("gallery_techs", "tecnologias"),
+                           ("gallery_victory", "victoria")]:
+        still(src, name, out_name)
     for f in sorted(OUT.iterdir()):
         print(f"{f.name}: {f.stat().st_size // 1024} KB")
 
