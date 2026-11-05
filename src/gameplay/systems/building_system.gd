@@ -37,29 +37,32 @@ func placement_error(type_id: String, origin: Vector2i) -> String:
 	if def.is_empty():
 		return "Unknown building"
 	var s: int = def["size"]
-	if def.get("placement", "") == "shore":
-		return _shore_error(origin, s)
 	for y in range(origin.y, origin.y + s):
 		for x in range(origin.x, origin.x + s):
-			var t := Vector2i(x, y)
-			if not _game.map.in_bounds(t):
-				return "Outside the map"
-			if not MapData.terrain_passable(_game.map.get_terrain(t)):
-				return "Cannot build on water or mountains"
-			if _game.map.is_blocked(t) or _game.map.occupied[_game.map.index(t)] != 0:
-				return "Something is in the way"
-	return ""
+			var err := tile_error(type_id, Vector2i(x, y))
+			if err != "":
+				return err
+	return _shore_error(origin, s) if def.get("placement", "") == "shore" else ""
 
 
+## Why tile `t` can't hold part of a `type_id` building ("" when it can).
+## The placement ghost colours each tile with this same rule.
+func tile_error(type_id: String, t: Vector2i) -> String:
+	if not _game.map.in_bounds(t):
+		return "Outside the map"
+	var taken := _game.map.is_blocked(t) or _game.map.occupied[_game.map.index(t)] != 0
+	if GameData.building(type_id).get("placement", "") == "shore":
+		if taken or not MapData.terrain_navigable(_game.map.get_terrain(t)):
+			return "Docks must be built on open water by the shore"
+		return ""
+	if not MapData.terrain_passable(_game.map.get_terrain(t)):
+		return "Cannot build on water or mountains"
+	return "Something is in the way" if taken else ""
+
+
+## What a shore building needs around it, once every tile under it is fine.
 func _shore_error(origin: Vector2i, s: int) -> String:
 	var rect := Rect2i(origin, Vector2i(s, s))
-	for y in range(origin.y, origin.y + s):
-		for x in range(origin.x, origin.x + s):
-			var t := Vector2i(x, y)
-			if not _game.map.in_bounds(t):
-				return "Outside the map"
-			if not MapData.terrain_navigable(_game.map.get_terrain(t)) or _game.map.is_blocked(t) or _game.map.occupied[_game.map.index(t)] != 0:
-				return "Docks must be built on open water by the shore"
 	var land := false
 	var water := false
 	var ring := rect.grow(1)

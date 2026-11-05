@@ -32,6 +32,20 @@ func _cancel() -> void:
 	_finish()
 
 
+## A click as a person makes it: the button stays down for several frames, so
+## anything the HUD does every frame gets a chance to break it.
+func _click(pos: Vector2) -> void:
+	var move := InputEventMouseMotion.new()
+	move.position = pos
+	move.global_position = pos
+	Input.parse_input_event(move)
+	await _frames(3)
+	_mouse_button(MOUSE_BUTTON_LEFT, true, pos)
+	await _frames(6)
+	_mouse_button(MOUSE_BUTTON_LEFT, false, pos)
+	await _seconds(0.4)
+
+
 ## Screen position of the middle of a control, for a real click.
 func _at(c: Control) -> Vector2:
 	return get_viewport().get_screen_transform() * c.get_global_rect().get_center()

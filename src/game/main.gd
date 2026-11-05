@@ -74,6 +74,8 @@ func _start_smoke(mode: Variant) -> void:
 		script = "res://src/debug/smoke_occlusion.gd"
 	if mode is String and mode == "layout":
 		script = "res://src/debug/smoke_layout.gd"
+	if mode is String and mode == "ghost":
+		script = "res://src/debug/smoke_ghost.gd"
 	if mode is String and mode == "cancel":
 		script = "res://src/debug/smoke_cancel.gd"
 	if mode is String and mode == "touch":

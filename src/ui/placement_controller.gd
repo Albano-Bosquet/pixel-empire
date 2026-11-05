@@ -173,14 +173,30 @@ func _draw() -> void:
 	var reg := Building.sprite_region(type_id)
 	draw_texture_rect_region(Building.atlas_texture(), Rect2(center - reg["anchor"], reg["rect"].size), reg["rect"], tint)
 	# Per-tile footprint diamonds so blocked tiles are visible.
+	var marks := tile_marks()
+	for t: Vector2i in marks:
+		var pts := PackedVector2Array()
+		for c in [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1), Vector2(0, 0)]:
+			pts.append(Iso.grid_to_world(Vector2(t) + c))
+		draw_polyline(pts, Color(0.6, 1, 0.6, 0.8) if marks[t] else Color(1, 0.3, 0.25, 0.9), 1.0)
+
+
+## Footprint of the ghost: tile -> whether it shows as good. When the spot fails
+## for no single tile (a dock away from the shore) every tile shows as bad, so the
+## grid never reads green under a red building.
+func tile_marks() -> Dictionary:
+	var s: int = GameData.building(type_id)["size"]
+	var marks := {}
+	var any_bad := false
 	for y in range(_origin.y, _origin.y + s):
 		for x in range(_origin.x, _origin.x + s):
 			var t := Vector2i(x, y)
-			var ok := _game.map.in_bounds(t) and MapData.terrain_passable(_game.map.get_terrain(t)) and not _game.map.is_blocked(t)
-			var pts := PackedVector2Array()
-			for c in [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1), Vector2(0, 0)]:
-				pts.append(Iso.grid_to_world(Vector2(t) + c))
-			draw_polyline(pts, Color(0.6, 1, 0.6, 0.8) if ok else Color(1, 0.3, 0.25, 0.9), 1.0)
+			marks[t] = _game.buildings.tile_error(type_id, t) == ""
+			any_bad = any_bad or not marks[t]
+	if not _valid and not any_bad:
+		for t: Vector2i in marks:
+			marks[t] = false
+	return marks
 
 
 ## Feedback for a placed foundation: the placing thud and the builders' answer.

@@ -126,6 +126,8 @@ func _draw() -> void:
 	# Butterflies / fireflies.
 	for f in _flies:
 		var p: Vector2 = f["p"]
+		if not _seen(p):
+			continue
 		if f["fire"]:
 			var glow := (0.5 + 0.5 * sin(f["ph"] * 3.0)) * night
 			draw_circle(p, 2.5, Color(1.0, 0.95, 0.4, 0.18 * glow))
@@ -140,11 +142,20 @@ func _draw() -> void:
 		for m in fl["m"]:
 			var bp: Vector2 = fl["p"] + m["o"]
 			var shadow := bp + Vector2(fl["alt"] * 0.25, fl["alt"])
-			_ellipse(shadow, 2.5, 1.0, Color(0, 0, 0, 0.18 * day))
+			if _seen(shadow):
+				_ellipse(shadow, 2.5, 1.0, Color(0, 0, 0, 0.18 * day))
+			if not _seen(bp):
+				continue
 			var wing := sin(_t * 9.0 + float(m["ph"])) * 2.0
 			var col2 := Color("#f4f4f0") if fl["gull"] else Color("#2a2622")
 			draw_line(bp + Vector2(-4, wing), bp, col2, 1.0)
 			draw_line(bp, bp + Vector2(4, wing), col2, 1.0)
+
+
+## Whether the local player sees the map at world point `p`. This layer is drawn
+## above the fog, so anything it draws elsewhere would show over the dark.
+func _seen(p: Vector2) -> bool:
+	return _game.fog.is_tile_visible(_game.local_player, Iso.tile_of(Iso.world_to_grid(p)))
 
 
 func _ellipse(c: Vector2, rx: float, ry: float, col: Color) -> void:

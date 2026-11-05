@@ -525,7 +525,9 @@ func _refresh_single(e: Entity) -> void:
 	var owner_name := tr("Gaia") if e.owner_id == Entity.GAIA else _game.player(e.owner_id).name
 	_name_label.text = "%s  ·  %s" % [tr(e.display_name()), owner_name]
 	_progress_bar.visible = false
-	_queue_row.visible = false
+	# Never hide the row just to show it again in _refresh_queue: this runs while
+	# the mouse is down, and hiding a pressed button makes it lose the click.
+	_queue_row.visible = e is Building and e.is_complete() and not e.queue.is_empty()
 	_task_label.visible = false
 	if e is ResourceNode:
 		_hp_bar.visible = false
