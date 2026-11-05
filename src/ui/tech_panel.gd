@@ -135,9 +135,10 @@ func _chip(p: PlayerState, id: String) -> Control:
 	var chip := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = UiStyle.BG_LIGHT if state != "done" else Color("#23331f")
-	sb.border_color = col.darkened(0.3)
-	sb.set_border_width_all(1)
-	sb.set_content_margin_all(5)
+	sb.border_color = col.darkened(0.35)
+	sb.set_border_width_all(2)
+	sb.border_width_bottom = 3
+	sb.set_content_margin_all(6)
 	chip.add_theme_stylebox_override("panel", sb)
 	var h := HBoxContainer.new()
 	var tex := TextureRect.new()

@@ -182,19 +182,9 @@ func _on_chat(from: String, text: String) -> void:
 
 # --- Construction -----------------------------------------------------------
 
-static func panel_style() -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = PANEL_BG
-	sb.border_color = PANEL_BORDER
-	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(0)
-	sb.shadow_color = Color(0, 0, 0, 0.45)
-	sb.shadow_size = 4
-	sb.content_margin_left = 10
-	sb.content_margin_right = 10
-	sb.content_margin_top = 6
-	sb.content_margin_bottom = 6
-	return sb
+## Thin brass pixel frame shared by the HUD bars and the minimap.
+static func panel_style() -> StyleBox:
+	return UiStyle.frame_small(12.0, 6.0)
 
 
 func _label(text: String, size: int = 16, color: Color = TEXT) -> Label:
@@ -227,9 +217,13 @@ func _bar(fill: Color, w: float, h: float) -> ProgressBar:
 	pb.show_percentage = false
 	pb.custom_minimum_size = Vector2(w, h)
 	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color("#2a1d1a")
+	bg.bg_color = Color("#120d08")
+	bg.border_color = Color("#140e09")
+	bg.set_border_width_all(2)
 	var fg := StyleBoxFlat.new()
 	fg.bg_color = fill
+	fg.border_color = Color("#140e09")
+	fg.set_border_width_all(2)
 	pb.add_theme_stylebox_override("background", bg)
 	pb.add_theme_stylebox_override("fill", fg)
 	return pb
@@ -286,17 +280,7 @@ func _top_button(text: String, tip: String) -> Button:
 	b.text = text
 	b.tooltip_text = tip
 	b.focus_mode = Control.FOCUS_NONE
-	b.add_theme_font_size_override("font_size", 14)
-	b.add_theme_color_override("font_color", TEXT)
-	b.add_theme_color_override("font_hover_color", Color("#f0c96a"))
-	for st in ["normal", "hover", "pressed"]:
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color("#2b2620") if st == "normal" else Color("#3d342a")
-		sb.border_color = PANEL_BORDER.darkened(0.2)
-		sb.set_border_width_all(1)
-		sb.content_margin_left = 10
-		sb.content_margin_right = 10
-		b.add_theme_stylebox_override(st, sb)
+	UiStyle.skin_pixel(b, 15, true)
 	return b
 
 
@@ -401,10 +385,8 @@ func _build_bottom_panel() -> void:
 	_bottom.add_child(root)
 
 	var frame := PanelContainer.new()
-	var fs := StyleBoxFlat.new()
-	fs.bg_color = Color("#2c3a2a")
-	fs.border_color = PANEL_BORDER.darkened(0.2)
-	fs.set_border_width_all(2)
+	var fs := UiStyle.inset(4.0)
+	fs.modulate_color = Color(0.85, 1.05, 0.85)
 	frame.add_theme_stylebox_override("panel", fs)
 	frame.custom_minimum_size = Vector2(124, 124)
 	_portrait = TextureRect.new()

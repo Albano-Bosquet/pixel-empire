@@ -27,6 +27,11 @@ static func scale_for(short_side_px: int, target_height: int, max_scale: float) 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Pixel-art skin for every control that does not style itself. Merged into
+	# the engine default theme (not set on the root window) so it also reaches
+	# controls under CanvasLayers, which do not inherit a window theme.
+	if DisplayServer.get_name() != "headless":
+		ThemeDB.get_default_theme().merge_with(UiStyle.theme())
 	var cfg := ConfigFile.new()
 	if cfg.load(SETTINGS_PATH) == OK:
 		fullscreen = bool(cfg.get_value("display", "fullscreen", fullscreen))

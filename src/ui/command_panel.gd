@@ -213,10 +213,9 @@ func _add_button(tex: Texture2D, region: Rect2, tip: String, hotkey: String, act
 	b.focus_mode = Control.FOCUS_NONE
 	b.tooltip_text = tip
 	b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	b.add_theme_stylebox_override("normal", _btn_style(Color("#2b2620")))
-	b.add_theme_stylebox_override("hover", _btn_style(Color("#3d342a")))
-	b.add_theme_stylebox_override("pressed", _btn_style(Color("#4d4233")))
-	b.add_theme_stylebox_override("disabled", _btn_style(Color("#1e1b18")))
+	var boxes := UiStyle.button_boxes(true, 5.0, 5.0)
+	for st in boxes:
+		b.add_theme_stylebox_override(st, boxes[st])
 	if tex != null:
 		var at := AtlasTexture.new()
 		at.atlas = tex
@@ -233,22 +232,15 @@ func _add_button(tex: Texture2D, region: Rect2, tip: String, hotkey: String, act
 		hk.text = hotkey
 		hk.add_theme_font_size_override("font_size", 11)
 		hk.add_theme_color_override("font_color", Color("#f0c96a"))
-		hk.position = Vector2(4, 1)
+		hk.add_theme_color_override("font_outline_color", Color("#140e09"))
+		hk.add_theme_constant_override("outline_size", 3)
+		hk.position = Vector2(6, 3)
 		b.add_child(hk)
 		_hotkeys[OS.find_keycode_from_string(hotkey)] = action
 	elif hotkey == "Tab":
 		_hotkeys[KEY_TAB] = action
 	_grid.add_child(b)
 	_buttons.append({"button": b, "check": check})
-
-
-static func _btn_style(bg: Color) -> StyleBoxFlat:
-	var s := StyleBoxFlat.new()
-	s.bg_color = bg
-	s.border_color = Color("#6b5530")
-	s.set_border_width_all(1)
-	s.set_content_margin_all(3)
-	return s
 
 
 ## Dims buttons whose action is currently impossible (keeps them clickable so
