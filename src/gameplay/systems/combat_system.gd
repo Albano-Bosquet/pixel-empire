@@ -328,7 +328,7 @@ func _acquire(u: Unit) -> void:
 func _on_damaged(e: Entity, attacker: Entity, _amount: int) -> void:
 	if attacker == null or not is_instance_valid(attacker) or attacker.dead:
 		return
-	if e.owner_id != Entity.GAIA:
+	if e.owner_id != Entity.GAIA and not provoked(e, attacker):
 		_notify_attack(e)
 	if e is Unit:
 		var u: Unit = e
@@ -336,6 +336,19 @@ func _on_damaged(e: Entity, attacker: Entity, _amount: int) -> void:
 			u.target = attacker
 			if u.guard_pos == Vector2.INF:
 				u.guard_pos = u.grid_pos
+
+
+## True when `victim` took the hit in a fight its own side started, so it is no
+## "under attack" alert: the victim was attacking or hunting `attacker`, or the
+## attacker is wild game (boar, deer), which only strikes back when hunted.
+## Predators and other players' units attacking unprovoked return false.
+static func provoked(victim: Entity, attacker: Entity) -> bool:
+	if Wildlife.is_animal(attacker) and attacker.owner_id == Entity.GAIA and not Wildlife.is_predator(attacker):
+		return true
+	if victim is Unit:
+		var u: Unit = victim
+		return u.target == attacker or WildlifeSystem.is_hunting(u, attacker)
+	return false
 
 
 func _notify_attack(e: Entity) -> void:

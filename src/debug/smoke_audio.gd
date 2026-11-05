@@ -98,6 +98,42 @@ func _audio() -> void:
 	EventBus.sound_at.emit("cannon", hidden)
 	_check(int(ga.played.get("cannon", 0)) == before, "no sound from inside the fog")
 
+	# Building placement: placing thuds, backing out cancels, a building's right click plants a rally flag.
+	_game.camera.focus_world(tc.position)
+	await _frames(3)
+	var canvas := get_viewport().get_canvas_transform()
+	me.add("wood", 200)
+	_game.selection.set_selection([vils[5]])
+	_game.placement.begin("house")
+	_game.placement._update_origin(canvas * Iso.grid_to_world(_open_spot(tc.grid_pos + Vector2(6, -6), 2)))
+	_game.placement._place_single(false)
+	await _frames(2)
+	_check(int(Audio.ui_played.get("ui_place", 0)) > 0, "placing a foundation thuds")
+	_game.placement.begin("house")
+	_game.placement.abort()
+	await _frames(2)
+	_check(int(Audio.ui_played.get("ui_cancel", 0)) > 0, "backing out of placement sounds")
+	_game.selection.set_selection([tc])
+	_game.commands.order_at(canvas * Iso.grid_to_world(tc.grid_pos + Vector2(4, 4)), false)
+	await _frames(2)
+	_check(int(Audio.ui_played.get("rally", 0)) > 0, "setting a rally point plants a flag")
+
+	# Hunting a boar: it strikes back, but that is no "under attack" alert.
+	var hunt_at := _open_spot(tc.grid_pos + Vector2(-4, 6))
+	var hunter: Unit = _spawn_group("villager", 1, hunt_at, 1)[0]
+	var boar: Unit = _spawn_group("boar", Entity.GAIA, hunt_at + Vector2(1.5, 0), 1)[0]
+	var bitten := [false]
+	hunter.damaged.connect(func(_e, attacker, _a) -> void: bitten[0] = bitten[0] or attacker == boar)
+	_game.combat._attack_notice.erase(1)
+	var alerts := int(Audio.ui_played.get("under_attack", 0))
+	var hunters: Array[Unit] = [hunter]
+	_game.wildlife.order_hunt(hunters, boar)
+	t0 = Time.get_ticks_msec()
+	while not bitten[0] and Time.get_ticks_msec() - t0 < 15000:
+		await _seconds(0.25)
+	_check(bitten[0], "the hunted boar fought back")
+	_check(int(Audio.ui_played.get("under_attack", 0)) == alerts, "no under-attack alert while hunting")
+
 	# Ambience loops run.
 	var running := 0
 	for key in ga._ambient:

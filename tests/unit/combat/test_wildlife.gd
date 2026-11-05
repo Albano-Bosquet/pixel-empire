@@ -58,3 +58,23 @@ func test_carcass_holds_the_animal_food_and_does_not_block() -> void:
 func test_owned_animals_do_not_count_as_population_class() -> void:
 	assert_true(GameData.unit("sheep").get("classes", []).has("animal"), "animal class")
 	assert_true(not GameData.unit("sheep").get("worker", false), "sheep are no workers")
+
+
+func test_no_under_attack_alert_for_fights_we_started() -> void:
+	var vil := _unit("villager", 1)
+	var boar := _unit("boar", Entity.GAIA)
+	var wolf := _unit("wolf", Entity.GAIA)
+	var enemy := _unit("swordsman", 2)
+	var guard := _unit("swordsman", 1)
+	assert_true(CombatSystem.provoked(vil, boar), "a hunted boar striking back is no attack")
+	assert_true(not CombatSystem.provoked(vil, wolf), "a wolf coming at us is an attack")
+	vil.target = wolf
+	assert_true(CombatSystem.provoked(vil, wolf), "a wolf we are fighting is no attack")
+	assert_true(not CombatSystem.provoked(guard, enemy), "an enemy hitting an idle soldier is an attack")
+	guard.target = enemy
+	assert_true(CombatSystem.provoked(guard, enemy), "an enemy hitting back at our attacker is no attack")
+	vil.target = null
+	vil.task = {"type": "hunt", "animal": wolf, "kind": "food"}
+	assert_true(CombatSystem.provoked(vil, wolf), "the animal we were sent to hunt is no attack")
+	for e in [vil, boar, wolf, enemy, guard]:
+		e.free()

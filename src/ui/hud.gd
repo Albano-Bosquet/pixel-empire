@@ -192,6 +192,7 @@ func _on_chat(from: String, text: String) -> void:
 		_on_notify(0, text)
 	else:
 		_show_notice("%s: %s" % [from, text])
+		EventBus.ui_sound.emit("chat")
 
 
 # --- Construction -----------------------------------------------------------

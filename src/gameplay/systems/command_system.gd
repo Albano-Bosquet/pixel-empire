@@ -48,6 +48,8 @@ func order_at(screen_pos: Vector2, queue: bool) -> bool:
 	else:
 		_game.ground_fx.add_move_marker(world)
 	EventBus.local_order.emit(units)
+	if units.is_empty():
+		EventBus.ui_sound.emit("rally")  # only buildings selected: a new rally point
 	return true
 
 

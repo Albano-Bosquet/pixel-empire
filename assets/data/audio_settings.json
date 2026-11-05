@@ -17,7 +17,7 @@
     "drop_wood": -12, "drop_food": -12, "drop_gold": -12, "drop_stone": -12, "tree_fall": -8,
     "bird": -16, "owl": -14, "rooster": -14, "gull": -14, "frog": -16, "dawn_bell": -12,
     "sheep": -12, "turkey": -12, "deer": -12, "boar": -10, "wolf_growl": -8, "wolf_howl": -12,
-    "tiger_roar": -7, "bear_roar": -7, "herd_claim": -10,
+    "tiger_roar": -7, "bear_roar": -7, "herd_claim": -10, "board": -8, "rally": -8, "wonder_built": -4,
     "sel_villager": -6, "ack_villager": -6, "building_done": -6, "unit_ready": -8
   },
   "unit_voices": {
@@ -36,7 +36,7 @@
     "arrow": "bow", "bolt": "crossbow", "javelin": "javelin", "bullet": "musket", "shot": "blunderbuss",
     "grenade": "grenade_throw", "rock": "catapult", "boulder": "trebuchet", "ballista_bolt": "scorpion",
     "cannonball": "cannon", "mortar_shell": "mortar", "rocket": "bazooka", "shell": "tank_gun",
-    "artillery_shell": "artillery", "bomb": "bomb_whistle", "fire": "fire_ship"
+    "artillery_shell": "artillery", "bomb": "bomb_whistle", "fire": "fire_ship", "flak": "tank_gun"
   },
   "attack_melee": "swing",
   "attack_silent": ["battering_ram", "petard", "villager", "trade_cart", "monk", "fishing_ship", "transport_ship", "demolition_ship", "sheep", "turkey", "deer"],
@@ -73,7 +73,14 @@
   },
   "notify_sounds": {
     "Not enough resources": "ui_error", "Not enough resources to repair": "ui_error", "Population limit reached — build more houses": "ui_error",
-    "You are under attack!": "under_attack", "No idle villagers": "ui_error", "Cannot build there": "ui_error"
+    "You are under attack!": "under_attack", "No idle villagers": "ui_error", "No idle military units": "ui_error", "No recent attacks": "ui_error",
+    "Something is in the way": "ui_error", "Cannot build on water or mountains": "ui_error", "Outside the map": "ui_error",
+    "Docks must be built on open water by the shore": "ui_error", "Docks must touch the shore": "ui_error", "Docks need open water for ships": "ui_error",
+    "Requires %s": "ui_error", "Queue is full": "ui_error", "Building not finished": "ui_error", "Cannot train that here": "ui_error",
+    "Cannot research that here": "ui_error", "Already researching": "ui_error", "Already researched": "ui_error",
+    "The transport is full": "ui_error", "No shore to unload at": "ui_error", "Trade needs a second market": "ui_error",
+    "Monks cannot convert that": "ui_error", "No drop-off building for %s": "ui_error",
+    "%s has built a Wonder! %s to victory": "wonder_built", "Your %s has been converted!": "under_attack"
   },
   "music": {
     "menu": ["menu"],

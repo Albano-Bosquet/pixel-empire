@@ -270,6 +270,8 @@ func _on_found(list: Array) -> void:
 func _on_chat(from: String, text: String) -> void:
 	if _chat_log:
 		_chat_log.append_text(("[color=#f0c96a]%s[/color]\n" % text) if from == "" else "[b]%s:[/b] %s\n" % [from, text])
+	if from != "":
+		Audio.ui("chat")  # the lobby has no match audio to route through EventBus.ui_sound
 
 
 func _set_status(text: String) -> void:

@@ -115,7 +115,7 @@ func _notification(what: int) -> void:
 ## then opens the pause menu.
 func go_back() -> void:
 	if _game.placement.is_active():
-		_game.placement.cancel()
+		_game.placement.abort()
 	elif not _game.selection.selected.is_empty():
 		_game.selection.set_selection([])
 	else:

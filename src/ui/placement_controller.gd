@@ -61,6 +61,13 @@ func begin(building_type: String) -> void:
 	queue_redraw()
 
 
+## The player backs out of placement (right click, Esc, touch cancel): cancel() with a sound.
+func abort() -> void:
+	if is_active():
+		EventBus.ui_sound.emit("ui_cancel")
+	cancel()
+
+
 func cancel() -> void:
 	type_id = ""
 	_drag_start = Vector2i(-1, -1)
@@ -109,10 +116,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			_place_single(event.shift_pressed)
 			get_viewport().set_input_as_handled()
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			cancel()
+			abort()
 			get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		cancel()
+		abort()
 		get_viewport().set_input_as_handled()
 
 
@@ -129,6 +136,7 @@ func _place_single(keep: bool, retry_blocked: bool = false) -> void:
 		EventBus.notify.emit(_game.local_player, req if req != "" else spot)
 	else:
 		_game.orders.submit({"t": "place", "type": type_id, "origins": [_origin], "builders": OrderRouter.ids(typed)})
+		_placed(typed)
 	if req != "" or not keep and not (retry_blocked and spot != ""):
 		cancel()
 
@@ -141,6 +149,8 @@ func _place_line(keep: bool) -> void:
 	for t in _line():
 		origins.append(t)
 	_game.orders.submit({"t": "place", "type": type_id, "origins": origins, "builders": OrderRouter.ids(typed)})
+	if not origins.is_empty():
+		_placed(typed)
 	_drag_start = Vector2i(-1, -1)
 	if not keep:
 		cancel()
@@ -171,3 +181,9 @@ func _draw() -> void:
 			for c in [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1), Vector2(0, 0)]:
 				pts.append(Iso.grid_to_world(Vector2(t) + c))
 			draw_polyline(pts, Color(0.6, 1, 0.6, 0.8) if ok else Color(1, 0.3, 0.25, 0.9), 1.0)
+
+
+## Feedback for a placed foundation: the placing thud and the builders' answer.
+func _placed(builders: Array[Unit]) -> void:
+	EventBus.ui_sound.emit("ui_place")
+	EventBus.local_order.emit(builders)

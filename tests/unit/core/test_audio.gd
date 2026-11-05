@@ -53,7 +53,7 @@ func test_every_building_has_a_selection_sound() -> void:
 
 
 func test_event_sounds_exist() -> void:
-	for key in ["ui_click", "ui_error", "notify", "age_up", "research_done", "unit_ready", "building_done", "under_attack", "victory", "defeat", "player_defeated", "tree_fall", "collapse"]:
+	for key in ["ui_click", "ui_error", "notify", "age_up", "research_done", "unit_ready", "building_done", "under_attack", "victory", "defeat", "player_defeated", "tree_fall", "collapse", "ui_place", "ui_cancel", "rally", "board", "chat", "wonder_built"]:
 		assert_true(_exists(key), "event sound %s" % key)
 	for section in ["fx_sounds", "drop_sounds", "attack_by_projectile", "impact_by_projectile", "notify_sounds"]:
 		var d: Dictionary = _cfg.get(section, {})
@@ -84,3 +84,17 @@ func test_music_and_ambience_exist() -> void:
 func test_notify_key_reads_packed_message_template() -> void:
 	assert_eq(SoundRules.notify_key(_cfg, "Not enough resources"), "ui_error", "plain text")
 	assert_eq(SoundRules.notify_key(_cfg, Loc.msg("%s completed", ["House"])), "notify", "packed message falls back")
+
+
+func test_every_building_projectile_has_a_launch_sound() -> void:
+	var launch: Dictionary = _cfg.get("attack_by_projectile", {})
+	for id in GameData.buildings:
+		var atk: Variant = GameData.buildings[id].get("attack")
+		if atk is Dictionary and atk.has("projectile"):
+			assert_true(launch.has(atk["projectile"]), "%s fires '%s', which has a launch sound (not the bow fallback)" % [id, atk["projectile"]])
+
+
+func test_player_errors_sound_as_errors() -> void:
+	for text in ["Something is in the way", "Queue is full", "The transport is full", Loc.msg("Requires %s", ["Feudal Age"])]:
+		assert_eq(SoundRules.notify_key(_cfg, text), "ui_error", "'%s' -> ui_error" % text)
+	assert_eq(SoundRules.notify_key(_cfg, Loc.msg("%s has built a Wonder! %s to victory", ["Ana", "5:00"])), "wonder_built", "wonder fanfare")

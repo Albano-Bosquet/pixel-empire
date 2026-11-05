@@ -21,6 +21,7 @@ func all() -> Dictionary:
 	_buildings(out)
 	_animals(out)
 	_ambience(out)
+	_extras(out)
 	for k in out:
 		var looped := String(k).ends_with("_loop") or String(k).begins_with("amb_")
 		if not looped:
@@ -543,3 +544,13 @@ func _battle_bed(dur: float) -> PackedFloat32Array:
 		items.append([s.lowpass(voice(s.rng.randf_range(110, 170), "a", "o", 0.4, 0.9, 90), 1500), s.rng.randf() * dur, s.rng.randf_range(0.05, 0.15)])
 	var bed := s.layer(items)
 	return bed.slice(0, s.n(dur))
+
+
+## Sounds added after the first release. Kept last so the random sequence of
+## every earlier recipe (and so its file) stays the same.
+func _extras(o: Dictionary) -> void:
+	# Boarding / landing from a transport: steps on a wooden gangplank, a hull creak, lapping water.
+	o["board"] = s.layer([[wood(190, 0.08), 0.0, 0.9], [wood(165, 0.08), 0.13, 0.8], [wood(210, 0.08), 0.26, 0.7],
+		[_creak(0.35, 110), 0.05, 0.35], [_splash(0.4), 0.1, 0.3]])
+	# Rally point: a banner stake knocked into the ground and the cloth snapping open.
+	o["rally"] = s.layer([[wood(130, 0.18), 0.0, 1.0], [burst(0.08, 600, 4000, 0.002, "pink"), 0.09, 0.6], [burst(0.1, 500, 3500, 0.002, "pink"), 0.17, 0.45]])

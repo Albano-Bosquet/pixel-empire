@@ -187,6 +187,7 @@ func _board(u: Unit, ship: Unit) -> void:
 	u.selectable = false
 	u.selected = false
 	ship.cargo.append(u)
+	_game.fx.burst(ship.position, "dust", "board")
 	_game.selection.prune.call_deferred()
 	EventBus.population_changed.emit(u.owner_id)
 
@@ -194,6 +195,8 @@ func _board(u: Unit, ship: Unit) -> void:
 ## Puts every passenger of `ship` on the land tiles around it.
 func unload_now(ship: Unit) -> void:
 	var used: Array[Vector2i] = []
+	if not ship.cargo.is_empty():
+		_game.fx.burst(ship.position, "dust", "board")
 	for u in ship.cargo:
 		if not is_instance_valid(u):
 			continue
