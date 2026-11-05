@@ -153,7 +153,8 @@ static func capture(game: Game) -> Dictionary:
 
 
 static func _ref(e: Variant) -> Variant:
-	if e is Entity and is_instance_valid(e):
+	# Validity first: `is` on a freed instance is a script error.
+	if is_instance_valid(e) and e is Entity:
 		return {"_ref": (e as Entity).entity_id}
 	return null
 
