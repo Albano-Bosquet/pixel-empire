@@ -43,6 +43,7 @@ func _layout() -> void:
 		_check(b.position.x >= Hud.MINIMAP_RIGHT, "%s page: selection panel clear of the minimap (x %.0f)" % [page, b.position.x])
 		_check(b.encloses(grid.get_global_rect()), "%s page: the buttons stay inside the panel" % page)
 	await _shot("layout_01_military_page")
+	await _pc_card(panel)
 
 	_check(Net.host("Layout") == "", "hosts a LAN game for the lobby")
 	var lobby := LobbyMenu.new()
@@ -71,3 +72,33 @@ func _find(n: Node, pred: Callable) -> Node:
 		if f != null:
 			return f
 	return null
+
+
+## PC: resting the mouse on a command button shows the detail card (large
+## preview, name, purpose, cost) as its tooltip, with the keyboard shortcut.
+func _pc_card(panel: CommandPanel) -> void:
+	var b: InfoButton = _find(panel, func(n): return n is InfoButton and n.info.has("cost"))
+	_check(b != null, "PC: command buttons carry detail cards")
+	if b == null:
+		return
+	var e := InputEventMouseMotion.new()
+	e.position = get_viewport().get_screen_transform() * b.get_global_rect().get_center()
+	e.global_position = e.position
+	Input.parse_input_event(e)
+	await _seconds(1.4)
+	var big: Array = []
+	_find_internal(get_tree().root, func(n): return n is TextureRect and maxf(n.custom_minimum_size.x, n.custom_minimum_size.y) >= 100.0 and n.is_visible_in_tree() and n.get_window() != get_tree().root, big)
+	_check(not big.is_empty(), "PC: hovering a command button shows the card with a large preview")
+	await _shot("layout_03_pc_card")
+	var away := InputEventMouseMotion.new()
+	away.position = get_viewport().get_screen_transform() * (get_viewport().get_visible_rect().size * Vector2(0.5, 0.4))
+	away.global_position = away.position
+	Input.parse_input_event(away)
+	await _frames(3)
+
+
+func _find_internal(n: Node, pred: Callable, out: Array) -> void:
+	if pred.call(n):
+		out.append(n)
+	for c in n.get_children(true):
+		_find_internal(c, pred, out)

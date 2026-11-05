@@ -29,7 +29,8 @@ func setup(game: Game) -> void:
 	var sp := Control.new()
 	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(sp)
-	var close := UiStyle.button(tr("Close  [F2]"), 120)
+	var touch: bool = game.touch != null and game.touch.enabled
+	var close := UiStyle.button(tr("Close") if touch else tr("Close  [F2]"), 120)
 	close.pressed.connect(toggle)
 	head.add_child(close)
 	v.add_child(head)
@@ -132,7 +133,7 @@ func _chip(p: PlayerState, id: String) -> Control:
 				state = "locked"
 				detail = "\n" + Loc.text(err)
 	var col: Color = {"done": UiStyle.GOOD, "progress": UiStyle.GOLD, "available": UiStyle.TEXT, "locked": Color(0.5, 0.48, 0.44)}[state]
-	var chip := PanelContainer.new()
+	var chip := InfoPanel.new()
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = UiStyle.BG_LIGHT if state != "done" else Color("#23331f")
 	sb.border_color = col.darkened(0.35)
@@ -156,4 +157,10 @@ func _chip(p: PlayerState, id: String) -> Control:
 	h.add_child(UiStyle.label(tr(d["display_name"]) + detail, 13, col))
 	chip.add_child(h)
 	chip.tooltip_text = "%s\n%s\n%s" % [tr(d["display_name"]), tr(d.get("description", "")), CommandPanel.cost_text(d.get("cost", {}))]
+	var lines: Array = []
+	if state == "locked" or state == "progress" or state == "done":
+		lines.append(detail.strip_edges().trim_prefix("- ").strip_edges())
+	chip.info = {"title": tr(d["display_name"]), "desc": tr(d.get("description", "")), "cost": d.get("cost", {}), "player": p,
+		"texture": at.atlas, "region": at.region, "lines": lines}
+	chip.show_keys = not (_game.touch != null and _game.touch.enabled)
 	return chip

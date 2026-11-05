@@ -175,7 +175,101 @@ func _touch() -> void:
 	_game.selection.set_selection([])
 	await _click(_win(_game.screen_from_world(v.position + Vector2(0, -14))))
 	_check(_game.selection.selected == [v], "a real mouse click still selects in touch mode")
+	await _hold_tips(vils)
+	await _chat()
 	_finish()
+
+
+## Command buttons on a phone: no keyboard letters, holding a finger shows the
+## detail card (large preview, cost) without running the button, a tap still runs it.
+func _hold_tips(vils: Array[Unit]) -> void:
+	_game.local_state().resources["wood"] = 500
+	_game.selection.set_selection(vils)
+	await _frames(4)
+	var panel: CommandPanel = _find_node(_game.hud, func(n): return n is CommandPanel)
+	var buttons: Array = _find_all(panel, func(n): return n is InfoButton)
+	var letters := buttons.filter(func(b): return b.get_children().any(func(c): return c is Label and c.text.length() == 1))
+	_check(not buttons.is_empty() and letters.is_empty(), "touch: command buttons show no keyboard letters (%d of %d)" % [letters.size(), buttons.size()])
+	var house: InfoButton = null
+	for b in buttons:
+		if b.info.get("title", "") == tr("House"):
+			house = b
+	_check(house != null, "touch: the House button is on the build page")
+	if house == null:
+		return
+	var tips: TouchTooltips = _game.hud.touch_tips
+	_check(tips != null, "touch: the HUD has hold-to-see tooltips")
+	var at := house.get_global_rect().get_center()
+	_finger(0, true, at)
+	await _seconds(0.8)
+	_check(tips.card != null, "touch: holding a finger on House shows its card")
+	if tips.card != null:
+		var art: Array = _find_all(tips.card, func(n): return n is TextureRect and maxf(n.custom_minimum_size.x, n.custom_minimum_size.y) >= 100.0)
+		_check(not art.is_empty(), "touch: the card previews the building large (>= 100 px)")
+		var keys: Array = _find_all(tips.card, func(n): return n is Label and n.text.contains("["))
+		_check(keys.is_empty(), "touch: the card shows no keyboard hints")
+		_check(_game.hud.get_viewport().get_visible_rect().encloses(tips.card.get_global_rect()), "touch: the card fits on screen")
+	await _shot("touch_04_hold_card")
+	_finger(0, false, at)
+	await _frames(4)
+	_check(not _game.placement.is_active(), "touch: lifting the finger after a hold does not start placement")
+	_check(tips.card != null and not house.disabled, "touch: the card lingers after the finger lifts; the button is usable again")
+	await _seconds(3.0)
+	_check(tips.card == null, "touch: the card hides by itself")
+	await _tap(at)
+	_check(_game.placement.is_active(), "touch: a quick tap on House still starts placement")
+	_game.placement.cancel()
+	# The technology tree has cards too.
+	if not _game.hud.tech_panel.visible:
+		_game.hud.tech_panel.toggle()
+	await _frames(4)
+	# The tree rebuilds its chips every 0.5 s: the hold must survive that.
+	var chip: InfoPanel = _find_node(_game.hud.tech_panel, func(n): return n is InfoPanel and n.is_visible_in_tree())
+	_check(chip != null, "touch: the technology tree has chips")
+	if chip != null:
+		var c := chip.get_global_rect().get_center()
+		_finger(0, true, c)
+		await _seconds(1.2)
+		_check(tips.card != null, "touch: holding a technology shows its card (while the tree refreshes)")
+		await _shot("touch_05_tech_card")
+		_finger(0, false, c)
+		await _frames(3)
+	_game.hud.tech_panel.toggle()
+	tips.hide_card()
+
+
+## The pixel chat button opens and closes the chat line (multiplayer only).
+func _chat() -> void:
+	_check(_find_node(_game.hud, func(n): return n is Button and n.name == "ChatButton") == null, "touch: no chat button in single player")
+	var b: Button = _game.hud._chat_button()
+	var top: Control = _find_node(_game.hud, func(n): return n is Button and n.text == tr("Technologies"))
+	top.get_parent().add_child(b)
+	top.get_parent().move_child(b, top.get_index())
+	await _frames(3)
+	await _tap(b.get_global_rect().get_center())
+	_check(_game.hud._chat_edit != null and _game.hud._chat_edit.visible, "touch: the chat button opens the chat line")
+	await _shot("touch_06_chat")
+	await _tap(b.get_global_rect().get_center())
+	_check(not _game.hud._chat_edit.visible, "touch: pressing it again closes the chat line")
+	b.queue_free()
+
+
+func _find_node(n: Node, pred: Callable) -> Node:
+	if pred.call(n):
+		return n
+	for c in n.get_children():
+		var r := _find_node(c, pred)
+		if r != null:
+			return r
+	return null
+
+
+func _find_all(n: Node, pred: Callable, out: Array = []) -> Array:
+	if pred.call(n):
+		out.append(n)
+	for c in n.get_children():
+		_find_all(c, pred, out)
+	return out
 
 
 func _find_button(n: Node, text: String) -> Button:

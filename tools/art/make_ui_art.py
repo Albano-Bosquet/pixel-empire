@@ -9,6 +9,8 @@ divider.png     gold rule with a diamond, drawn under the tagline
 toggle_on/off   pixel switch for check buttons (full screen)
 *_small         2x versions for the HUD: button_small_*, frame_small
 check_on/off    check box, slider_grabber knob, inset (text fields, bars)
+icon_chat       speech bubble for the touch-screen chat button
+                (`--chat-only` writes just this one)
 
 Every texture is painted at 1 px per "pixel" and upscaled with nearest
 neighbour (SCALE), so the menu shares the chunky look of the sprites.
@@ -246,8 +248,38 @@ def grabber():
     return img
 
 
+def chat_icon():
+    """15x13 speech bubble: parchment with an ink outline, three gold dots, tail."""
+    rows = [
+        "..###########..",
+        ".#ppppppppppp#.",
+        "#ppppppppppppp#",
+        "#ppppppppppppps",
+        "#ppGGppGGppGGps",
+        "#ppGGppGGppGGps",
+        "#ppppppppppppps",
+        "#pppppppppppsps",
+        ".#ppsssssssss#.",
+        "..#p##########.",
+        "..#p#..........",
+        "..##...........",
+        "...............",
+    ]
+    colours = {"#": INK, "p": hexc("#f1e6cf"), "s": hexc("#b5a88e"), "G": GOLD_MID}
+    img = Image.new("RGBA", (len(rows[0]), len(rows)), (0, 0, 0, 0))
+    px = img.load()
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch in colours:
+                px[x, y] = colours[ch]
+    return img
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    up(chat_icon(), 2).save(OUT / "icon_chat.png")
+    if "--chat-only" in sys.argv:
+        return
     title = shadowed(pixel_text("PIXEL EMPIRE", 6, (255, 232, 140), (214, 140, 40), 1), 8, 3)
     title.save(OUT / "title.png", optimize=True)
     walnut_top, walnut_bottom = hexc("#4a3c2c"), hexc("#30271d")

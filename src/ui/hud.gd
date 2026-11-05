@@ -42,6 +42,8 @@ var _commands: CommandPanel
 var _box := SelectionBoxDraw.new()
 var minimap: Minimap
 var tech_panel: TechPanel
+## Hold-a-finger tooltips (touch screens only, else null).
+var touch_tips: TouchTooltips
 var _idle_button: Button
 var _selection: Array = []
 var _elapsed := 0.0
@@ -73,6 +75,10 @@ func setup(game: Game) -> void:
 	_notify_label.offset_top = 54
 	_notify_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_notify_label)
+	if _touch():
+		touch_tips = TouchTooltips.new()
+		add_child(touch_tips)
+		touch_tips.setup(self, GameData.touch)
 	_box.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_box)
@@ -161,16 +167,24 @@ func _open_chat() -> void:
 		_chat_edit.set_anchors_preset(Control.PRESET_CENTER_TOP)
 		_chat_edit.position = Vector2(-210, 92)
 		_chat_edit.text_submitted.connect(func(t: String) -> void:
-			Net.send_chat(t)
+			if t.strip_edges() != "":
+				Net.send_chat(t)
 			_chat_edit.text = ""
-			_chat_edit.visible = false)
+			_close_chat())
 		_chat_edit.gui_input.connect(func(ev: InputEvent) -> void:
 			if ev is InputEventKey and ev.pressed and ev.keycode == KEY_ESCAPE:
-				_chat_edit.visible = false
+				_close_chat()
 				_chat_edit.accept_event())
 		add_child(_chat_edit)
 	_chat_edit.visible = true
 	_chat_edit.grab_focus()
+
+
+func _close_chat() -> void:
+	if _chat_edit == null:
+		return
+	_chat_edit.release_focus()  # also drops the phone keyboard
+	_chat_edit.visible = false
 
 
 func _on_chat(from: String, text: String) -> void:
@@ -267,12 +281,38 @@ func _build_top_bar() -> void:
 	row.add_child(_fps_label)
 	_clock_label = _label("00:00", 18)
 	row.add_child(_clock_label)
+	if _touch() and Net.is_networked():
+		row.add_child(_chat_button())
 	var techs := _top_button(tr("Technologies"), tr("Technology tree  [F2]"))
 	techs.pressed.connect(func() -> void: tech_panel.toggle())
 	row.add_child(techs)
 	var menu := _top_button(tr("Menu"), tr("Game menu  [F10]"))
 	menu.pressed.connect(func() -> void: EventBus.pause_requested.emit())
 	row.add_child(menu)
+
+
+## Whether the HUD is on a touch screen (no keyboard hints, chat button, hold tips).
+func _touch() -> bool:
+	return _game.touch != null and _game.touch.enabled
+
+
+## Pixel speech-bubble button that opens / closes the chat line (phones have no Enter key).
+func _chat_button() -> Button:
+	var b := Button.new()
+	b.name = "ChatButton"
+	b.icon = load(UiStyle.UI_ART + "icon_chat.png")
+	b.tooltip_text = tr("Chat with the other players")
+	b.focus_mode = Control.FOCUS_NONE
+	b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	b.custom_minimum_size = Vector2(48, 0)
+	b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiStyle.skin_pixel(b, 15, true)
+	b.pressed.connect(func() -> void:
+		if _chat_edit != null and _chat_edit.visible:
+			_close_chat()
+		else:
+			_open_chat())
+	return b
 
 
 func _top_button(text: String, tip: String) -> Button:

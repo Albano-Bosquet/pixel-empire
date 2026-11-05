@@ -91,7 +91,8 @@ func _build_pages() -> void:
 	for id in ids:
 		var def := GameData.building(id)
 		var reg := Building.sprite_region(id)
-		var tip := "%s  [%s]\n%s\n%s\n%s" % [tr(def["display_name"]), def.get("hotkey", ""), tr(def.get("description", "")), cost_text(def.get("cost", {})), _age_req(int(def.get("age", 0)))]
+		var tip := {"title": tr(def["display_name"]), "desc": tr(def.get("description", "")), "cost": def.get("cost", {}),
+			"lines": [_age_req(int(def.get("age", 0)))].filter(func(s): return s != "")}
 		_add_button(Building.atlas_texture(), reg["rect"], tip, def.get("hotkey", ""), func() -> void: _game.placement.begin(id),
 			func() -> String: return _game.buildings.requirement_error(_game.local_state(), id))
 	var other := "military" if _page == "economy" else "economy"
@@ -106,7 +107,8 @@ func _build_training(b: Building) -> void:
 		var udef := GameData.unit(unit_id)
 		var layout := SpriteLibrary.unit_layout(udef.get("sprite", unit_id))
 		var pr: Array = layout.get("portrait_rect", [0, 0, 48, 48])
-		var tip := "%s  [%s]\n%s\n%s · %ds" % [tr(udef.get("display_name", unit_id)), udef.get("hotkey", ""), tr(udef.get("description", "")), cost_text(udef.get("cost", {})), int(udef.get("train_time", 0))]
+		var tip := {"title": tr(udef.get("display_name", unit_id)), "desc": tr(udef.get("description", "")), "cost": udef.get("cost", {}),
+			"lines": [_time_line(int(udef.get("train_time", 0)))]}
 		var bb := b
 		_add_button(SpriteLibrary.unit_sheet(udef.get("sprite", unit_id), b.color_slot), Rect2(pr[0], pr[1], pr[2], pr[3]), tip, udef.get("hotkey", ""),
 			func() -> void:
@@ -128,7 +130,8 @@ func _build_training(b: Building) -> void:
 		if _game.player(b.owner_id).age >= int(r.get("sets_age", 0)):
 			continue
 		shown_age = true
-		var rtip := "%s  [%s]\n%s\n%s · %ds" % [tr("Advance to %s") % tr(r["display_name"]), r.get("hotkey", ""), tr(r.get("description", "")), cost_text(r.get("cost", {})), int(r.get("research_time", 0))]
+		var rtip := {"title": tr("Advance to %s") % tr(r["display_name"]), "desc": tr(r.get("description", "")), "cost": r.get("cost", {}),
+			"lines": [_time_line(int(r.get("research_time", 0)))]}
 		var bb2 := b
 		var research_id: String = rid
 		_add_button(SpriteLibrary.props_texture(), SpriteLibrary.prop("icon_age")["rect"], rtip, r.get("hotkey", ""),
@@ -193,10 +196,12 @@ func _add_tech_button(b: Building, id: String) -> void:
 	if p.researched.has(id):
 		return
 	var t: Dictionary = GameData.techs[id]
-	var req := ""
+	var lines: Array = [_time_line(int(t.get("research_time", 0)))]
+	if int(t.get("age", 0)) > 0:
+		lines.append(_age_req(int(t.get("age", 0))))
 	for r in t.get("requires", []):
-		req += "\n" + tr("Requires %s") % tr(GameData.techs[r]["display_name"])
-	var tip := "%s  [%s]\n%s\n%s · %ds%s%s" % [tr(t["display_name"]), t.get("hotkey", ""), tr(t.get("description", "")), cost_text(t.get("cost", {})), int(t.get("research_time", 0)), "\n" + _age_req(int(t.get("age", 0))) if int(t.get("age", 0)) > 0 else "", req]
+		lines.append(tr("Requires %s") % tr(GameData.techs[r]["display_name"]))
+	var tip := {"title": tr(t["display_name"]), "desc": tr(t.get("description", "")), "cost": t.get("cost", {}), "lines": lines}
 	var bb := b
 	_add_button(SpriteLibrary.props_texture(), tech_icon(id)["rect"], tip, t.get("hotkey", ""),
 		func() -> void: _game.orders.submit({"t": "enqueue", "b": bb.entity_id, "item": id}),
@@ -207,11 +212,34 @@ func _age_req(age: int) -> String:
 	return "" if age <= 0 else tr("Requires %s") % tr(Hud.AGE_NAMES[age])
 
 
-func _add_button(tex: Texture2D, region: Rect2, tip: String, hotkey: String, action: Callable, check: Callable, text: String = "") -> void:
-	var b := Button.new()
+func _time_line(seconds: int) -> String:
+	return tr("Time: %d s") % seconds
+
+
+## Whether this is a touch screen: no keyboard hints on buttons or cards.
+func _touch() -> bool:
+	return _game.touch != null and _game.touch.enabled
+
+
+## `tip` is either plain tooltip text or InfoCard info (title, desc, cost, lines);
+## either way the card previews `region` of `tex` large and shows `check`'s error.
+func _add_button(tex: Texture2D, region: Rect2, tip: Variant, hotkey: String, action: Callable, check: Callable, text: String = "") -> void:
+	var b := InfoButton.new()
 	b.custom_minimum_size = BTN
 	b.focus_mode = Control.FOCUS_NONE
-	b.tooltip_text = tip
+	var info: Dictionary = tip.duplicate() if tip is Dictionary else {"text": tip}
+	if tex != null:
+		info["texture"] = tex
+		info["region"] = region
+	if tip is Dictionary:
+		info["hotkey"] = hotkey if hotkey.length() == 1 or hotkey == "Tab" else ""
+		info["player"] = _game.local_state()
+		b.tooltip_text = InfoCard.plain(info)
+	else:
+		b.tooltip_text = tip
+	info["status"] = check
+	b.info = info
+	b.show_keys = not _touch()
 	b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	var boxes := UiStyle.button_boxes(true, 5.0, 5.0)
 	for st in boxes:
@@ -227,7 +255,7 @@ func _add_button(tex: Texture2D, region: Rect2, tip: String, hotkey: String, act
 		b.text = text
 		b.add_theme_font_size_override("font_size", 11)
 	b.pressed.connect(action)
-	if hotkey.length() == 1:
+	if hotkey.length() == 1 and not _touch():
 		var hk := Label.new()
 		hk.text = hotkey
 		hk.add_theme_font_size_override("font_size", 11)
@@ -236,6 +264,7 @@ func _add_button(tex: Texture2D, region: Rect2, tip: String, hotkey: String, act
 		hk.add_theme_constant_override("outline_size", 3)
 		hk.position = Vector2(6, 3)
 		b.add_child(hk)
+	if hotkey.length() == 1:
 		_hotkeys[OS.find_keycode_from_string(hotkey)] = action
 	elif hotkey == "Tab":
 		_hotkeys[KEY_TAB] = action
