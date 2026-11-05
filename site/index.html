@@ -823,9 +823,9 @@
   ind.style.transition = "none";
   selectTab(isAndroid ? tabs[1] : tabs[0], false);
   requestAnimationFrame(() => requestAnimationFrame(() => ind.style.transition = ""));
-  { // the visitor's platform gets the main button, the other one steps back
-    const cta = $(".hero .cta"), mine = $(`[data-os=${isAndroid ? "android" : "win"}]`, cta), other = $(`[data-os=${isAndroid ? "win" : "android"}]`, cta);
-    cta.prepend(mine); other.classList.add("ghost");
+  { // the visitor's platform goes first
+    const cta = $(".hero .cta");
+    cta.prepend($(`[data-os=${isAndroid ? "android" : "win"}]`, cta));
   }
   addEventListener("resize", () => {
     placeInd($(".tab[aria-selected=true]"));
