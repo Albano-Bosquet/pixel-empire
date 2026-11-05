@@ -159,6 +159,18 @@ func _touch() -> void:
 	_check(not _game.placement.is_active(), "placement ends after one building")
 	await _shot("touch_03_placed")
 
+	# --- A tap on an own sheep with a villager selected slaughters it ----------------------
+	var sheep := _game.spawn_unit("sheep", 1, v.grid_pos + Vector2(1.5, 0.0))
+	_game.camera.focus_world(sheep.position)
+	await _frames(3)
+	_game.selection.set_selection([v])
+	await _tap(_game.screen_from_world(sheep.position + Vector2(0, -6)))
+	_check(_game.selection.selected == [v], "tapping an own sheep keeps the villager selected")
+	_check(WildlifeSystem.is_hunting(v, sheep), "tapping an own sheep sends the villager to slaughter it (task=%s)" % v.task)
+	_game.selection.set_selection([])
+	await _tap(_game.screen_from_world(sheep.position + Vector2(0, -6)))
+	_check(sheep.dead or _game.selection.selected == [sheep], "with nothing selected a tap still selects the sheep")
+
 	# --- The PC mouse keeps working in touch mode ------------------------------------------
 	_game.selection.set_selection([])
 	await _click(_win(_game.screen_from_world(v.position + Vector2(0, -14))))

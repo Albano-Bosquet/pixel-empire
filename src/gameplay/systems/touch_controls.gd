@@ -4,7 +4,8 @@ extends Node
 ## are untouched: this only acts on touch input, so the same build plays on both
 ## and crossplay sessions mix them freely.
 ##   tap own unit / nothing selected  -> select (quick double tap: all of that type)
-##   tap with own units selected      -> contextual order (the right click of PC)
+##   tap with own units selected      -> contextual order (the right click of PC;
+##                                       on an own sheep: villagers slaughter it)
 ##   long press                       -> select whatever is there (e.g. a building)
 ##   one-finger drag                  -> pan the camera (box mode: selection rectangle)
 ##   two fingers                      -> pan and pinch zoom
@@ -126,6 +127,10 @@ func tap(screen_pos: Vector2) -> void:
 	var units := _game.selection.own_units()
 	var target := _game.selection.pick(screen_pos)
 	var own_unit := target is Unit and target.owner_id == _game.local_player and not NavalSystem.is_transport(target)
+	# A herded sheep is ours too, but with people selected a tap on it slaughters it
+	# (the right click of PC); a long press still selects it to move it.
+	if own_unit and Wildlife.is_animal(target) and units.any(func(u): return not Wildlife.is_animal(u)):
+		own_unit = false
 	if not units.is_empty() and not own_unit:
 		_game.commands.order_at(screen_pos, false)
 	else:
