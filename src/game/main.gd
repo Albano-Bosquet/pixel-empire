@@ -140,7 +140,7 @@ func open_pause() -> void:
 	if _pause != null or game == null or game.config.get("showcase", false) or _end != null:
 		return
 	if Net.is_networked():
-		Net.set_paused(true)  # everyone pauses; the overlay opens on net_paused
+		_show_pause_overlay()  # local only: the match keeps running for everyone
 		return
 	_pause = PauseMenu.new()
 	_pause.game = game
@@ -153,14 +153,20 @@ func open_pause() -> void:
 	_pause.quit_pressed.connect(func() -> void: get_tree().quit())
 
 
-## Networked pause: same menu, but resume / leave act on the whole session.
+## Networked menu. Opened locally it only covers this player's screen while the
+## match runs on; during a session-wide pause (net_paused) resume unpauses all.
 func _show_pause_overlay() -> void:
 	if _pause != null or game == null:
 		return
+	var shared := get_tree().paused
 	_pause = PauseMenu.new()
 	add_child(_pause)
-	_pause.set_networked()
-	_pause.resume_pressed.connect(func() -> void: Net.set_paused(false))
+	_pause.set_networked(not shared)
+	_pause.resume_pressed.connect(func() -> void:
+		if get_tree().paused:
+			Net.set_paused(false)
+		else:
+			_close_pause_overlay())
 	_pause.menu_pressed.connect(func() -> void:
 		Net.leave()
 		show_menu())

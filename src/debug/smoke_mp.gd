@@ -217,6 +217,18 @@ func _client() -> void:
 	_check(await _wait(func(): return get_tree().paused, 10.0), "pausing from the client pauses the match")
 	Net.set_paused(false)
 	_check(await _wait(func(): return not get_tree().paused, 10.0), "and resuming works too")
+	# The in-game menu opens for this player only: the match keeps running.
+	_main.open_pause()
+	var menu: PauseMenu = _main._pause
+	_check(menu != null and not get_tree().paused, "the menu opens without pausing the match")
+	var walker: Unit = mine.call()[0]  # the first villager may have fallen to the archers
+	var from := walker.grid_pos
+	g.orders.submit({"t": "issue", "units": [walker.entity_id], "buildings": [], "grid": from + Vector2(-4, 0), "target": 0})
+	_check(await _wait(func(): return walker.grid_pos.distance_to(from) > 1.5, 10.0), "units keep moving behind the menu")
+	await _shot("mp_02b_client_menu")
+	if menu:
+		menu.resume_pressed.emit()
+	_check(_main._pause == null, "resume closes the menu")
 	# Give the replica a couple of snapshots after the pause: units that just left
 	# our sight linger for VANISH_GRACE_MS before the client forgets them.
 	var hidden_enemies := func() -> Array: return g.unit_system.units.filter(func(u): return u.owner_id == 1 and not g.fog.is_visible(2, u))

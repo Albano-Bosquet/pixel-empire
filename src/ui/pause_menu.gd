@@ -1,8 +1,9 @@
 class_name PauseMenu
 extends CanvasLayer
 ## In-game menu (F10, Esc with nothing selected, or the top-bar button).
-## Pauses the scene tree while open. Save / load (single player), sound
-## options and language live here too.
+## Single player: Main pauses the scene tree while it is open. Multiplayer: it
+## opens only for the local player and the match keeps running. Save / load
+## (single player), sound options and language live here too.
 
 signal resume_pressed
 signal restart_pressed
@@ -14,6 +15,7 @@ signal load_requested(data: Dictionary)
 ## The running match (save dialog); set by Main.
 var game: Game = null
 var _restart: Button
+var _title: Label
 var _save_btns: Array[Button] = []
 
 
@@ -26,7 +28,8 @@ func _ready() -> void:
 	root.add_child(UiStyle.dimmer(0.5))
 	var pv: Array = UiStyle.centered_panel(root, 320)
 	var v: VBoxContainer = pv[1]
-	v.add_child(UiStyle.title(tr("Paused"), 40))
+	_title = UiStyle.title(tr("Paused"), 40)
+	v.add_child(_title)
 	for entry in [[tr("Resume"), resume_pressed], [tr("Restart match"), restart_pressed], [tr("Main menu"), menu_pressed], [tr("Quit game"), quit_pressed]]:
 		var b := UiStyle.button(entry[0], 280)
 		var sig: Signal = entry[1]
@@ -58,15 +61,22 @@ func _ready() -> void:
 	(v.get_child(1) as Button).grab_focus()
 
 
-## Multiplayer: no restart; "Main menu" leaves the session.
-func set_networked() -> void:
+## Multiplayer: no restart; "Main menu" leaves the session. `live` is true when
+## the match keeps running behind the menu (titled "Menu", not "Paused").
+func set_networked(live: bool = false) -> void:
 	if _restart:
 		_restart.visible = false
 	for b in _save_btns:
 		b.visible = false
+	if live and _title:
+		_title.text = tr("Menu")
 
 
+## Esc / F10 close the menu; every other key stops here so game hotkeys do not
+## fire behind it while a networked match keeps running.
 func _unhandled_key_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_ESCAPE or event.keycode == KEY_F10):
+	if not (event is InputEventKey):
+		return
+	if event.pressed and not event.echo and (event.keycode == KEY_ESCAPE or event.keycode == KEY_F10):
 		resume_pressed.emit()
-		get_viewport().set_input_as_handled()
+	get_viewport().set_input_as_handled()
