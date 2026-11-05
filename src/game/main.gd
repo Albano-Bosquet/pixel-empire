@@ -2,8 +2,8 @@ extends Node
 ## Application flow: title screen (with a live village backdrop) -> match ->
 ## pause / end screens -> back to the title or a rematch.
 ## Command line (skips the menu):
-##   -- --mode=sandbox|skirmish --difficulty=easy|normal|hard --size=small --map=continental|coast|islands
-##      --seed=123 --victory=conquest|town_center --nofog --smoke[=combat|ai|fx|stage4|naval|modern|military|lang|audio|features|work|touch|layout] --lang=es|en
+##   -- --mode=sandbox|skirmish --difficulty=easy|normal|hard --size=small --map=continental|coast|islands|desert
+##      --seed=123 --victory=conquest|town_center --nofog --smoke[=combat|ai|fx|stage4|naval|modern|military|lang|audio|features|work|touch|layout|terrain] --lang=es|en
 ##   multiplayer smoke: -- --mp=host --smoke=mp  /  -- --mp=client --smoke=mp
 
 var game: Game
@@ -78,6 +78,8 @@ func _start_smoke(mode: Variant) -> void:
 		script = "res://src/debug/smoke_touch.gd"
 	if mode is String and mode == "display":
 		script = "res://src/debug/smoke_display.gd"
+	if mode is String and mode == "terrain":
+		script = "res://src/debug/smoke_terrain.gd"
 	if mode is String and mode == "showcase":
 		script = "res://src/debug/smoke_showcase.gd"
 	var smoke: Node = load(script).new()

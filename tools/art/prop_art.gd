@@ -1,5 +1,5 @@
 extends RefCounted
-## Static world props: trees, resource deposits, mountain crags, ground decor,
+## Static world props: trees, resource deposits, ground decor,
 ## plus shadow and selection-ring sprites. Each builder returns
 ## {"canvas": PixelCanvas, "anchor": Vector2i} where anchor is the ground point.
 
@@ -18,8 +18,6 @@ static func all_props() -> Dictionary:
 		out["stone_%d" % i] = deposit(600 + i, false)
 	for i in 2:
 		out["berry_%d" % i] = berry_bush(700 + i)
-	for i in 4:
-		out["crag_%d" % i] = crag(800 + i)
 	out["stump_0"] = stump(900)
 	for i in 3:
 		out["tuft_%d" % i] = tuft(1000 + i)
@@ -30,6 +28,18 @@ static func all_props() -> Dictionary:
 	out["shrub_0"] = shrub(1300)
 	out["shrub_1"] = shrub(1301)
 	out["mushroom_0"] = mushrooms(1400)
+	out["mushroom_1"] = toadstools(1401, Color("#a9713f"), Color("#c99a62"))
+	out["mushroom_2"] = toadstools(1402, Color("#e7d7b4"), Color("#f5ecd6"))
+	out["daisies_0"] = flower_bed(1110, Color("#f6f2e6"), Color("#f3c63a"))
+	out["daisies_1"] = flower_bed(1111, Color("#f6f2e6"), Color("#f3c63a"))
+	out["buttercups_0"] = flower_bed(1112, Color("#f5d13f"), Color("#d99a22"))
+	out["bluebells_0"] = flower_bed(1113, Color("#8f8fe6"), Color("#d7d4f7"))
+	out["poppies_0"] = flower_bed(1114, Color("#e0523f"), Color("#3a2a24"))
+	out["clover_0"] = clover(1115)
+	out["clover_1"] = clover(1116)
+	out["stone_small_0"] = field_stone(1210)
+	out["stone_small_1"] = field_stone(1211)
+	out["twigs_0"] = twigs(1212)
 	for i in 2:
 		out["fish_%d" % i] = fish_shoal(1600 + i)
 	out["shadow_s"] = shadow(26, 11)
@@ -412,56 +422,6 @@ static func berry_bush(seed: int) -> Dictionary:
 	return {"canvas": c, "anchor": Vector2i(bx, by - 2)}
 
 
-static func crag(seed: int) -> Dictionary:
-	var rng := _rng(seed)
-	var c := PixelCanvas.new(72, 72)
-	var bx := 36
-	var by := 60
-	var rock := PixelCanvas.ramp(Color("#7e776d"), 6, 0.6)
-	var spires := []
-	for i in rng.randi_range(4, 6):
-		spires.append(Vector4(rng.randf_range(-20, 20), 0, rng.randf_range(7, 12), rng.randf_range(18, 38)))
-	spires.sort_custom(func(a, b): return a.w > b.w)
-	for s in spires:
-		var cx: float = bx + s.x
-		var hh: float = s.w * (1.0 - absf(s.x) / 40.0)
-		var half: float = s.z
-		var pts := PackedVector2Array([
-			Vector2(cx - half, by - 2 - absf(s.x) * 0.2), Vector2(cx - half * 0.7, by - hh * 0.6),
-			Vector2(cx - half * 0.2, by - hh), Vector2(cx + half * 0.35, by - hh * 0.92),
-			Vector2(cx + half * 0.8, by - hh * 0.5), Vector2(cx + half, by - 2 - absf(s.x) * 0.2)])
-		var tmp := PixelCanvas.new(c.w, c.h)
-		tmp.polygon(pts, Color.WHITE)
-		for y in c.h:
-			for x in c.w:
-				if not tmp.is_solid(x, y):
-					continue
-				var rel := (x + 0.5 - cx) / half
-				var face := 0.72 if rel < -0.15 else (0.45 if rel < 0.4 else 0.22)
-				var top_light := clampf(1.0 - (y - (by - hh)) / 10.0, 0.0, 1.0) * 0.25
-				var shade := face + top_light + (PixelCanvas.bayer(x, y) - 0.5) * 0.12 + rng.randf_range(-0.05, 0.05)
-				c.put(x, y, rock[clampi(int(shade * rock.size()), 0, rock.size() - 1)])
-		for k in 3:
-			var x0 := int(cx + rng.randf_range(-half * 0.6, half * 0.6))
-			var y0 := int(by - hh * rng.randf_range(0.3, 0.8))
-			for j in rng.randi_range(4, 9):
-				if tmp.is_solid(x0, y0):
-					c.put(x0, y0, rock[0])
-				y0 += 1
-				x0 += rng.randi_range(-1, 1)
-	# Moss on top surfaces.
-	var moss := Color("#6d8a3d")
-	for x in c.w:
-		for y in c.h:
-			if c.is_solid(x, y):
-				if rng.randf() < 0.35:
-					c.put(x, y, moss)
-				break
-	c.outline(0.6)
-	_under_shadow(c, bx + 6, by, 32, 8)
-	return {"canvas": c, "anchor": Vector2i(bx, by - 4)}
-
-
 static func stump(seed: int) -> Dictionary:
 	var rng := _rng(seed)
 	var c := PixelCanvas.new(24, 18)
@@ -507,6 +467,60 @@ static func flower_patch(seed: int) -> Dictionary:
 	return {"canvas": c, "anchor": Vector2i(8, 10)}
 
 
+## A small bed of one kind of flower: `petal` around a `heart` pixel.
+static func flower_bed(seed: int, petal: Color, heart: Color) -> Dictionary:
+	var rng := _rng(seed)
+	var c := PixelCanvas.new(20, 14)
+	for i in rng.randi_range(5, 7):
+		var x := rng.randi_range(3, 16)
+		var y := rng.randi_range(3, 10)
+		c.put(x, y + 1, Color("#4f7f2b"))
+		c.put(x, y + 2, Color("#47742a"))
+		c.put(x - 1, y, petal)
+		c.put(x + 1, y, petal)
+		c.put(x, y - 1, petal)
+		c.put(x, y, heart)
+	return {"canvas": c, "anchor": Vector2i(10, 11)}
+
+
+## A low dark-green leafy patch.
+static func clover(seed: int) -> Dictionary:
+	var rng := _rng(seed)
+	var c := PixelCanvas.new(18, 10)
+	var leaves := [Color("#4c8232"), Color("#559038"), Color("#649f40")]
+	for i in 26:
+		var a := rng.randf() * TAU
+		var d := sqrt(rng.randf())
+		c.put(9 + int(round(cos(a) * d * 7.0)), 5 + int(round(sin(a) * d * 3.5)), leaves[rng.randi() % leaves.size()])
+	return {"canvas": c, "anchor": Vector2i(9, 5)}
+
+
+## One half-buried stone with a touch of moss.
+static func field_stone(seed: int) -> Dictionary:
+	var rng := _rng(seed)
+	var c := PixelCanvas.new(18, 13)
+	var r := PixelCanvas.ramp(Color("#98938a"), 4, 0.5)
+	c.shaded_blob(9, 7, rng.randf_range(4.5, 6.0), rng.randf_range(3.0, 4.0), r)
+	c.put(7, 4, Color("#6d8a3d"))
+	c.put(8, 4, Color("#6d8a3d"))
+	c.outline(0.55)
+	_under_shadow(c, 10, 10, 7, 2)
+	return {"canvas": c, "anchor": Vector2i(9, 9)}
+
+
+## A couple of fallen sticks.
+static func twigs(seed: int) -> Dictionary:
+	var rng := _rng(seed)
+	var c := PixelCanvas.new(18, 9)
+	for i in 3:
+		var x := rng.randi_range(2, 7)
+		var y := rng.randi_range(2, 6)
+		var dy := rng.randi_range(-1, 1)
+		for k in rng.randi_range(6, 9):
+			c.put(x + k, y + (dy if k > 3 else 0), Color("#6e5234") if k % 3 != 0 else Color("#8a6a45"))
+	return {"canvas": c, "anchor": Vector2i(9, 5)}
+
+
 static func pebbles(seed: int) -> Dictionary:
 	var rng := _rng(seed)
 	var c := PixelCanvas.new(16, 10)
@@ -547,6 +561,23 @@ static func mushrooms(seed: int) -> Dictionary:
 
 
 ## Fish shoal: ripple rings on the water with dark fish backs and a glint.
+## Plain brown or pale mushrooms: `cap` with a lighter `top` pixel.
+static func toadstools(seed: int, cap: Color, top: Color) -> Dictionary:
+	var rng := _rng(seed)
+	var c := PixelCanvas.new(14, 12)
+	for i in rng.randi_range(2, 3):
+		var x := rng.randi_range(3, 10)
+		var y := rng.randi_range(6, 9)
+		c.put(x, y, Color("#efe6cf"))
+		c.put(x, y - 1, Color("#efe6cf"))
+		c.put(x - 1, y - 2, cap.darkened(0.15))
+		c.put(x, y - 2, cap)
+		c.put(x + 1, y - 2, cap.darkened(0.3))
+		c.put(x, y - 3, top)
+	c.outline(0.55)
+	return {"canvas": c, "anchor": Vector2i(7, 9)}
+
+
 static func fish_shoal(seed: int) -> Dictionary:
 	var rng := _rng(seed)
 	var c := PixelCanvas.new(44, 24)

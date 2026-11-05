@@ -35,7 +35,8 @@
   "map_types_menu": [
     "continental",
     "coast",
-    "islands"
+    "islands",
+    "desert"
   ],
   "max_players": 8,
   "teams_menu": 4,

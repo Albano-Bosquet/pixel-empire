@@ -3,7 +3,10 @@ extends RefCounted
 ## Grid model of a generated map: terrain per tile, static blockers, start
 ## positions and the spawn lists the Game turns into entities.
 
-enum Terrain { DEEP_WATER, WATER, SAND, GRASS, MEADOW, FOREST, DIRT, PATH, ROCKY, MOUNTAIN }
+## New ids go at the end: saves and the terrain atlas index by these numbers.
+## The atlas has one more entry after these, "cliff": the wall painted on
+## MOUNTAIN edges by terrain.gdshader, never a terrain of its own.
+enum Terrain { DEEP_WATER, WATER, SAND, GRASS, MEADOW, FOREST, DIRT, PATH, ROCKY, MOUNTAIN, DESERT, PLATEAU, RAMP }
 
 const IMPASSABLE: Array[int] = [Terrain.DEEP_WATER, Terrain.WATER, Terrain.MOUNTAIN]
 

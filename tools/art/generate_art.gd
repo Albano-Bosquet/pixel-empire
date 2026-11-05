@@ -93,6 +93,17 @@ func _initialize() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if String(arg).begins_with("--units="):
 			only_units = Array(String(arg).get_slice("=", 1).split(","))
+	if "--terrain" in OS.get_cmdline_user_args():
+		_save(TerrainArt.build_atlas(sprites["terrain"]["order"]), OUT + "terrain/terrain_atlas.png")
+		_save(TerrainArt.build_noise(), OUT + "terrain/terrain_noise.png")
+		print("Art (terrain only) generated in %d ms" % (Time.get_ticks_msec() - t0))
+		quit(0)
+		return
+	if "--props" in OS.get_cmdline_user_args():
+		_make_props()
+		print("Art (props only) generated in %d ms" % (Time.get_ticks_msec() - t0))
+		quit(0)
+		return
 	if "--buildings" in OS.get_cmdline_user_args():
 		_save_buildings_preview(_make_buildings(sprites, players))
 		print("Art (buildings only) generated in %d ms" % (Time.get_ticks_msec() - t0))
@@ -117,12 +128,7 @@ func _initialize() -> void:
 
 	var b_packed := _make_buildings(sprites, players)
 
-	var props := PropArt.all_props()
-	var packed := _pack(props, 512)
-	_save(packed["image"], OUT + "props/props_atlas.png")
-	var f := FileAccess.open(OUT + "props/props_atlas.json", FileAccess.WRITE)
-	f.store_string(JSON.stringify(packed["regions"], "  "))
-	f.close()
+	var packed := _make_props()
 
 	var unit_sheets := []
 	for unit_id in sprites["units"]:
@@ -212,6 +218,17 @@ func _save(img: Image, path: String) -> void:
 
 
 ## Shelf packer: tallest first, 1px padding.
+## Paints and packs the props atlas; returns the packing ("image", "regions").
+func _make_props() -> Dictionary:
+	var props := PropArt.all_props()
+	var packed := _pack(props, 512)
+	_save(packed["image"], OUT + "props/props_atlas.png")
+	var f := FileAccess.open(OUT + "props/props_atlas.json", FileAccess.WRITE)
+	f.store_string(JSON.stringify(packed["regions"], "  "))
+	f.close()
+	return packed
+
+
 func _pack(items: Dictionary, width: int) -> Dictionary:
 	var names := items.keys()
 	names.sort_custom(func(a, b): return items[a]["canvas"].h > items[b]["canvas"].h)

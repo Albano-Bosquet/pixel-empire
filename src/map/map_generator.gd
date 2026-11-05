@@ -8,11 +8,22 @@ extends RefCounted
 ##   coast       — an inland sea fills the centre; a land ring joins the starts
 ##                 (a visible road only between allies).
 ##   islands     — every player on an island of their own (ships needed to meet).
+## Every type: the inside of big mountains is a PLATEAU reached by RAMPs.
+##   desert      — continental layout ("layout": "continental") where dry land is
+##                 dune sand (DESERT), forests are scarce and lakes read as oases.
 ## Fish shoals are placed on open water for every type.
 ## Example:
 ##   var map := MapGenerator.new(GameData.map_gen, GameData.resource_nodes).generate(96, 1234, 2, "islands")
 
 const T := MapData.Terrain
+## A mountain tile is plateau only if all of these tiles are mountain too. The
+## extra south offsets keep walkable ground clear of the wall the shader paints
+## over the tiles at a cliff's camera-facing foot.
+const PLATEAU_RIM: Array[Vector2i] = [
+	Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0), Vector2i(1, 0),
+	Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(1, 2), Vector2i(2, 2)]
+## Directions a ramp may leave a plateau, camera-facing ones first.
+const RAMP_DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)]
 
 var cfg: Dictionary
 var resource_defs: Dictionary
@@ -20,6 +31,8 @@ var _rng := RandomNumberGenerator.new()
 var _map: MapData
 var _reserved: PackedByteArray  # tiles that must stay free: 1 = start area, 2 = road or corridor
 var _type := "continental"
+## Land/sea layout the type follows: continental, coast or islands.
+var _layout := "continental"
 var _type_cfg: Dictionary = {}
 var _start_angle := NAN
 
@@ -38,8 +51,9 @@ func generate(size: int, map_seed: int, player_count: int, map_type: String = "c
 	_reserved.fill(0)
 	_type = map_type if cfg.get("map_types", {}).has(map_type) else "continental"
 	_type_cfg = cfg.get("map_types", {}).get(_type, {})
+	_layout = String(_type_cfg.get("layout", _type))
 	_build_fields(map_seed)
-	if _type != "continental":
+	if _layout != "continental":
 		# Water maps fix the start angle first so the landmass can follow it.
 		var shape_rng := RandomNumberGenerator.new()
 		shape_rng.seed = map_seed + 31337
@@ -47,15 +61,16 @@ func generate(size: int, map_seed: int, player_count: int, map_type: String = "c
 		_shape_water(maxi(player_count, 1), shape_rng)
 	_classify_terrain()
 	_place_starts(maxi(player_count, 1))
-	if _type == "continental":
+	if _layout == "continental":
 		_carve_roads(teams)
-	elif _type == "coast":
+	elif _layout == "coast":
 		_carve_ring_road(teams)
 	_place_trees()
 	_place_player_resources()
 	_place_start_woods()
 	_place_extra_resources()
 	_place_fish()
+	_open_plateaus()
 	_place_decor()
 	return _map
 
@@ -78,7 +93,7 @@ func _shape_water(count: int, shape_rng: RandomNumberGenerator) -> void:
 			var i := y * _map.width + x
 			var p2 := Vector2(x + 0.5, y + 0.5)
 			var e := _map.elevation[i]
-			if _type == "coast":
+			if _layout == "coast":
 				# Inland sea in the middle, guaranteed land along the start ring.
 				var dc := p2.distance_to(center) / w
 				var sea := 1.0 - smoothstep(float(_type_cfg.get("sea_radius", 0.2)) * 0.6, float(_type_cfg.get("sea_radius", 0.2)), dc)
@@ -132,8 +147,15 @@ func _build_fields(map_seed: int) -> void:
 		_map.moisture[i] = inverse_lerp(m_min, m_max, _map.moisture[i])
 
 
+## A generation value, overridden per map type when the type sets it.
+func _param(key: String, default: float) -> float:
+	return float(_type_cfg.get(key, cfg.get(key, default)))
+
+
 func _classify_terrain() -> void:
 	var dirt_noise := _noise(_map.seed + 104729, 6.0, 2)
+	var desert_m := _param("desert_moisture", -1.0)
+	var forest_m := _param("forest_moisture", 0.6)
 	for y in _map.height:
 		for x in _map.width:
 			var i := y * _map.width + x
@@ -144,14 +166,16 @@ func _classify_terrain() -> void:
 				t = T.DEEP_WATER
 			elif e < cfg.get("water_level", 0.31):
 				t = T.WATER
-			elif e < cfg.get("beach_level", 0.345):
+			elif e < _param("beach_level", 0.345):
 				t = T.SAND
 			elif e > cfg.get("mountain_level", 0.76):
 				t = T.MOUNTAIN
 			elif e > cfg.get("rocky_level", 0.70):
 				t = T.ROCKY
-			elif m > cfg.get("forest_moisture", 0.6):
+			elif m > forest_m:
 				t = T.FOREST
+			elif m < desert_m:
+				t = T.DESERT
 			elif m < cfg.get("meadow_moisture", 0.38):
 				t = T.MEADOW
 			else:
@@ -424,29 +448,173 @@ func _fish_ok(t: Vector2i) -> bool:
 	return true
 
 
+## Turns the inside of big mountains into walkable PLATEAU reached by RAMP cuts
+## through the remaining cliff rim. Runs after every resource is placed and on
+## its own random stream, so it never moves anything else on a seeded map. A
+## mountain too thin for a plateau, or with no reachable foot for a ramp, stays solid.
+func _open_plateaus() -> void:
+	var inner := PackedByteArray()
+	inner.resize(_map.terrain.size())
+	for y in _map.height:
+		for x in _map.width:
+			if _plateau_inner(Vector2i(x, y)):
+				inner[_map.index(Vector2i(x, y))] = 1
+	var reach := _reachable_from_starts()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _map.seed + 65537
+	var min_tiles := int(cfg.get("plateau_min_tiles", 12))
+	var seen := PackedByteArray()
+	seen.resize(_map.terrain.size())
+	for y in _map.height:
+		for x in _map.width:
+			var i := _map.index(Vector2i(x, y))
+			if inner[i] == 0 or seen[i] != 0:
+				continue
+			var tiles := _flood_plateau(Vector2i(x, y), inner, seen)
+			if tiles.size() < min_tiles:
+				continue
+			var ramps := _pick_ramps(tiles, inner, reach, rng)
+			if ramps.is_empty():
+				continue
+			for t in tiles:
+				_map.set_terrain(t, T.PLATEAU)
+			for ramp in ramps:
+				for t in ramp["cells"]:
+					_map.set_terrain(t, T.RAMP)
+
+
+func _plateau_inner(t: Vector2i) -> bool:
+	if _map.get_terrain(t) != T.MOUNTAIN:
+		return false
+	for off in PLATEAU_RIM:
+		var n := t + off
+		if not _map.in_bounds(n) or _map.get_terrain(n) != T.MOUNTAIN:
+			return false
+	return true
+
+
+## Tiles a walker can reach from any start (1 in the returned mask).
+func _reachable_from_starts() -> PackedByteArray:
+	var reach := PackedByteArray()
+	reach.resize(_map.terrain.size())
+	var queue: Array[Vector2i] = []
+	for s in _map.start_positions:
+		reach[_map.index(s)] = 1
+		queue.append(s)
+	var head := 0
+	while head < queue.size():
+		var t := queue[head]
+		head += 1
+		for d in RAMP_DIRS:
+			var n := t + d
+			if _map.walkable(n) and reach[_map.index(n)] == 0:
+				reach[_map.index(n)] = 1
+				queue.append(n)
+	return reach
+
+
+func _flood_plateau(from: Vector2i, inner: PackedByteArray, seen: PackedByteArray) -> Array[Vector2i]:
+	var tiles: Array[Vector2i] = [from]
+	seen[_map.index(from)] = 1
+	var head := 0
+	while head < tiles.size():
+		var t := tiles[head]
+		head += 1
+		for d in RAMP_DIRS:
+			var n := t + d
+			if _map.in_bounds(n) and inner[_map.index(n)] != 0 and seen[_map.index(n)] == 0:
+				seen[_map.index(n)] = 1
+				tiles.append(n)
+	return tiles
+
+
+## Chooses this plateau's ramps: camera-facing when one exists, spread apart.
+func _pick_ramps(tiles: Array[Vector2i], inner: PackedByteArray, reach: PackedByteArray, rng: RandomNumberGenerator) -> Array:
+	var candidates := []
+	for t in tiles:
+		for k in RAMP_DIRS.size():
+			var ramp := _ramp_from(t, RAMP_DIRS[k], inner, reach)
+			if not ramp.is_empty():
+				ramp["south"] = k < 2
+				candidates.append(ramp)
+	if candidates.is_empty():
+		return []
+	var south := candidates.filter(func(c): return c["south"])
+	var pool: Array = south if not south.is_empty() else candidates
+	var chosen: Array = [pool[rng.randi() % pool.size()]]
+	var wanted := clampi(tiles.size() / maxi(1, int(cfg.get("plateau_tiles_per_ramp", 70))), 1, int(cfg.get("plateau_max_ramps", 3)))
+	var spacing := float(cfg.get("plateau_ramp_spacing", 14.0))
+	while chosen.size() < wanted:
+		var best := {}
+		var best_d := spacing
+		for c in candidates:
+			var d := INF
+			for r in chosen:
+				d = minf(d, Vector2(c["foot"] - r["foot"]).length())
+			if d >= best_d:
+				best_d = d
+				best = c
+		if best.is_empty():
+			break
+		chosen.append(best)
+	return chosen
+
+
+## The straight cut from plateau tile `t` through the rim in direction `dir`,
+## "ramp_half_width" tiles to each side, ending on reachable ground. Empty if
+## the rim is too thick or the cut does not land there.
+func _ramp_from(t: Vector2i, dir: Vector2i, inner: PackedByteArray, reach: PackedByteArray) -> Dictionary:
+	var side := Vector2i(dir.y, dir.x)
+	var half := int(cfg.get("ramp_half_width", 1))
+	var cells: Array[Vector2i] = []
+	var p := t + dir
+	if not _map.in_bounds(p) or inner[_map.index(p)] != 0:
+		return {}
+	for step in int(cfg.get("ramp_max_length", 6)):
+		if not _map.in_bounds(p):
+			return {}
+		if _map.get_terrain(p) != T.MOUNTAIN:
+			return {"cells": cells, "foot": p} if reach[_map.index(p)] != 0 and not cells.is_empty() else {}
+		if inner[_map.index(p)] != 0:
+			return {}
+		for w in range(-half, half + 1):
+			var c := p + side * w
+			if not _map.in_bounds(c) or _map.get_terrain(c) != T.MOUNTAIN:
+				return {}
+			cells.append(c)
+		p += dir
+	return {}
+
+
+## Ground life: every terrain draws from its "decor_sprites" list. A noise field
+## gathers it into patches, where tiles are denser and use "decor_patch_sprites"
+## (flower beds, mushroom rings) instead of an even sprinkle. Runs last, so its
+## random draws never move anything that matters to play.
 func _place_decor() -> void:
 	var density: float = cfg.get("decor_density", 0.12)
-	var crag_density: float = cfg.get("mountain_crag_density", 0.55)
+	var threshold := float(cfg.get("decor_patch_threshold", 0.56))
+	var boost := float(cfg.get("decor_patch_boost", 2.2))
+	var rock_keep := float(cfg.get("decor_rock_keep", 1.0))
+	var patches := _noise(_map.seed + 271, float(cfg.get("decor_patch_frequency", 9.0)), 2)
+	var names: Array = T.keys()
+	var lists: Dictionary = cfg.get("decor_sprites", {})
+	var patch_lists: Dictionary = cfg.get("decor_patch_sprites", {})
 	for y in _map.height:
 		for x in _map.width:
 			var t := Vector2i(x, y)
-			var ter := _map.get_terrain(t)
+			if _map.is_blocked(t):
+				continue
+			var key := String(names[_map.get_terrain(t)]).to_lower()
+			var in_patch: bool = patches.get_noise_2d(x, y) * 0.5 + 0.5 > threshold and patch_lists.has(key)
+			if _rng.randf() >= density * (boost if in_patch else 1.0):
+				continue
+			var list: Array = patch_lists[key] if in_patch else lists.get(key, [])
+			if list.is_empty():
+				continue
+			var sprite := String(list[_rng.randi() % list.size()])
+			# Loose rocks stay rare: only this share of the ones rolled is kept.
+			if sprite.begins_with("pebble") or sprite.begins_with("stone"):
+				if _rng.randf() >= rock_keep:
+					continue
 			var jitter := Vector2(_rng.randf_range(0.2, 0.8), _rng.randf_range(0.2, 0.8))
-			if ter == T.MOUNTAIN:
-				if _rng.randf() < crag_density:
-					_map.decor.append({"sprite": "crag_%d" % (_rng.randi() % 4), "pos": Vector2(t) + jitter, "tall": true})
-				continue
-			if _map.is_blocked(t) or _rng.randf() >= density:
-				continue
-			var sprite := ""
-			match ter:
-				T.GRASS:
-					sprite = ["tuft_0", "tuft_1", "tuft_2", "shrub_0", "pebble_0"][_rng.randi() % 5]
-				T.MEADOW:
-					sprite = ["flowers_0", "flowers_1", "tuft_1", "tuft_2"][_rng.randi() % 4]
-				T.FOREST:
-					sprite = ["mushroom_0", "shrub_1", "tuft_0"][_rng.randi() % 3]
-				T.DIRT, T.ROCKY, T.SAND:
-					sprite = ["pebble_0", "pebble_1", "pebble_2"][_rng.randi() % 3]
-			if sprite != "":
-				_map.decor.append({"sprite": sprite, "pos": Vector2(t) + jitter, "tall": sprite.begins_with("shrub")})
+			_map.decor.append({"sprite": sprite, "pos": Vector2(t) + jitter, "tall": sprite.begins_with("shrub")})

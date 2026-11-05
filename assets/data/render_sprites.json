@@ -2124,7 +2124,11 @@
       "dirt",
       "path",
       "rocky",
-      "mountain"
+      "mountain",
+      "desert",
+      "plateau",
+      "ramp",
+      "cliff"
     ]
   },
   "construction": {

@@ -30,8 +30,32 @@
   "start_clear_radius": 7,
   "start_dirt_radius": 3,
   "start_resource_min_dist": 4.5,
-  "decor_density": 0.12,
-  "mountain_crag_density": 0.55,
+  "plateau_min_tiles": 12,
+  "plateau_tiles_per_ramp": 70,
+  "plateau_max_ramps": 3,
+  "plateau_ramp_spacing": 14.0,
+  "ramp_half_width": 1,
+  "ramp_max_length": 6,
+  "decor_density": 0.3,
+  "decor_patch_frequency": 9.0,
+  "decor_patch_threshold": 0.56,
+  "decor_patch_boost": 2.4,
+  "decor_rock_keep": 0.25,
+  "decor_sprites": {
+    "grass": ["tuft_0", "tuft_1", "tuft_2", "clover_0", "clover_1", "pebble_0", "pebble_1", "stone_small_0", "stone_small_1", "twigs_0", "shrub_0"],
+    "meadow": ["tuft_1", "tuft_2", "clover_0", "flowers_0", "flowers_1", "pebble_2", "stone_small_1"],
+    "forest": ["mushroom_0", "mushroom_1", "mushroom_2", "twigs_0", "shrub_1", "tuft_0", "clover_1"],
+    "dirt": ["pebble_0", "pebble_1", "pebble_2", "twigs_0"],
+    "rocky": ["pebble_0", "pebble_1", "pebble_2", "stone_small_0", "stone_small_1", "tuft_0"],
+    "desert": [],
+    "plateau": ["tuft_0", "tuft_1", "tuft_2", "pebble_0", "pebble_1", "stone_small_0", "shrub_1"],
+    "sand": []
+  },
+  "decor_patch_sprites": {
+    "grass": ["daisies_0", "daisies_1", "buttercups_0", "flowers_0", "mushroom_1", "mushroom_2"],
+    "meadow": ["daisies_0", "daisies_1", "buttercups_0", "bluebells_0", "poppies_0", "flowers_1"],
+    "forest": ["mushroom_0", "mushroom_1", "mushroom_2", "bluebells_0"]
+  },
   "player_resources": {
     "gold_mine": {
       "clusters": 1,
@@ -85,6 +109,18 @@
       "start_woods": {
         "clusters": 2,
         "cluster_size": 22,
+        "min_dist": 9,
+        "max_dist": 13
+      }
+    },
+    "desert": {
+      "display_name": "Desert",
+      "layout": "continental",
+      "desert_moisture": 0.64,
+      "forest_moisture": 0.74,
+      "start_woods": {
+        "clusters": 2,
+        "cluster_size": 14,
         "min_dist": 9,
         "max_dist": 13
       }

@@ -1,21 +1,34 @@
 class_name DecorLayer
 extends Node2D
-## Flat ground decoration (grass tufts, flowers, pebbles) drawn in one node,
-## below all entities. Tall decor (crags, shrubs) is spawned as y-sorted
-## sprites by the Game instead.
+## Flat ground decoration (grass tufts, flowers, pebbles), below all entities.
+## Items are split into square chunks of the world, each a canvas item of its
+## own, so the renderer skips every chunk off screen. Tall decor (shrubs) is
+## spawned as y-sorted sprites by the Game instead.
 
-var _items: Array[Dictionary] = []
+## Side of a chunk in world pixels.
+const CHUNK_SIZE := 1024.0
 
 
 func build(map: MapData) -> void:
-	_items.clear()
+	for child in get_children():
+		child.queue_free()
+	var chunks := {}
 	for d in map.decor:
 		if not d["tall"]:
-			_items.append({"sprite": d["sprite"], "pos": Iso.grid_to_world(d["pos"]).round()})
-	_items.sort_custom(func(a, b): return a["pos"].y < b["pos"].y)
-	queue_redraw()
+			var pos: Vector2 = Iso.grid_to_world(d["pos"]).round()
+			var key := Vector2i((pos / CHUNK_SIZE).floor())
+			chunks.get_or_add(key, []).append({"sprite": d["sprite"], "pos": pos})
+	for key in chunks:
+		var chunk := Chunk.new()
+		chunk.items = chunks[key]
+		chunk.items.sort_custom(func(a, b): return a["pos"].y < b["pos"].y)
+		add_child(chunk)
 
 
-func _draw() -> void:
-	for it in _items:
-		SpriteLibrary.draw_prop(self, it["sprite"], it["pos"])
+## One chunk's sprites, drawn in a single canvas item.
+class Chunk extends Node2D:
+	var items: Array = []
+
+	func _draw() -> void:
+		for it in items:
+			SpriteLibrary.draw_prop(self, it["sprite"], it["pos"])

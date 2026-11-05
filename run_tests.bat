@@ -15,4 +15,7 @@ set G="%~dp0tools\godot\Godot_v4.7.2-stable_win64_console.exe"
 %G% --path "%~dp0." -- --smoke=display --mode=skirmish --seed=4242 || exit /b 1
 %G% --path "%~dp0." -- --smoke=touch --mode=skirmish --seed=4242 || exit /b 1
 %G% --path "%~dp0." -- --smoke=layout --mode=skirmish --seed=4242 || exit /b 1
+%G% --path "%~dp0." -- --smoke=terrain --mode=skirmish --map=continental --seed=4242 --nofog || exit /b 1
+%G% --path "%~dp0." -- --smoke=terrain --mode=skirmish --map=coast --seed=4242 --nofog || exit /b 1
+%G% --path "%~dp0." -- --smoke=terrain --mode=skirmish --map=desert --seed=4242 --nofog || exit /b 1
 echo ALL CHECKS PASSED
