@@ -12,6 +12,8 @@ const TEXT := Color("#f1e6cf")
 const TEXT_DIM := Color("#b5a88e")
 const GOOD := Color("#7fd36a")
 const BAD := Color("#ff8a7a")
+## Width of every scroll bar (setup screens, lists), wide enough to see and touch.
+const SCROLLBAR_WIDTH := 16.0
 
 
 ## Framed walnut panel with brass corner brackets (every dialog).
@@ -224,16 +226,36 @@ static func theme() -> Theme:
 		t.set_stylebox("grabber_area_highlight", type, fill)
 		t.set_icon("grabber", type, load(UI_ART + "slider_grabber.png"))
 		t.set_icon("grabber_highlight", type, load(UI_ART + "slider_grabber.png"))
-	var sc := StyleBoxFlat.new()
-	sc.bg_color = Color("#120d08")
-	sc.set_content_margin_all(4)
-	var grab := StyleBoxFlat.new()
-	grab.bg_color = Color("#8a6d3b")
-	grab.border_color = Color("#140e09")
-	grab.set_border_width_all(1)
-	var grab_hi: StyleBoxFlat = grab.duplicate()
-	grab_hi.bg_color = GOLD.darkened(0.15)
-	for type in ["VScrollBar", "HScrollBar"]:
+	# Scroll bars: a wide dark trough with a brass rim and a bright brass
+	# grabber, so a scrollable panel reads as one at a glance (also on phones).
+	for vertical in [true, false]:
+		var type := "VScrollBar" if vertical else "HScrollBar"
+		var sc := StyleBoxFlat.new()
+		sc.bg_color = Color("#120d08")
+		sc.border_color = BORDER.darkened(0.2)
+		sc.set_border_width_all(2)
+		var grab := StyleBoxFlat.new()
+		grab.bg_color = Color("#c9963f")
+		grab.border_color = Color("#140e09")
+		grab.set_border_width_all(2)
+		# The trough's margins set the bar's thickness; the grabber's set its
+		# shortest length along the bar.
+		if vertical:
+			sc.content_margin_left = SCROLLBAR_WIDTH * 0.5
+			sc.content_margin_right = SCROLLBAR_WIDTH * 0.5
+			sc.content_margin_top = 3
+			sc.content_margin_bottom = 3
+			grab.content_margin_top = 18
+			grab.content_margin_bottom = 18
+		else:
+			sc.content_margin_top = SCROLLBAR_WIDTH * 0.5
+			sc.content_margin_bottom = SCROLLBAR_WIDTH * 0.5
+			sc.content_margin_left = 3
+			sc.content_margin_right = 3
+			grab.content_margin_left = 18
+			grab.content_margin_right = 18
+		var grab_hi: StyleBoxFlat = grab.duplicate()
+		grab_hi.bg_color = GOLD
 		t.set_stylebox("scroll", type, sc)
 		t.set_stylebox("grabber", type, grab)
 		t.set_stylebox("grabber_highlight", type, grab_hi)

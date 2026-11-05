@@ -15,6 +15,19 @@ var _lobby: LobbyMenu
 var _setup: SkirmishSetup
 var _update_btn: Button
 var _updater: UpdateChecker
+var _title: TextureRect
+var _tagline: Label
+var _rule: TextureRect
+var _panel: PanelContainer
+var _gap: Control
+var _hint: Label
+var _title_top := 34.0
+var _title_h := 128.0
+## Title bob offset in pixels, animated by a looping tween.
+var _bob := 0.0
+
+## Below this logical screen height (phones) the title screen is compacted.
+const COMPACT_HEIGHT := 820.0
 
 
 func _ready() -> void:
@@ -42,46 +55,41 @@ func _ready() -> void:
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(shade)
 
-	# Pixel logo (same art as the web page), bobbing gently.
-	var title := TextureRect.new()
-	title.texture = load(UiStyle.UI_ART + "title.png")
-	title.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-	title.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	title.offset_left = -480
-	title.offset_right = 480
-	title.offset_top = 34
-	title.offset_bottom = 34 + title.texture.get_height()
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(title)
+	# Pixel logo (same art as the web page), bobbing gently. Positions come
+	# from _layout(), which also shrinks everything on short (phone) screens.
+	_title = TextureRect.new()
+	_title.texture = load(UiStyle.UI_ART + "title.png")
+	_title.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_title.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_title.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_title)
 	var bob := create_tween().set_loops()
-	for to in [5.0, 0.0]:
-		bob.tween_property(title, "offset_top", 34.0 + to, 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		bob.parallel().tween_property(title, "offset_bottom", 34.0 + to + title.texture.get_height(), 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	bob.tween_property(self, "_bob", 5.0, 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	bob.tween_property(self, "_bob", 0.0, 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
-	var tagline := UiStyle.label(tr("Gather · Build · Advance · Conquer").to_upper(), 19, Color("#ecd6aa"))
-	tagline.add_theme_font_override("font", UiStyle.spaced_font(3))
-	tagline.add_theme_color_override("font_outline_color", Color("#140e09"))
-	tagline.add_theme_constant_override("outline_size", 5)
-	tagline.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tagline.offset_left = -500
-	tagline.offset_right = 500
-	tagline.offset_top = 182
-	root.add_child(tagline)
-	var rule := _divider(root, 216)
-	rule.modulate.a = 0.9
+	_tagline = UiStyle.label(tr("Gather · Build · Advance · Conquer").to_upper(), 19, Color("#ecd6aa"))
+	_tagline.add_theme_font_override("font", UiStyle.spaced_font(3))
+	_tagline.add_theme_color_override("font_outline_color", Color("#140e09"))
+	_tagline.add_theme_constant_override("outline_size", 5)
+	_tagline.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_tagline.offset_left = -500
+	_tagline.offset_right = 500
+	root.add_child(_tagline)
+	_rule = _divider(root, 216)
+	_rule.modulate.a = 0.9
 
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiStyle.pixel_panel(30))
-	panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	panel.offset_left = -230
-	panel.offset_right = 230
-	panel.offset_top = 262
-	root.add_child(panel)
+	_panel = PanelContainer.new()
+	_panel.add_theme_stylebox_override("panel", UiStyle.pixel_panel(30))
+	_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_panel.offset_left = -230
+	_panel.offset_right = 230
+	root.add_child(_panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
-	panel.add_child(v)
+	_panel.add_child(v)
 	_single = UiStyle.pixel_button(tr("Single player"), 400, 54, 22)
 	_single.pressed.connect(open_setup)
 	v.add_child(_single)
@@ -96,9 +104,9 @@ func _ready() -> void:
 	var mp := UiStyle.pixel_button(tr("Multiplayer (LAN / VPN)"), 400)
 	mp.pressed.connect(_open_lobby)
 	v.add_child(mp)
-	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(0, 4)
-	v.add_child(gap)
+	_gap = Control.new()
+	_gap.custom_minimum_size = Vector2(0, 4)
+	v.add_child(_gap)
 	# Settings row: sound and language side by side, full screen below.
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
@@ -141,13 +149,15 @@ func _ready() -> void:
 	_update_btn.offset_bottom = -16
 	root.add_child(_update_btn)
 	var keys := "Tap: select or order · Drag: camera · Pinch: zoom · Hold: select · Back: menu" if Display.touch_screen() 		else "WASD / edges: camera · Wheel: zoom · Left: select · Right: order · F2: technologies · F10: menu"
-	var hint := UiStyle.label(tr(keys), 13, UiStyle.TEXT_DIM)
-	hint.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.offset_left = -600
-	hint.offset_right = 600
-	hint.offset_top = -36
-	root.add_child(hint)
+	_hint = UiStyle.label(tr(keys), 13, UiStyle.TEXT_DIM)
+	_hint.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.offset_left = -600
+	_hint.offset_right = 600
+	_hint.offset_top = -36
+	root.add_child(_hint)
+	_layout()
+	get_viewport().size_changed.connect(_layout)
 	_single.grab_focus()
 	_updater = UpdateChecker.new()
 	add_child(_updater)
@@ -156,6 +166,9 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	if _title != null:
+		_title.offset_top = _title_top + _bob
+		_title.offset_bottom = _title_top + _bob + _title_h
 	if _updater != null and _updater.state == UpdateChecker.State.DOWNLOADING:
 		_update_btn.text = tr("Downloading update... %d%%") % roundi(_updater.progress() * 100.0)
 
@@ -176,6 +189,30 @@ func _on_update_state(st: UpdateChecker.State) -> void:
 		UpdateChecker.State.FAILED:
 			_update_btn.text = tr("Update")
 			_update_btn.tooltip_text = tr("Could not reach the update server")
+
+
+## Places title, tagline, rule and menu for the current screen height. On a
+## short screen (a phone draws ~640 logical px) the logo shrinks and the menu
+## moves up so nothing reaches the controls hint at the bottom.
+func _layout() -> void:
+	var h := get_viewport().get_visible_rect().size.y
+	var compact := h < COMPACT_HEIGHT
+	var k := clampf((h - 560.0) / (COMPACT_HEIGHT - 560.0), 0.0, 1.0) if compact else 1.0
+	_title_top = lerpf(10.0, 34.0, k)
+	_title_h = lerpf(70.0, 128.0, k)
+	_title.offset_left = -480
+	_title.offset_right = 480
+	var tag_y := _title_top + _title_h + lerpf(6.0, 20.0, k)
+	_tagline.add_theme_font_size_override("font_size", 15 if compact else 19)
+	_tagline.offset_top = tag_y
+	var rule_y := tag_y + lerpf(24.0, 34.0, k)
+	_rule.offset_top = rule_y
+	_rule.offset_bottom = rule_y + _rule.texture.get_height()
+	_panel.add_theme_stylebox_override("panel", UiStyle.pixel_panel(24 if compact else 30))
+	_panel.offset_top = rule_y + lerpf(14.0, 46.0, k)
+	_gap.visible = not compact
+	_hint.add_theme_font_size_override("font_size", 12 if compact else 13)
+	_hint.offset_top = -26 if compact else -36
 
 
 ## Gold rule with a diamond, centred at height `y`.

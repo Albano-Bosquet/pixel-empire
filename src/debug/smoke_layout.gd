@@ -7,6 +7,9 @@ extends "res://src/debug/smoke_combat.gd"
 ##    of the minimap.
 ## 2. Multiplayer lobby (hosting): the panel fits the screen height and the
 ##    Start / Leave buttons can be scrolled into view.
+## 3. Title screen: the menu panel sits on screen, below the tagline and above
+##    the controls hint; the single-player setup shows a scroll bar that is
+##    wide enough to see.
 
 
 func run_mode(game: Game, _mode: String) -> void:
@@ -61,7 +64,32 @@ func _layout() -> void:
 	await _shot("layout_02_lobby")
 	lobby.queue_free()
 	Net.leave()
+	await _title_screen()
 	_finish()
+
+
+func _title_screen() -> void:
+	var vp := get_viewport().get_visible_rect()
+	var menu := MainMenu.new()
+	get_tree().root.add_child(menu)
+	await _frames(8)
+	var mp: Rect2 = menu._panel.get_global_rect()
+	_check(vp.encloses(mp), "title menu panel on screen (%s in %s)" % [mp, vp])
+	_check(mp.end.y <= menu._hint.get_global_rect().position.y, "title menu ends above the controls hint (%.0f / %.0f)" % [mp.end.y, menu._hint.get_global_rect().position.y])
+	_check(mp.position.y >= menu._tagline.get_global_rect().end.y, "title menu starts below the tagline")
+	await _shot("layout_04_title")
+	menu.open_setup()
+	await _frames(8)
+	var bars: Array = []
+	_find_internal(menu._setup, func(n): return n is VScrollBar and n.is_visible_in_tree(), bars)
+	var bar: VScrollBar = bars[0] if not bars.is_empty() else null
+	if bar == null:
+		var sp: Control = _find(menu._setup, func(n): return n is ScrollContainer).get_parent()
+		_check(vp.encloses(sp.get_global_rect()), "single-player setup fits without scrolling")
+	else:
+		_check(bar.size.x >= UiStyle.SCROLLBAR_WIDTH, "setup scroll bar is wide enough to see (%.0f px)" % bar.size.x)
+	await _shot("layout_05_setup_scroll")
+	menu.queue_free()
 
 
 func _find(n: Node, pred: Callable) -> Node:
