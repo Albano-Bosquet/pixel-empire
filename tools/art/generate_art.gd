@@ -141,6 +141,7 @@ func _make_buildings(sprites: Dictionary, players: Dictionary) -> Dictionary:
 	var b_items := BuildingArt.build_all(buildings_def, sprites.get("construction", {}))
 	b_items.merge(BuildingArt.flags(players["colors"]))
 	b_items.merge(BuildingArt.sails())
+	b_items.merge(BuildingArt.flak_turrets())
 	var b_packed := _pack(b_items, 2048)
 	for n in b_items:
 		if b_items[n].has("meta") and not b_items[n]["meta"].is_empty():

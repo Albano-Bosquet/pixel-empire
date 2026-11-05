@@ -34,7 +34,7 @@ var size := 2
 var cx := 0.0
 var cy := 0.0
 var _ramps: Dictionary = {}
-var meta := {"flags": [], "smoke": [], "sails": null}
+var meta := {"smoke": [], "sails": null}
 var main_box := {}
 ## Construction clipping (INF = complete building).
 var z_cap := INF
@@ -44,6 +44,14 @@ var max_z := 0.0
 ## Per-pixel nearness (x + y + z / 16, larger = closer to the camera) of the
 ## opaque geometry painted so far, so recipes need not be ordered back to front.
 var zbuf := PackedFloat32Array()
+## 1 where the visible pixel is team cloth (banners, bands, awnings): those
+## pixels are painted grey and also exported as the `<id>_team` mask, which the
+## game draws over the body tinted with the owner's colour.
+var team_px := PackedByteArray()
+## Set by the team helpers for a whole primitive; a material may also set
+## _px_team for single pixels (striped awnings).
+var _team := false
+var _px_team := false
 
 
 ## Builds all buildings in buildings_stats.json. Returns
@@ -64,6 +72,9 @@ static func build_all(defs: Dictionary, construction: Dictionary = {}) -> Dictio
 		body.call("_paint_" + style)
 		body._finish_body()
 		out[id] = {"canvas": body.c, "anchor": Vector2i(roundi(body.cx), roundi(body.cy)), "meta": body.meta}
+		var mask: Dictionary = body._team_mask()
+		if not mask.is_empty():
+			out[id + "_team"] = mask
 		if defs[id].get("wall", false):
 			# Half-tile arms joining a wall piece to each neighbour (Building.WALL_ARMS).
 			for key in ["px", "nx", "py", "ny", "pxpy", "nxny", "pxny", "nxpy"]:
@@ -113,10 +124,17 @@ func _begin(s: int, height: int) -> void:
 	c = PixelCanvas.new(w, hh)
 	zbuf.resize(w * hh)
 	zbuf.fill(-INF)
+	team_px.resize(w * hh)
+	team_px.fill(0)
 	cx = w * 0.5
 	cy = TOP_MARGIN + height + s * 16
 	for k in RAMPS:
 		_ramps[k] = PixelCanvas.ramp(Color(RAMPS[k][0]), RAMPS[k][1], 0.5)
+	# Neutral greys: the game multiplies them by the owner's colour.
+	var greys: Array[Color] = []
+	for v in [0.42, 0.56, 0.7, 0.82, 0.92, 1.0]:
+		greys.append(Color(v, v, v))
+	_ramps["team"] = greys
 
 
 func _finish_body() -> void:
@@ -130,7 +148,7 @@ func scr(p: Vector3) -> Vector2:
 	return Vector2(cx + (p.x - p.y) * 32.0, cy + (p.x + p.y - size) * 16.0 - p.z)
 
 
-## Point in anchor-relative pixel coordinates (for metadata such as flags).
+## Point in anchor-relative pixel coordinates (for metadata such as smoke).
 func rel(p: Vector3) -> Array:
 	var s := scr(p)
 	return [roundi(s.x - cx), roundi(s.y - cy)]
@@ -185,11 +203,13 @@ func tri(a: Vector3, b: Vector3, d: Vector3, mat: Callable) -> void:
 			var zi := y * c.w + x
 			if depth < zbuf[zi] - 0.004:
 				continue
+			_px_team = _team
 			var col: Color = mat.call(pp, x, y)
 			if col.a > 0.0:
 				c.put(x, y, col)
 				if col.a >= 0.999:
 					zbuf[zi] = depth
+					team_px[zi] = 1 if _px_team else 0
 
 
 func quad(a: Vector3, b: Vector3, d: Vector3, e: Vector3, mat: Callable) -> void:
@@ -289,7 +309,11 @@ func roof_mat(kind: String, lum: float) -> Callable:
 			"awning":
 				# Striped market cloth: alternate cream and red bands along the eave.
 				var band := floori(fposmod(along, 1000.0) / 6.0) % 2
-				var kk := "awning" if band == 0 else "awning_dark"
+				var kk := "awning"
+				if band == 1:
+					# Coloured stripes in the owner's colour once the stall is finished.
+					kk = "awning_dark" if _team_off() else "team"
+					_px_team = kk == "team"
 				return _shade(kk, lum + (_hash(floorf(along / 2.0), floorf(z / 3.0)) - 0.5) * 0.08, x, y)
 			"roof_shingle":
 				var row2 := floori(z / 5.0)
@@ -498,8 +522,90 @@ func pad(inset: float = 0.05) -> void:
 		return _shade("pad", 0.62 + (_hash(floorf(p.x * 12.0), floorf(p.y * 12.0)) - 0.5) * 0.25, x, y))
 
 
-func flag_at(p: Vector3) -> void:
-	meta["flags"].append(rel(p))
+# --- team colour ----------------------------------------------------------------
+
+## Construction frames carry no team cloth (the mask belongs to the finished body).
+func _team_off() -> bool:
+	return z_cap < INF or sweep_cap < INF
+
+
+## Hanging cloth material: vertical folds, a darker hem at the sides and a
+## heraldic band near the top. `u` maps a point to 0..1 across the cloth;
+## below `bottom(u)` the cloth is cut (swallowtail).
+func _cloth_mat(along: Callable, z_top: float, h: float, lum: float) -> Callable:
+	return func(p: Vector3, x: int, y: int) -> Color:
+		var t: float = along.call(p)
+		var notch := h * 0.28 * (1.0 - absf(2.0 * t - 1.0))
+		if p.z < z_top - h + notch:
+			return Color(0, 0, 0, 0)
+		var v := lum + sin(t * PI * 3.0) * 0.08
+		if t < 0.12 or t > 0.88:
+			v -= 0.16
+		var from_top := z_top - p.z
+		if from_top > h * 0.22 and from_top < h * 0.36:
+			v -= 0.22
+		return _shade("team", v, x, y)
+
+
+## Banner on the left (+y) face at y, spanning u0..u1 along x, hanging from a
+## rod at z_top down h pixels.
+func banner_l(y: float, u0: float, u1: float, z_top: float, h: float) -> void:
+	if _team_off():
+		return
+	var yy := y + 0.012
+	quad(Vector3(u0 - 0.03, yy + 0.004, z_top), Vector3(u1 + 0.03, yy + 0.004, z_top), Vector3(u1 + 0.03, yy + 0.004, z_top + 2), Vector3(u0 - 0.03, yy + 0.004, z_top + 2), flat_mat("timber", 0.45, 0.0))
+	_team = true
+	quad(Vector3(u0, yy, z_top - h), Vector3(u1, yy, z_top - h), Vector3(u1, yy, z_top), Vector3(u0, yy, z_top),
+		_cloth_mat(func(p: Vector3) -> float: return (p.x - u0) / (u1 - u0), z_top, h, 0.82))
+	_team = false
+
+
+## Banner on the right (+x) face at x, spanning v0..v1 along y.
+func banner_r(x: float, v0: float, v1: float, z_top: float, h: float) -> void:
+	if _team_off():
+		return
+	var xx := x + 0.012
+	quad(Vector3(xx + 0.004, v1 + 0.03, z_top), Vector3(xx + 0.004, v0 - 0.03, z_top), Vector3(xx + 0.004, v0 - 0.03, z_top + 2), Vector3(xx + 0.004, v1 + 0.03, z_top + 2), flat_mat("timber", 0.35, 0.0))
+	_team = true
+	quad(Vector3(xx, v1, z_top - h), Vector3(xx, v0, z_top - h), Vector3(xx, v0, z_top), Vector3(xx, v1, z_top),
+		_cloth_mat(func(p: Vector3) -> float: return (p.y - v0) / (v1 - v0), z_top, h, 0.6))
+	_team = false
+
+
+## Painted band in the owner's colour around the visible faces of a box
+## (pass the wall's box; the band sits a hair in front of it).
+func team_band(x0: float, y0: float, x1: float, y1: float, z0: float, z1: float) -> void:
+	if _team_off():
+		return
+	var e := 0.012
+	_team = true
+	var trim := func(lum: float) -> Callable:
+		return func(p: Vector3, x: int, y: int) -> Color:
+			var k := (p.z - z0) / maxf(0.001, z1 - z0)
+			var v := lum - (0.12 if k < 0.2 or k > 0.8 else 0.0)
+			return _shade("team", v + (_hash(floorf(p.x * 20.0 + p.y * 20.0), floorf(p.z)) - 0.5) * 0.05, x, y)
+	quad(Vector3(x0 - e, y1 + e, z0), Vector3(x1 + e, y1 + e, z0), Vector3(x1 + e, y1 + e, z1), Vector3(x0 - e, y1 + e, z1), trim.call(0.85))
+	quad(Vector3(x1 + e, y1 + e, z0), Vector3(x1 + e, y0 - e, z0), Vector3(x1 + e, y0 - e, z1), Vector3(x1 + e, y1 + e, z1), trim.call(0.62))
+	_team = false
+
+
+## The team pixels of the finished body, cropped: {"canvas", "anchor"} or {}.
+func _team_mask() -> Dictionary:
+	var lo := Vector2i(c.w, c.h)
+	var hi := Vector2i(-1, -1)
+	for y in c.h:
+		for x in c.w:
+			if team_px[y * c.w + x] == 1 and c.get_px(x, y).a > 0.0:
+				lo = Vector2i(mini(lo.x, x), mini(lo.y, y))
+				hi = Vector2i(maxi(hi.x, x), maxi(hi.y, y))
+	if hi.x < 0:
+		return {}
+	var m := PixelCanvas.new(hi.x - lo.x + 1, hi.y - lo.y + 1)
+	for y in range(lo.y, hi.y + 1):
+		for x in range(lo.x, hi.x + 1):
+			if team_px[y * c.w + x] == 1:
+				m.img.set_pixel(x - lo.x, y - lo.y, c.get_px(x, y))
+	return {"canvas": m, "anchor": Vector2i(roundi(cx), roundi(cy)) - lo, "meta": {}}
 
 
 func smoke_at(p: Vector3) -> void:
@@ -533,6 +639,7 @@ func _paint_house() -> void:
 	window_l(y1, 1.15, 1.45, 13, 8)
 	window_r(x1, 0.65, 0.95, 13, 8)
 	window_r(x1, 1.2, 1.45, 13, 8)
+	banner_l(y1, 0.9, 1.1, 24, 14)
 	box(1.25, 0.55, 1.45, 0.75, 26, 52, "stone", "stone")
 	smoke_at(Vector3(1.35, 0.65, 54))
 	roof(x0, y0, x1, y1, 26, 24, "roof_thatch", "x", 0.18, true)
@@ -544,8 +651,8 @@ func _paint_town_center() -> void:
 	box(0.45, 0.45, 1.45, 1.45, 0, 70, "stone")
 	battlements(0.45, 0.45, 1.45, 1.45, 70)
 	roof(0.45, 0.45, 1.45, 1.45, 70, 34, "roof_red", "x", 0.12)
-	flag_at(Vector3(0.95, 0.95, 104))
 	window_r(1.45, 0.8, 1.05, 48, 10)
+	team_band(0.45, 0.45, 1.45, 1.45, 60, 66)
 	# Main hall.
 	var x0 := 0.6
 	var y0 := 1.3
@@ -560,11 +667,13 @@ func _paint_town_center() -> void:
 	window_r(x1, 1.6, 1.95, 16, 10)
 	window_r(x1, 2.5, 2.85, 16, 10)
 	window_r(3.4, 0.8, 1.1, 16, 10)
+	banner_l(y1, 1.28, 1.55, 32, 22)
+	banner_l(y1, 2.45, 2.72, 32, 22)
+	banner_r(x1, 2.05, 2.38, 32, 22)
 	roof(1.4, 0.6, 3.4, 1.4, 34, 26, "roof_red", "x", 0.15)
 	roof(x0, y0, x1, y1, 34, 38, "roof_red", "y", 0.18)
 	box(2.9, 1.9, 3.15, 2.15, 50, 78, "stone", "stone")
 	smoke_at(Vector3(3.02, 2.02, 80))
-	flag_at(Vector3(2.07, 2.42, 74))
 
 
 func _paint_mill() -> void:
@@ -574,6 +683,7 @@ func _paint_mill() -> void:
 	main_box = {"x0": 0.5, "y0": 0.5, "x1": 1.6, "y1": 1.6, "h": 52}
 	door_l(1.6, 0.8, 1.15, 6, 16)
 	window_r(1.6, 0.85, 1.1, 32, 8)
+	banner_l(1.6, 1.24, 1.48, 46, 16)
 	roof(0.5, 0.5, 1.6, 1.6, 52, 30, "roof_shingle", "x", 0.12)
 	meta["sails"] = rel(Vector3(1.6, 1.6, 50))
 	# Grain sacks.
@@ -586,6 +696,7 @@ func _paint_storehouse() -> void:
 	box(0.3, 0.3, 1.7, 1.3, 0, 28, "planks")
 	main_box = {"x0": 0.3, "y0": 0.3, "x1": 1.7, "y1": 1.3, "h": 28}
 	door_l(1.3, 0.6, 1.1, 0, 18)
+	banner_l(1.3, 1.2, 1.45, 26, 14)
 	roof(0.3, 0.3, 1.7, 1.3, 28, 16, "roof_shingle", "x", 0.16, true, "planks")
 	# Log stack and ore crate in the yard.
 	for i in 3:
@@ -607,8 +718,10 @@ func _paint_barracks() -> void:
 	window_l(y1, 2.1, 2.4, 16, 9)
 	window_r(x1, 0.8, 1.1, 16, 9)
 	window_r(x1, 1.6, 1.9, 16, 9)
+	banner_l(y1, 0.95, 1.18, 32, 20)
+	banner_l(y1, 1.82, 2.05, 32, 20)
+	banner_r(x1, 1.22, 1.48, 32, 20)
 	roof(x0, y0, x1, y1, 34, 30, "roof_red", "x", 0.18)
-	flag_at(Vector3(1.5, 1.4, 68))
 	# Weapon rack in the yard.
 	for i in 4:
 		var bx := 0.5 + i * 0.12
@@ -621,8 +734,10 @@ func _paint_archery_range() -> void:
 	box(0.3, 0.3, 2.7, 1.2, 0, 26, "planks")
 	main_box = {"x0": 0.3, "y0": 0.3, "x1": 2.7, "y1": 1.2, "h": 26}
 	door_l(1.2, 1.2, 1.8, 0, 18)
+	banner_l(1.2, 0.55, 0.8, 24, 16)
+	banner_l(1.2, 2.2, 2.45, 24, 16)
+	banner_r(2.7, 0.6, 0.9, 24, 16)
 	roof(0.3, 0.3, 2.7, 1.2, 26, 18, "roof_thatch", "x", 0.16, true, "planks")
-	flag_at(Vector3(2.5, 0.4, 56))
 	# Targets.
 	for i in 2:
 		var p := scr(Vector3(1.0 + i * 1.1, 2.4, 10))
@@ -640,8 +755,9 @@ func _paint_stable() -> void:
 	for i in 3:
 		door_l(1.9, 0.5 + i * 0.75, 0.95 + i * 0.75, 0, 17)
 	window_r(2.7, 0.8, 1.2, 14, 7)
+	banner_r(2.7, 1.35, 1.65, 26, 18)
+	banner_l(1.9, 2.48, 2.66, 26, 16)
 	roof(0.3, 0.4, 2.7, 1.9, 28, 24, "roof_thatch", "x", 0.2)
-	flag_at(Vector3(1.5, 1.15, 56))
 	# Hay bales.
 	box(2.2, 2.2, 2.6, 2.6, 0, 8, "plaster", "hay")
 	box(2.3, 2.3, 2.55, 2.55, 8, 15, "plaster", "hay")
@@ -654,6 +770,8 @@ func _paint_blacksmith() -> void:
 	door_l(2.1, 1.1, 1.7, 0, 22)
 	window_r(2.6, 0.8, 1.1, 14, 9)
 	window_r(2.6, 1.5, 1.8, 14, 9)
+	banner_l(2.1, 0.6, 0.9, 30, 18)
+	banner_l(2.1, 1.9, 2.2, 30, 18)
 	roof(0.4, 0.4, 2.6, 2.1, 32, 26, "roof_slate", "x", 0.15)
 	box(2.0, 0.6, 2.35, 0.95, 40, 80, "stone_dark", "stone_dark")
 	smoke_at(Vector3(2.17, 0.77, 82))
@@ -673,7 +791,8 @@ func _paint_tower() -> void:
 		window_l(0.85, 0.45, 0.55, z, 10)
 		window_r(0.85, 0.45, 0.55, z, 10)
 	door_l(0.85, 0.38, 0.62, 0, 16)
-	flag_at(Vector3(0.5, 0.5, 130))
+	team_band(0.15, 0.15, 0.85, 0.85, 84, 92)
+	banner_l(0.85, 0.38, 0.62, 56, 13)
 
 
 func _paint_castle() -> void:
@@ -698,19 +817,21 @@ func _paint_castle() -> void:
 	window_l(2.8, 2.2, 2.4, 60, 12)
 	window_r(2.8, 1.7, 1.9, 60, 12)
 	window_r(2.8, 2.2, 2.4, 60, 12)
-	flag_at(Vector3(2.0, 2.0, 128))
+	banner_l(2.8, 1.3, 1.6, 92, 28)
+	banner_r(2.8, 1.3, 1.6, 92, 28)
 	# Front walls and front tower.
 	box(0.9, 3.3, 3.1, 3.7, 0, 46, k, k)
 	battlements(0.9, 3.3, 3.1, 3.7, 46, k, 0.2)
 	door_l(3.7, 1.6, 2.4, 0, 30)
+	banner_l(3.7, 1.1, 1.38, 44, 22)
+	banner_l(3.7, 2.62, 2.9, 44, 22)
 	box(3.3, 0.9, 3.7, 3.1, 0, 46, k, k)
 	battlements(3.3, 0.9, 3.7, 3.1, 46, k, 0.2)
 	box(3.1, 3.1, 3.9, 3.9, 0, 66, k, k)
 	battlements(3.1, 3.1, 3.9, 3.9, 66, k, 0.16)
+	team_band(3.1, 3.1, 3.9, 3.9, 56, 62)
 	window_l(3.9, 3.4, 3.6, 40, 10)
 	window_r(3.9, 3.4, 3.6, 40, 10)
-	flag_at(Vector3(3.5, 3.5, 92))
-	flag_at(Vector3(0.5, 0.5, 92))
 
 
 func _paint_siege_workshop() -> void:
@@ -725,8 +846,9 @@ func _paint_siege_workshop() -> void:
 	door_l(y1, 0.65, 1.75, 0, 28)
 	window_r(x1, 0.7, 1.0, 20, 8)
 	window_r(x1, 1.2, 1.45, 20, 8)
+	banner_l(y1, 2.0, 2.3, 34, 20)
+	banner_r(x1, 0.4, 0.62, 34, 18)
 	roof(x0, y0, x1, y1, 36, 22, "roof_shingle", "x", 0.18, true, "planks")
-	flag_at(Vector3(2.5, 0.5, 62))
 	# Yard: a spare wheel leaning on a sawhorse, cut beams and a winch post.
 	var wc := scr(Vector3(2.2, 2.25, 10))
 	c.ellipse(wc.x, wc.y, 7, 9, Color("#3a2618"))
@@ -746,6 +868,7 @@ func _paint_lumber_camp() -> void:
 	for p in [Vector2(0.35, 0.35), Vector2(1.65, 0.35), Vector2(0.35, 1.2), Vector2(1.65, 1.2)]:
 		box(p.x, p.y, p.x + 0.1, p.y + 0.1, 0, 26, "planks", "planks")
 	box(0.3, 0.3, 1.75, 0.42, 0, 22, "planks")
+	banner_l(1.3, 0.78, 1.02, 25, 13)
 	main_box = {"x0": 0.3, "y0": 0.3, "x1": 1.75, "y1": 1.3, "h": 26}
 	roof(0.3, 0.3, 1.75, 1.3, 26, 14, "roof_shingle", "x", 0.14, true, "planks")
 	for i in 3:
@@ -763,6 +886,7 @@ func _paint_mining_camp() -> void:
 	box(0.3, 0.3, 1.4, 1.2, 8, 24, "planks")
 	main_box = {"x0": 0.3, "y0": 0.3, "x1": 1.4, "y1": 1.2, "h": 24}
 	door_l(1.2, 0.6, 0.95, 0, 16)
+	banner_l(1.2, 1.05, 1.3, 22, 13)
 	roof(0.3, 0.3, 1.4, 1.2, 24, 14, "roof_shingle", "x", 0.14, true, "planks")
 	var heap := scr(Vector3(1.65, 0.6, 0))
 	c.shaded_blob(heap.x, heap.y - 4, 8, 5, _ramps["stone"])
@@ -783,8 +907,9 @@ func _paint_market() -> void:
 	door_l(2.8, 1.7, 2.3, 4, 22)
 	window_r(2.8, 1.5, 1.8, 22, 9)
 	window_r(2.8, 2.2, 2.5, 22, 9)
+	banner_l(2.8, 1.3, 1.58, 38, 20)
+	banner_r(2.8, 1.88, 2.12, 38, 18)
 	roof(1.2, 1.2, 2.8, 2.8, 40, 34, "roof_red", "x", 0.16)
-	flag_at(Vector3(2.0, 2.0, 78))
 	# Stalls: posts and striped awnings around the hall.
 	for st in [Vector4(0.25, 0.3, 1.05, 0.9), Vector4(2.95, 0.3, 3.75, 0.9), Vector4(0.25, 3.05, 1.05, 3.65),
 			Vector4(2.95, 3.05, 3.75, 3.65), Vector4(0.25, 1.5, 0.9, 2.5), Vector4(3.1, 1.5, 3.75, 2.5)]:
@@ -810,11 +935,13 @@ func _paint_university() -> void:
 		window_l(y1, u, u + 0.18, 22, 14)
 	for v in [0.8, 1.2, 1.6, 2.0]:
 		window_r(x1, v, v + 0.18, 22, 14)
+	banner_l(y1, 1.8, 2.0, 44, 20)
+	banner_r(x1, 2.22, 2.42, 44, 20)
 	roof(x0, y0, x1, y1, 46, 30, "roof_slate", "x", 0.16)
 	box(0.5, 0.6, 1.0, 1.1, 46, 92, "stone", "stone")
 	window_r(1.0, 0.75, 0.95, 72, 12)
+	team_band(0.5, 0.6, 1.0, 1.1, 84, 90)
 	roof(0.5, 0.6, 1.0, 1.1, 92, 22, "roof_slate", "x", 0.06)
-	flag_at(Vector3(0.75, 0.85, 114))
 
 
 ## Wooden lookout platform on stilts with a brazier.
@@ -826,6 +953,7 @@ func _paint_outpost() -> void:
 	box(0.12, 0.12, 0.88, 0.88, 62, 66, "planks", "planks")
 	box(0.12, 0.84, 0.88, 0.88, 66, 74, "planks")
 	box(0.84, 0.12, 0.88, 0.88, 66, 74, "planks")
+	team_band(0.12, 0.12, 0.88, 0.88, 67, 72)
 	roof(0.2, 0.2, 0.8, 0.8, 80, 16, "roof_thatch", "x", 0.06)
 	for p in [Vector2(0.2, 0.2), Vector2(0.72, 0.72)]:
 		box(p.x, p.y, p.x + 0.06, p.y + 0.06, 66, 80, "planks", "planks")
@@ -846,13 +974,13 @@ func _paint_bombard_tower() -> void:
 		window_l(0.9, 0.42, 0.58, z, 8)
 		window_r(0.9, 0.42, 0.58, z, 8)
 	door_l(0.9, 0.38, 0.62, 0, 16)
+	team_band(0.1, 0.1, 0.9, 0.9, 68, 76)
 	# Plain lines ignore z_cap: the cannon is only mounted once the parapet is laid.
 	if z_cap > 88.0:
 		var muzzle := scr(Vector3(0.95, 0.95, 90))
 		var breech := scr(Vector3(0.55, 0.55, 88))
 		c.thick_line(breech.x, breech.y, muzzle.x, muzzle.y, 4.0, Color("#4b5058"))
 		c.ellipse(muzzle.x, muzzle.y, 2.2, 2.2, Color("#2a2d33"))
-	flag_at(Vector3(0.3, 0.3, 112))
 
 
 ## Pointed log post (palisades).
@@ -934,7 +1062,7 @@ func _paint_gate() -> void:
 	battlements(0.1, 0.1, 0.9, 0.9, 46, "stone", 0.14, 6)
 	door_l(0.88, 0.3, 0.7, 0, 26)
 	door_r(0.88, 0.3, 0.7, 0, 26)
-	flag_at(Vector3(0.5, 0.5, 66))
+	team_band(0.12, 0.12, 0.88, 0.88, 34, 40)
 
 
 ## Monastery: long nave with a red roof, a round window and a bell tower.
@@ -954,12 +1082,13 @@ func _paint_monastery() -> void:
 	c.ellipse(rw.x, rw.y, 3.5, 4.0, Color("#3a2618"))
 	c.ellipse(rw.x, rw.y, 2.4, 2.8, Color("#c9a24a"))
 	c.put(roundi(rw.x), roundi(rw.y), Color("#4a7ac0"))
+	banner_r(x1, 1.08, 1.32, 36, 22)
+	banner_r(x1, 1.98, 2.22, 36, 22)
 	roof(x0, y0, x1, y1, 40, 30, "roof_red", "x", 0.16, true, "plaster")
 	box(0.45, 0.3, 1.15, 1.0, 0, 92, "stone")
 	window_r(1.15, 0.5, 0.75, 70, 14)
 	window_l(1.0, 0.65, 0.9, 70, 14)
 	roof(0.45, 0.3, 1.15, 1.0, 92, 34, "roof_slate", "x", 0.08)
-	flag_at(Vector3(0.8, 0.65, 128))
 	# Cloister garden.
 	for p in [Vector2(2.0, 0.45), Vector2(2.4, 0.6)]:
 		var g := scr(Vector3(p.x, p.y, 0))
@@ -995,6 +1124,10 @@ func _paint_wonder() -> void:
 	_cornice(1.8, 1.8, 3.2, 3.2, 94)
 	window_l(3.2, 2.4, 2.6, 72, 12)
 	window_r(3.2, 2.4, 2.6, 72, 12)
+	banner_l(3.2, 1.98, 2.28, 92, 26)
+	banner_l(3.2, 2.72, 3.02, 92, 26)
+	banner_r(3.2, 1.98, 2.28, 92, 26)
+	banner_r(3.2, 2.72, 3.02, 92, 26)
 	main_box = {"x0": 0.6, "y0": 0.6, "x1": 4.4, "y1": 4.4, "h": 94}
 	# Front stairs up to both gates.
 	for i in 3:
@@ -1004,7 +1137,6 @@ func _paint_wonder() -> void:
 	door_l(4.4, 2.2, 2.8, 6, 22)
 	door_r(4.4, 2.2, 2.8, 6, 22)
 	roof(1.8, 1.8, 3.2, 3.2, 94, 60, "roof_gold", "x", 0.1)
-	flag_at(Vector3(2.5, 2.5, 156))
 
 
 ## Gilded moulding just below a terrace's top edge.
@@ -1022,6 +1154,7 @@ func _paint_dock() -> void:
 	main_box = {"x0": 0.4, "y0": 0.4, "x1": 1.6, "y1": 1.3, "h": 28}
 	box(0.4, 0.4, 1.6, 1.3, 6, 28, "planks")
 	door_l(1.3, 0.75, 1.15, 6, 16)
+	banner_l(1.3, 1.25, 1.5, 26, 14)
 	roof(0.4, 0.4, 1.6, 1.3, 28, 14, "roof_shingle", "x", 0.12, true, "planks")
 	# Crane at the water corner with a hanging rope.
 	box(2.3, 2.3, 2.4, 2.4, 6, 44, "logs", "logs")
@@ -1033,7 +1166,6 @@ func _paint_dock() -> void:
 		var bp := scr(Vector3(p2.x, p2.y, 6))
 		c.ellipse(bp.x, bp.y - 3, 3.0, 3.5, Color("#6e4a2c"))
 		c.rect(roundi(bp.x - 3), roundi(bp.y - 4), 6, 1, Color("#3a2618"))
-	flag_at(Vector3(1.5, 0.5, 52))
 
 
 ## Artillery foundry: brick works with twin smoking chimneys and a cast barrel outside.
@@ -1044,6 +1176,8 @@ func _paint_foundry() -> void:
 	door_l(2.3, 1.0, 1.8, 0, 26)
 	for v in [0.8, 1.3, 1.8]:
 		window_r(2.7, v, v + 0.25, 20, 12)
+	banner_l(2.3, 0.5, 0.8, 38, 22)
+	banner_l(2.3, 2.0, 2.3, 38, 22)
 	roof(0.3, 0.5, 2.7, 2.3, 40, 18, "roof_slate", "x", 0.12, true, "brick")
 	for p in [Vector2(0.6, 0.7), Vector2(2.1, 0.7)]:
 		box(p.x, p.y, p.x + 0.3, p.y + 0.3, 40, 96, "brick", "brick")
@@ -1051,7 +1185,6 @@ func _paint_foundry() -> void:
 	var b0 := scr(Vector3(0.6, 2.65, 4))
 	var b1 := scr(Vector3(1.8, 2.65, 6))
 	c.thick_line(b0.x, b0.y, b1.x, b1.y, 4.0, Color("#a8803a"))
-	flag_at(Vector3(1.5, 1.4, 70))
 
 
 ## Airfield: a mown runway with a dashed centre line, a big hangar and a windsock.
@@ -1069,7 +1202,8 @@ func _paint_airfield() -> void:
 	box(2.8, 0.4, 3.4, 1.0, 0, 44, "concrete", "concrete")
 	window_r(3.4, 0.55, 0.85, 34, 8)
 	window_l(1.0, 2.9, 3.25, 34, 8)
-	flag_at(Vector3(3.6, 1.7, 40))
+	team_band(2.8, 0.4, 3.4, 1.0, 20, 26)
+	banner_r(2.3, 0.7, 1.0, 28, 16)
 
 
 ## Flak fort: a low concrete emplacement ringed with sandbags and twin AA guns.
@@ -1080,15 +1214,12 @@ func _paint_flak_fort() -> void:
 	battlements(0.2, 0.2, 1.8, 1.8, 18, "hay", 0.14, 4)
 	for g in [Vector2(0.65, 0.65), Vector2(1.35, 1.35)]:
 		box(g.x - 0.12, g.y - 0.12, g.x + 0.12, g.y + 0.12, 18, 24, "stone_dark", "stone_dark")
-		# Plain lines ignore z_cap: barrels go up only on a finished gun mount.
-		if z_cap < 24.0:
-			continue
-		for k in [-0.05, 0.05]:
-			var a := scr(Vector3(g.x + k, g.y - k, 24))
-			var b := scr(Vector3(g.x + 0.25 + k, g.y - 0.25 - k, 44))
-			c.thick_line(a.x, a.y, b.x, b.y, 1.6, Color("#2a2d33"))
+		# The guns are separate sprites (flak_gun_<dir>) that the game turns
+		# towards the aircraft under fire.
+		if not _team_off():
+			meta.get_or_add("turrets", []).append(rel(Vector3(g.x, g.y, 24)))
 	door_l(1.8, 0.8, 1.2, 0, 12)
-	flag_at(Vector3(1.6, 0.4, 40))
+	team_band(0.2, 0.2, 1.8, 1.8, 13, 17)
 
 
 ## Military base: concrete headquarters with a radio mast, a corrugated-steel
@@ -1112,6 +1243,7 @@ func _paint_military_base() -> void:
 	for v in [1.05, 1.65]:
 		window_r(x1, v, v + 0.22, 10, 7)
 		window_r(x1, v, v + 0.22, 28, 7)
+	team_band(x0, y0, x1, y1, 19, 24)
 	# Radio mast: plain lines ignore z_cap, so it only goes up on the finished roof.
 	if z_cap > 86.0:
 		var m0 := scr(Vector3(0.5, 1.1, 44))
@@ -1126,7 +1258,6 @@ func _paint_military_base() -> void:
 	window_r(2.75, 1.05, 1.25, 7, 6)
 	window_l(1.4, 2.15, 2.4, 7, 6)
 	battlements(1.85, 1.85, 2.75, 2.75, 0, "sandbag", 0.12, 5)
-	flag_at(Vector3(1.3, 1.0, 74))
 
 
 ## Tank factory: brick assembly hall under a saw-tooth steel roof, a tall
@@ -1144,12 +1275,12 @@ func _paint_tank_factory() -> void:
 		window_l(2.5, u, u + 0.3, 24, 10)
 	for v in [0.6, 1.2, 1.8]:
 		window_r(3.1, v, v + 0.3, 24, 10)
+	team_band(0.3, 0.3, 3.1, 2.5, 37, 42)
 	box(3.3, 0.45, 3.6, 0.75, 0, 112, "brick", "brick")
 	smoke_at(Vector3(3.45, 0.6, 114))
 	for d in [Vector2(3.3, 2.9), Vector2(3.55, 3.05), Vector2(3.35, 3.25)]:
 		box(d.x, d.y, d.x + 0.16, d.y + 0.16, 0, 9, "olive", "stone_dark")
 	box(0.4, 2.9, 0.9, 3.5, 0, 7, "planks", "planks")
-	flag_at(Vector3(0.6, 0.5, 86))
 
 
 ## Air base: tarmac with a marked runway, a corrugated hangar and a concrete
@@ -1173,7 +1304,8 @@ func _paint_air_base() -> void:
 	window_r(3.57, 0.37, 0.98, 56, 6)
 	box(2.84, 0.29, 3.61, 1.06, 64, 66, "concrete", "concrete")
 	window_r(3.5, 0.55, 0.8, 30, 8)
-	flag_at(Vector3(3.7, 1.7, 44))
+	team_band(2.95, 0.4, 3.5, 0.95, 40, 46)
+	banner_r(2.5, 0.8, 1.1, 26, 16)
 
 
 func _paint_farm() -> void:
@@ -1288,6 +1420,52 @@ static func flags(colors: Array, frames: int = 4) -> Dictionary:
 					c.put(x, y, r[clampi(idx + (1 if x < 6 else 0), 0, 3)])
 			c.outline(0.6)
 			out["flag_%d_%d" % [slot, f]] = {"canvas": c, "anchor": Vector2i(2, 23)}
+	return out
+
+
+## Twin anti-aircraft gun on a turning cap, one frame per direction:
+## frame "flak_gun_<i>" aims along grid angle i * TAU / dirs (0 = +x).
+## The anchor is the top centre of the mount the cap sits on.
+static func flak_turrets(dirs: int = 16) -> Dictionary:
+	var out := {}
+	var w := 52
+	var h := 50
+	var ax := 26.0
+	var ay := 36.0
+	var proj := func(p: Vector3) -> Vector2:
+		return Vector2(ax + (p.x - p.y) * 32.0, ay + (p.x + p.y) * 16.0 - p.z)
+	var steel := PixelCanvas.ramp(Color("#4b5058"), 4, 0.5)
+	for i in dirs:
+		var th := TAU * i / dirs
+		var d := Vector3(cos(th), sin(th), 0)
+		var side := Vector3(-d.y, d.x, 0)
+		var c := PixelCanvas.new(w, h)
+		var barrels := func() -> void:
+			for k in [-0.045, 0.045]:
+				var base: Vector3 = side * k + d * 0.02 + Vector3(0, 0, 4)
+				var tip: Vector3 = base + d * 0.42 + Vector3(0, 0, 14)
+				var a: Vector2 = proj.call(base)
+				var b: Vector2 = proj.call(tip)
+				c.thick_line(a.x, a.y, b.x, b.y, 1.8, steel[0])
+				c.line(roundi(a.x), roundi(a.y) - 1, roundi(b.x), roundi(b.y) - 1, steel[2])
+				c.ellipse(b.x, b.y, 1.1, 1.1, Color("#1c1e22"))
+		var cap := func() -> void:
+			var m: Vector2 = proj.call(Vector3(0, 0, 0))
+			c.ellipse(m.x, m.y + 0.5, 6.5, 3.6, steel[0])
+			c.ellipse(m.x, m.y - 2.0, 6.0, 3.2, steel[1])
+			c.ellipse(m.x - 1.2, m.y - 2.6, 3.0, 1.5, steel[2])
+			# Breech block on the side the guns point to.
+			var br: Vector2 = proj.call(d * 0.06 + Vector3(0, 0, 4))
+			c.ellipse(br.x, br.y, 2.6, 2.0, steel[1])
+		# Guns pointing away from the camera are drawn behind the cap.
+		if d.x + d.y < 0.0:
+			barrels.call()
+			cap.call()
+		else:
+			cap.call()
+			barrels.call()
+		c.outline(0.6)
+		out["flak_gun_%d" % i] = {"canvas": c, "anchor": Vector2i(roundi(ax), roundi(ay))}
 	return out
 
 

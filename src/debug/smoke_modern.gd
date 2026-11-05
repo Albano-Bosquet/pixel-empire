@@ -179,10 +179,21 @@ func _run() -> void:
 	var away := (flak.grid_pos - tc.grid_pos).normalized()
 	var walker := _game.spawn_unit("militia", 2, flak.grid_pos + away * 4.0)
 	walker.stance = "stand"
+	flak.turret_goal = PI * 0.75
+	flak.turret_angle = PI * 0.75
 	var t6 := Time.get_ticks_msec()
+	var aimed := INF
+	var shot_taken := false
+	_game.camera.focus_world(flak.position + Vector2(40, -30))
 	while raider.is_alive() and Time.get_ticks_msec() - t6 < 10000:
 		await _seconds(0.1)
+		var seen_at := Iso.world_to_grid(raider.position - Vector2(0, raider.flight_height()))
+		aimed = minf(aimed, absf(wrapf(flak.turret_angle - (seen_at - flak.grid_pos).angle(), -PI, PI)))
+		if aimed < 0.4 and not shot_taken:
+			shot_taken = true
+			await _shot("modern_02a_flak_aiming")
 	_check(not raider.is_alive(), "the flak fort shoots down the enemy fighter")
+	_check(aimed < 0.4, "the flak guns turn towards the plane (off by %.2f rad)" % aimed)
 	_check(walker.hp == walker.max_hp, "flak ignores ground troops")
 	await _seconds(0.4)
 	await _shot("modern_02_flak_crash")

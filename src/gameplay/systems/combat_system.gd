@@ -399,6 +399,8 @@ func _buildings_fire(delta: float) -> void:
 		if best == null:
 			continue
 		b.attack_timer = float(atk.get("cooldown", 2.0))
+		# Guns point at the aircraft as drawn (lifted by its altitude), not at its ground spot.
+		b.aim_at(Iso.world_to_grid(best.position - Vector2(0, best.flight_height())))
 		EventBus.sound_at.emit(String(GameData.audio.get("attack_by_projectile", {}).get(atk.get("projectile", "arrow"), "bow")), b.position + b.top_offset())
 		for i in int(atk.get("arrows", 1)):
 			_spawn_projectile(b, best, String(atk.get("projectile", "arrow")), int(atk.get("damage", 3)) + b.attack_bonus, String(atk.get("type", "pierce")), atk.get("bonuses", {}), 0.0, Vector2(randf_range(-0.2, 0.2), randf_range(-0.2, 0.2)))

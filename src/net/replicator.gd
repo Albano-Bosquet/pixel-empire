@@ -215,8 +215,11 @@ func build_snapshot(pid: int) -> Dictionary:
 		if b.owner_id != pid and not fog.is_explored(pid, Iso.tile_of(b.grid_pos)):
 			continue
 		var rp: Vector2 = b.rally_point if b.owner_id == pid else Vector2.INF
-		blds.append([b.entity_id, _bld_types.find(b.type_id), b.owner_id, b.origin.x, b.origin.y, b.progress,
-			b.hp, b.max_hp, b.queue if b.owner_id == pid else [], b.production_time, b.amount, rp])
+		var row := [b.entity_id, _bld_types.find(b.type_id), b.owner_id, b.origin.x, b.origin.y, b.progress,
+			b.hp, b.max_hp, b.queue if b.owner_id == pid else [], b.production_time, b.amount, rp]
+		if b.has_turrets():
+			row.append(snappedf(b.turret_goal, 0.01))
+		blds.append(row)
 	var res := []
 	for id in gathered:
 		res.append([id, gathered[id].amount])
@@ -455,6 +458,8 @@ func _apply_building(row: Array) -> void:
 	b.amount = float(row[10])
 	if b.owner_id == _game.local_player:
 		b.rally_point = row[11]
+	if row.size() > 12:
+		b.turret_goal = float(row[12])
 
 
 func receive_events(events: Array) -> void:

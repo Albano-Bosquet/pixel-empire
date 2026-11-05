@@ -19,9 +19,10 @@ enum State { FOUNDATION, CONSTRUCTING, COMPLETE }
 
 const ATLAS_TEX := "res://assets/sprites/buildings/buildings_atlas.png"
 const ATLAS_JSON := "res://assets/sprites/buildings/buildings_atlas.json"
-const FLAG_FRAMES := 4
-const FLAG_FPS := 6.0
 const SAIL_FRAMES := 8
+const TURRET_DIRS := 16
+## Turret slew speed (radians per second).
+const TURRET_TURN := 5.0
 ## Wall pieces ("wall": true) connect to neighbours with half-tile arm sprites
 ## `<id>_arm_<key>`; arms pointing at the camera (px, py, pxpy) draw in front
 ## of the post, the rest behind it. Diagonal arms only link pieces that touch at a corner and
@@ -64,8 +65,15 @@ var _dust: CPUParticles2D
 var _puff: CPUParticles2D
 ## Seconds of "builders are working" left (refreshed by add_progress).
 var _build_activity := 0.0
-var _flags: Array[Sprite2D] = []
+## Owner-coloured cloth (banners, bands): the `<id>_team` grey mask drawn over
+## the finished body, tinted with the player's colour.
+var _team: Sprite2D
 var _sails: Sprite2D
+## Turning guns (flak fort): sprites "flak_gun_<dir>" on the mounts in meta "turrets".
+var _turrets: Array[Sprite2D] = []
+## Grid-space angle the guns point at now, and the one they turn towards.
+var turret_angle := -PI * 0.25
+var turret_goal := -PI * 0.25
 var _smoke: Array[CPUParticles2D] = []
 var _fires: Array[CPUParticles2D] = []
 ## Defensive fire cooldown (CombatSystem).
@@ -176,11 +184,15 @@ func _add_sprite(sp: Sprite2D, name: String) -> void:
 
 func _build_overlays() -> void:
 	var meta: Dictionary = atlas_entry(type_id).get("meta", {})
-	for f in meta.get("flags", []):
-		var sp := Sprite2D.new()
-		_add_sprite(sp, "flag_%d_0" % color_slot)
-		sp.position = Vector2(f[0], f[1])
-		_flags.append(sp)
+	if not atlas_entry(type_id + "_team").is_empty():
+		_team = Sprite2D.new()
+		_add_sprite(_team, type_id + "_team")
+		_team.self_modulate = Color(GameData.player_color(color_slot).get("primary", "#ffffff"))
+	for t in meta.get("turrets", []):
+		var gun := Sprite2D.new()
+		_add_sprite(gun, _turret_frame())
+		gun.position = Vector2(t[0], t[1])
+		_turrets.append(gun)
 	if meta.get("sails") != null:
 		_sails = Sprite2D.new()
 		_add_sprite(_sails, "sails_0")
@@ -382,6 +394,7 @@ func memory_snapshot() -> Node2D:
 		copy.offset = sp.offset
 		copy.position = sp.position
 		copy.modulate = sp.modulate
+		copy.self_modulate = sp.self_modulate
 		root.add_child(copy)
 	for ps in _fires + _smoke:
 		if ps.emitting:
@@ -452,8 +465,10 @@ func _set_state(s: State) -> void:
 	state = s
 	_foundation.visible = s != State.COMPLETE
 	_body.visible = s != State.FOUNDATION
-	for f in _flags:
-		f.visible = s == State.COMPLETE
+	if _team:
+		_team.visible = s == State.COMPLETE
+	for gun in _turrets:
+		gun.visible = s == State.COMPLETE
 	_update_arms()
 	if _sails:
 		_sails.visible = s == State.COMPLETE
@@ -516,11 +531,29 @@ func animate(delta: float) -> void:
 	if _dust.emitting:
 		_dust.emitting = false
 	_anim_time += delta
-	var ff := int(_anim_time * FLAG_FPS) % FLAG_FRAMES
-	for f in _flags:
-		f.region_rect = sprite_region("flag_%d_%d" % [color_slot, ff])["rect"]
 	if _sails:
 		_sails.region_rect = sprite_region("sails_%d" % (int(_anim_time * SAIL_FPS) % SAIL_FRAMES))["rect"]
+	if not _turrets.is_empty() and turret_angle != turret_goal:
+		var diff := wrapf(turret_goal - turret_angle, -PI, PI)
+		var step := TURRET_TURN * delta
+		turret_angle = turret_goal if absf(diff) <= step else wrapf(turret_angle + signf(diff) * step, -PI, PI)
+		var frame := _turret_frame()
+		for gun in _turrets:
+			_show_region(gun, frame)
+
+
+## Points the guns (if any) at a grid position; they turn there over a few frames.
+func aim_at(grid: Vector2) -> void:
+	if not _turrets.is_empty() and grid != grid_pos:
+		turret_goal = (grid - grid_pos).angle()
+
+
+func has_turrets() -> bool:
+	return not _turrets.is_empty()
+
+
+func _turret_frame() -> String:
+	return "flak_gun_%d" % posmod(roundi(turret_angle / (TAU / TURRET_DIRS)), TURRET_DIRS)
 
 
 func _draw() -> void:
