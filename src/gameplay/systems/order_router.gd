@@ -8,6 +8,7 @@ extends Node
 ##   {"t": "issue", "units": [id], "buildings": [id], "grid": Vector2, "target": id (0 = none), "queue": bool (Shift waypoint)}
 ##   {"t": "place", "type": String, "origins": [Vector2i], "builders": [id]}
 ##   {"t": "enqueue", "b": id, "item": String}        {"t": "cancel", "b": id, "idx": int}
+##   {"t": "cancel_research", "item": String}         (wherever the sender is researching it)
 ##   {"t": "market", "res": String, "buy": bool}
 ##   {"t": "stop" | "unload", "units": [id]}
 ##   {"t": "stance", "units": [id], "stance": String}  {"t": "formation", "f": String}
@@ -103,6 +104,8 @@ func apply(pid: int, order: Dictionary) -> bool:
 			if b3 != null:
 				_game.production.cancel(b3, int(order.get("idx", 0)))
 				return true
+		"cancel_research":
+			return _game.production.cancel_research(pid, String(order.get("item", "")))
 		"market":
 			return _game.market.buy(p, order.get("res", "")) if order.get("buy", true) else _game.market.sell(p, order.get("res", ""))
 		"stop":

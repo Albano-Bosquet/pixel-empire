@@ -132,11 +132,7 @@ func _build_training(b: Building) -> void:
 		shown_age = true
 		var rtip := {"title": tr("Advance to %s") % tr(r["display_name"]), "desc": tr(r.get("description", "")), "cost": r.get("cost", {}),
 			"lines": [_time_line(int(r.get("research_time", 0)))]}
-		var bb2 := b
-		var research_id: String = rid
-		_add_button(SpriteLibrary.props_texture(), SpriteLibrary.prop("icon_age")["rect"], rtip, r.get("hotkey", ""),
-			func() -> void: _game.orders.submit({"t": "enqueue", "b": bb2.entity_id, "item": research_id}),
-			func() -> String: return _game.production.enqueue_error(bb2, research_id))
+		_add_research_button(b, rid, SpriteLibrary.prop("icon_age")["rect"], rtip, r.get("hotkey", ""))
 
 
 ## Market buy/sell buttons: one pair per tradable resource, prices live in the tooltip.
@@ -202,10 +198,25 @@ func _add_tech_button(b: Building, id: String) -> void:
 	for r in t.get("requires", []):
 		lines.append(tr("Requires %s") % tr(GameData.techs[r]["display_name"]))
 	var tip := {"title": tr(t["display_name"]), "desc": tr(t.get("description", "")), "cost": t.get("cost", {}), "lines": lines}
-	var bb := b
-	_add_button(SpriteLibrary.props_texture(), tech_icon(id)["rect"], tip, t.get("hotkey", ""),
-		func() -> void: _game.orders.submit({"t": "enqueue", "b": bb.entity_id, "item": id}),
-		func() -> String: return _game.production.enqueue_error(bb, id))
+	_add_research_button(b, id, tech_icon(id)["rect"], tip, t.get("hotkey", ""))
+
+
+## A research button: starts `id`, and a click while it is under way cancels it
+## with a refund, as in the queue row. The hotkey only starts it, so pressing it
+## twice by mistake does not throw the research away.
+func _add_research_button(b: Building, id: String, region: Rect2, tip: Dictionary, hotkey: String) -> void:
+	var start := func() -> void: _game.orders.submit({"t": "enqueue", "b": b.entity_id, "item": id})
+	var click := func() -> void:
+		if _game.production.research_site(b.owner_id, id) != null:
+			_game.orders.submit({"t": "cancel_research", "item": id})
+		else:
+			start.call()
+	var check := func() -> String:
+		var err := _game.production.enqueue_error(b, id)
+		if err != "Already researching":
+			return err
+		return "Already researching - tap to cancel (refund)" if _touch() else "Already researching - click to cancel (refund)"
+	_add_button(SpriteLibrary.props_texture(), region, tip, hotkey, start, check, "", click)
 
 
 func _age_req(age: int) -> String:
@@ -223,7 +234,8 @@ func _touch() -> bool:
 
 ## `tip` is either plain tooltip text or InfoCard info (title, desc, cost, lines);
 ## either way the card previews `region` of `tex` large and shows `check`'s error.
-func _add_button(tex: Texture2D, region: Rect2, tip: Variant, hotkey: String, action: Callable, check: Callable, text: String = "") -> void:
+## `click`, when given, replaces `action` for the mouse; the hotkey keeps `action`.
+func _add_button(tex: Texture2D, region: Rect2, tip: Variant, hotkey: String, action: Callable, check: Callable, text: String = "", click: Callable = Callable()) -> void:
 	var b := InfoButton.new()
 	b.custom_minimum_size = BTN
 	b.focus_mode = Control.FOCUS_NONE
@@ -254,7 +266,7 @@ func _add_button(tex: Texture2D, region: Rect2, tip: Variant, hotkey: String, ac
 	else:
 		b.text = text
 		b.add_theme_font_size_override("font_size", 11)
-	b.pressed.connect(action)
+	b.pressed.connect(click if click.is_valid() else action)
 	if hotkey.length() == 1 and not _touch():
 		var hk := Label.new()
 		hk.text = hotkey

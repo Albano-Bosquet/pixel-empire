@@ -8,6 +8,7 @@ extends SceneTree
 ## Keys reached indirectly (constants, capitalized ids, plain messages
 ## returned or emitted by systems) that the source scan cannot see.
 const EXTRA_KEYS := [
+	"Already researching - click to cancel (refund)", "Already researching - tap to cancel (refund)",
 	"Dark Age", "Feudal Age", "Castle Age", "Imperial Age", "Gunpowder Age", "Industrial Age",
 	"Skirmish vs Computer", "Sandbox (no enemies)",
 	"Result", "Age reached", "Food gathered", "Wood gathered", "Gold gathered", "Stone gathered",

@@ -58,21 +58,28 @@ func research_error(b: Building, id: String) -> String:
 		return "Cannot research that here"
 	var p := _game.player(b.owner_id)
 	if GameData.techs.has(id):
-		for other in _game.buildings.buildings:
-			if other.owner_id == b.owner_id and other.queue.has(id):
-				return "Already researching"
+		if research_site(b.owner_id, id) != null:
+			return "Already researching"
 		return TechSystem.research_error(p, id)
 	var r: Dictionary = GameData.ages[id]
 	if p.age >= int(r.get("sets_age", 0)):
 		return "Already researched"
 	if p.age < int(r.get("requires_age", 0)):
 		return Loc.msg("Requires %s", [Hud.AGE_NAMES[int(r.get("requires_age", 0))]])
-	for other in _game.buildings.buildings:
-		if other.owner_id == b.owner_id and other.queue.has(id):
-			return "Already researching"
+	if research_site(b.owner_id, id) != null:
+		return "Already researching"
 	if not p.can_afford(r.get("cost", {})):
 		return "Not enough resources"
 	return ""
+
+
+## The building of player `pid` with research `id` in its queue, null if none.
+## A research is unique per player, so there is at most one.
+func research_site(pid: int, id: String) -> Building:
+	for b in _game.buildings.buildings:
+		if b.owner_id == pid and b.queue.has(id):
+			return b
+	return null
 
 
 func enqueue(b: Building, unit_id: String) -> bool:
@@ -98,6 +105,16 @@ func cancel(b: Building, index: int) -> void:
 	if index == 0:
 		b.production_time = 0.0
 	EventBus.production_changed.emit(b)
+
+
+## Cancels research `id` of player `pid` wherever it is queued, with a full refund.
+## Returns false when that player is not researching it.
+func cancel_research(pid: int, id: String) -> bool:
+	var b := research_site(pid, id)
+	if b == null:
+		return false
+	cancel(b, b.queue.find(id))
+	return true
 
 
 ## 0..1 progress of the front item.
