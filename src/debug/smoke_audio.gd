@@ -134,6 +134,28 @@ func _audio() -> void:
 	_check(bitten[0], "the hunted boar fought back")
 	_check(int(Audio.ui_played.get("under_attack", 0)) == alerts, "no under-attack alert while hunting")
 
+	# Butchering a sheep we own: our own villager hurts our own unit, no alert either.
+	var farm_at := _open_spot(tc.grid_pos + Vector2(6, 6))
+	var butcher: Unit = _spawn_group("villager", 1, farm_at, 1)[0]
+	var sheep: Unit = _spawn_group("sheep", 1, farm_at + Vector2(1.5, 0), 1)[0]
+	var cut := [false]
+	sheep.damaged.connect(func(_e, attacker, _a) -> void: cut[0] = cut[0] or attacker == butcher)
+	var pings := [0]
+	var count_ping := func(pid: int, _where: Vector2) -> void: pings[0] += 1 if pid == 1 else 0  # the battle above may still hurt player 2
+	EventBus.under_attack.connect(count_ping)
+	_game.combat._attack_notice.erase(1)
+	alerts = int(Audio.ui_played.get("under_attack", 0))
+	var butchers: Array[Unit] = [butcher]
+	_game.wildlife.order_hunt(butchers, sheep)
+	t0 = Time.get_ticks_msec()
+	while not cut[0] and Time.get_ticks_msec() - t0 < 15000:
+		await _seconds(0.25)
+	await _seconds(0.5)
+	EventBus.under_attack.disconnect(count_ping)
+	_check(cut[0], "the villager butchered our own sheep")
+	_check(pings[0] == 0, "no under-attack ping for butchering our own sheep (%d)" % pings[0])
+	_check(int(Audio.ui_played.get("under_attack", 0)) == alerts, "no under-attack horn for butchering our own sheep (%d -> %d)" % [alerts, int(Audio.ui_played.get("under_attack", 0))])
+
 	# Ambience loops run.
 	var running := 0
 	for key in ga._ambient:

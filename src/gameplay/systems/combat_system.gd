@@ -339,10 +339,13 @@ func _on_damaged(e: Entity, attacker: Entity, _amount: int) -> void:
 
 
 ## True when `victim` took the hit in a fight its own side started, so it is no
-## "under attack" alert: the victim was attacking or hunting `attacker`, or the
-## attacker is wild game (boar, deer), which only strikes back when hunted.
+## "under attack" alert: the victim was attacking or hunting `attacker`, the attacker
+## is on the victim's own side (villagers butchering a herded sheep), or it is wild
+## game (boar, deer), which only strikes back when hunted.
 ## Predators and other players' units attacking unprovoked return false.
 static func provoked(victim: Entity, attacker: Entity) -> bool:
+	if attacker.owner_id == victim.owner_id:
+		return true
 	if Wildlife.is_animal(attacker) and attacker.owner_id == Entity.GAIA and not Wildlife.is_predator(attacker):
 		return true
 	if victim is Unit:

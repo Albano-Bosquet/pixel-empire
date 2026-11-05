@@ -78,3 +78,15 @@ func test_no_under_attack_alert_for_fights_we_started() -> void:
 	assert_true(CombatSystem.provoked(vil, wolf), "the animal we were sent to hunt is no attack")
 	for e in [vil, boar, wolf, enemy, guard]:
 		e.free()
+
+
+func test_butchering_own_sheep_is_no_attack_but_an_enemy_doing_it_is() -> void:
+	var sheep := _unit("sheep", 1)
+	var vil := _unit("villager", 1)
+	var enemy := _unit("swordsman", 2)
+	var wolf := _unit("wolf", Entity.GAIA)
+	assert_true(CombatSystem.provoked(sheep, vil), "our villager slaughtering our sheep is no attack")
+	assert_true(not CombatSystem.provoked(sheep, enemy), "an enemy killing our sheep is an attack")
+	assert_true(not CombatSystem.provoked(sheep, wolf), "a wolf killing our sheep is an attack")
+	for e in [sheep, vil, enemy, wolf]:
+		e.free()
