@@ -1,0 +1,214 @@
+{
+  "match": {
+    "map_type": "continental",
+    "size": "tiny",
+    "seed": 20261106,
+    "victory": "conquest",
+    "resources": "standard",
+    "animals": "none",
+    "day_night": false,
+    "reveal": "normal"
+  },
+  "enemy_name": "Bandits",
+  "camp": {
+    "buildings": [
+      { "type": "storehouse", "offset": [0, 0] },
+      { "type": "house", "offset": [-4, 1] },
+      { "type": "house", "offset": [3, 2] }
+    ],
+    "units": { "militia": 3 }
+  },
+  "camera_moved_px": 140,
+  "poll_seconds": 0.25,
+  "advance_delay": 0.9,
+  "steps": [
+    {
+      "id": "camera",
+      "title": "Look around",
+      "text": "Move the camera with WASD, the arrow keys or the screen edges. Zoom with the mouse wheel.",
+      "text_touch": "Drag a finger to move the camera. Pinch with two fingers to zoom.",
+      "done": [{ "camera_moved": 1 }]
+    },
+    {
+      "id": "select_villager",
+      "title": "Your villagers",
+      "text": "Villagers do all the work. Left click one to select it.",
+      "text_touch": "Villagers do all the work. Tap one to select it.",
+      "point": ["villager"],
+      "done": [{ "selected_villagers": 1 }]
+    },
+    {
+      "id": "gather_food",
+      "title": "Gather food",
+      "text": "With a villager selected, right click the berry bushes to gather food.",
+      "text_touch": "With a villager selected, tap the berry bushes to gather food.",
+      "point": ["villager", "food"],
+      "done": [{ "gather_food": 1 }]
+    },
+    {
+      "id": "gather_wood",
+      "title": "Gather wood",
+      "text": "Select another villager and right click a tree. Drag a box to select several at once.",
+      "text_touch": "Tap another villager, then tap a tree. To pick several, press Area and drag over them.",
+      "point": ["villager", "wood"],
+      "done": [{ "gather_wood": 1 }]
+    },
+    {
+      "id": "train_villager",
+      "title": "More hands",
+      "text": "Villagers carry what they gather to the Town Center. Spend that food: click the Town Center and train a villager.",
+      "text_touch": "Villagers carry what they gather to the Town Center. Hold a finger on the Town Center to select it, then press the villager button.",
+      "point": ["town_center"],
+      "button": "villager",
+      "quiet": { "pending_villager": 4 },
+      "ensure": { "food": 50 },
+      "done": [{ "unit_villager": 4 }]
+    },
+    {
+      "id": "house",
+      "title": "Build a house",
+      "text": "The top bar shows your population and its limit. Houses raise it. Select a villager, press the House button, then click the ground.",
+      "text_touch": "The top bar shows your population and its limit. Houses raise it. Tap a villager, press the House button, touch the ground and lift your finger where you want it.",
+      "point": ["villager"],
+      "button": "house",
+      "quiet": { "placed_house": 1 },
+      "ensure": { "wood": 25 },
+      "done": [{ "building_house": 1 }]
+    },
+    {
+      "id": "more_villagers",
+      "title": "A bigger village",
+      "text": "Now there is room. Train villagers until you have six. Shift + click queues five at once.",
+      "text_touch": "Now there is room. Hold a finger on the Town Center and train villagers until you have six.",
+      "point": ["town_center"],
+      "button": "villager",
+      "quiet": { "pending_villager": 6 },
+      "ensure": { "food": 100 },
+      "done": [{ "unit_villager": 6 }]
+    },
+    {
+      "id": "gather_gold",
+      "title": "Mine gold",
+      "text": "Soldiers cost gold. The Idle button (or the period key) finds villagers with nothing to do: send one to the gold mine.",
+      "text_touch": "Soldiers cost gold. The Idle button selects a villager with nothing to do: then tap the gold mine.",
+      "point": ["villager", "gold"],
+      "done": [{ "gather_gold": 1 }]
+    },
+    {
+      "id": "farm",
+      "title": "Plant a farm",
+      "text": "Berries run out, farms keep feeding you. Select a villager and build a Farm next to the Town Center. The builder starts farming by itself.",
+      "text_touch": "Berries run out, farms keep feeding you. Tap a villager, press the Farm button and lift your finger next to the Town Center. The builder starts farming by itself.",
+      "point": ["villager"],
+      "button": "farm",
+      "quiet": { "placed_farm": 1 },
+      "ensure": { "wood": 60 },
+      "done": [{ "building_farm": 1 }]
+    },
+    {
+      "id": "scout",
+      "title": "Explore",
+      "text": "The dark areas are unexplored. Select your scout and send it towards the arrow: bandits have camped nearby. You can also right click the minimap.",
+      "text_touch": "The dark areas are unexplored. Tap your scout, then tap the ground towards the arrow: bandits have camped nearby. Tapping the minimap moves the camera there.",
+      "point": ["scout", "camp"],
+      "done": [{ "camp_seen": 1 }, { "scout_lost": 1 }]
+    },
+    {
+      "id": "advance_age",
+      "title": "Advance to the Feudal Age",
+      "text": "Ages unlock new units and buildings. Your people have stored enough food: select the Town Center and press the age button.",
+      "text_touch": "Ages unlock new units and buildings. Your people have stored enough food: hold a finger on the Town Center and press the age button.",
+      "point": ["town_center"],
+      "button": "feudal_age",
+      "ensure": { "food": 500 },
+      "done": [{ "age_started": 1 }]
+    },
+    {
+      "id": "barracks",
+      "title": "Build a Barracks",
+      "text": "The age takes a while, so keep working. Select a villager, open the Military page of the build menu and place a Barracks.",
+      "text_touch": "The age takes a while, so keep working. Tap a villager, press Military in the build menu, press the Barracks button and lift your finger on open ground.",
+      "point": ["villager"],
+      "button": "barracks",
+      "quiet": { "placed_barracks": 1 },
+      "ensure": { "wood": 175 },
+      "done": [{ "building_barracks": 1 }]
+    },
+    {
+      "id": "second_house",
+      "title": "Room for an army",
+      "text": "Every soldier takes up population too. Build a second house.",
+      "text_touch": "Every soldier takes up population too. Tap a villager and build a second house.",
+      "point": ["villager"],
+      "button": "house",
+      "quiet": { "placed_house": 2 },
+      "ensure": { "wood": 25 },
+      "done": [{ "building_house": 2 }]
+    },
+    {
+      "id": "militia",
+      "title": "Train soldiers",
+      "text": "Select the Barracks and train five militia.",
+      "text_touch": "Hold a finger on the Barracks to select it and train five militia.",
+      "point": ["barracks"],
+      "button": "militia",
+      "quiet": { "pending_militia": 5 },
+      "ensure": { "food": 250, "gold": 75 },
+      "done": [{ "unit_militia": 5 }]
+    },
+    {
+      "id": "feudal_reached",
+      "title": "A new age",
+      "text": "Wait for the Feudal Age. The progress is shown when you select the Town Center.",
+      "text_touch": "Wait for the Feudal Age. Hold a finger on the Town Center to see the progress.",
+      "point": ["town_center"],
+      "button": "feudal_age",
+      "quiet": { "age_started": 1 },
+      "done": [{ "age": 1 }]
+    },
+    {
+      "id": "technology",
+      "title": "Research a technology",
+      "text": "Technologies improve your people for good. Select the Town Center and research the Wheelbarrow. F2 opens the whole tree.",
+      "text_touch": "Technologies improve your people for good. Hold a finger on the Town Center and research the Wheelbarrow. The Technologies button shows the whole tree.",
+      "point": ["town_center"],
+      "button": "wheelbarrow",
+      "ensure": { "food": 175, "wood": 50 },
+      "done": [{ "tech_started": 1 }]
+    },
+    {
+      "id": "spearmen",
+      "title": "New units",
+      "text": "The Feudal Age unlocked spearmen. Train two at the Barracks.",
+      "text_touch": "The Feudal Age unlocked spearmen. Hold a finger on the Barracks and train two.",
+      "point": ["barracks"],
+      "button": "spearman",
+      "quiet": { "pending_spearman": 2 },
+      "ensure": { "food": 70, "wood": 50 },
+      "done": [{ "unit_spearman": 2 }]
+    },
+    {
+      "id": "select_army",
+      "title": "Gather your army",
+      "text": "Select at least five soldiers: drag a box around them, press the Army button or use Ctrl + A.",
+      "text_touch": "Select at least five soldiers: press the Army button, or press Area and drag over them.",
+      "point": ["soldiers"],
+      "done": [{ "selected_soldiers": 5 }]
+    },
+    {
+      "id": "attack",
+      "title": "Attack",
+      "text": "Right click the enemy camp to attack it. If it is off screen, right click it on the minimap.",
+      "text_touch": "Tap the enemy camp to attack it. If it is off screen, tap the minimap to look there, then tap the camp.",
+      "point": ["soldiers", "camp"],
+      "done": [{ "enemy_hurt": 1 }]
+    },
+    {
+      "id": "destroy_camp",
+      "title": "Destroy the camp",
+      "text": "Defeat the bandits and destroy their storehouse. Lost soldiers can be replaced at the Barracks.",
+      "point": ["soldiers", "camp"],
+      "done": []
+    }
+  ]
+}

@@ -2,7 +2,7 @@ extends Node
 ## Application flow: title screen (with a live village backdrop) -> match ->
 ## pause / end screens -> back to the title or a rematch.
 ## Command line (skips the menu):
-##   -- --mode=sandbox|skirmish --difficulty=easy|normal|hard --size=small --map=continental|coast|islands|desert
+##   -- --mode=sandbox|skirmish|tutorial --difficulty=easy|normal|hard --size=small --map=continental|coast|islands|desert
 ##      --seed=123 --victory=conquest|town_center --nofog --smoke[=combat|ai|fx|stage4|naval|modern|military|lang|audio|features|work|touch|layout|terrain] --lang=es|en
 ##   multiplayer smoke: -- --mp=host --smoke=mp  /  -- --mp=client --smoke=mp
 
@@ -36,7 +36,11 @@ func _ready() -> void:
 		add_child(sm)
 		sm.start(self, String(opts["mp"]))
 		return
-	if opts.has("mode") or opts.has("smoke"):
+	if opts.get("mode") == "tutorial":
+		start_game(MatchConfig.tutorial())
+		if opts.has("smoke"):
+			_start_smoke(opts["smoke"])
+	elif opts.has("mode") or opts.has("smoke"):
 		start_game({
 			"mode": opts.get("mode", "sandbox"),
 			"size": opts.get("size", GameData.map_gen.get("default_size", "small")),
@@ -84,6 +88,8 @@ func _start_smoke(mode: Variant) -> void:
 		script = "res://src/debug/smoke_display.gd"
 	if mode is String and mode == "terrain":
 		script = "res://src/debug/smoke_terrain.gd"
+	if mode is String and mode == "tutorial":
+		script = "res://src/debug/smoke_tutorial.gd"
 	if mode is String and mode == "showcase":
 		script = "res://src/debug/smoke_showcase.gd"
 	var smoke: Node = load(script).new()

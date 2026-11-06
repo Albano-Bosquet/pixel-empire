@@ -20,7 +20,7 @@
 - Save/load, sound system with placeholder hooks, day/night ambience.
 
 ## Out of scope — not building this
-- No multiplayer/networking, no campaign or scripted scenarios, no naval units, no relics/monks/trade, no multiple civilizations with unique units (civilizations differ only by color for now), no terrain elevation affecting combat.
+- No multiplayer/networking, no campaign or scripted scenarios (the one exception is the guided tutorial match, assets/data/tutorial_steps.json), no naval units, no relics/monks/trade, no multiple civilizations with unique units (civilizations differ only by color for now), no terrain elevation affecting combat.
 
 ## Build order
 1. Stage 1 — Isometric map, camera & zoom, terrains, trees & resources, villagers, selection, right-click move.

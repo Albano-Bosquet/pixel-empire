@@ -44,6 +44,8 @@ var victory: VictorySystem
 var fog: FogSystem
 var fx: FxLayer
 var ai_players: Array[AIPlayer] = []
+## The guided first match, else null (config "tutorial").
+var tutorial: TutorialSystem
 var world: Node2D
 var hud: Hud
 ## Positional sound, ambience and music of this match.
@@ -69,7 +71,8 @@ var _autosave_timer := 0.0
 ## or int), seed (int, 0 = random), players (Array of {name, ai, difficulty,
 ## team}), difficulty ("easy" | "normal" | "hard", default for AIs without
 ## one), fog (bool, default true), victory ("conquest" | "town_center"),
-## showcase (bool: title-screen backdrop, no HUD, no input, no victory checks).
+## showcase (bool: title-screen backdrop, no HUD, no input, no victory checks),
+## tutorial (bool: guided match, see MatchConfig.tutorial), tutorial_step (int, from a save).
 ## Match options (MatchConfig): resources (preset id), start_age (int),
 ## population (int limit), speed (preset id), reveal ("normal" | "explored" |
 ## "visible"), animals (wildlife preset id), day_night (bool).
@@ -136,6 +139,8 @@ func start(cfg: Dictionary) -> void:
 	for p in players:
 		if cfg.get("replica", false) or not save.is_empty():
 			break
+		if cfg.get("tutorial", false) and p.id != local_player:
+			continue  # TutorialSystem places the bandit camp instead
 		_spawn_start_buildings(p)
 		_spawn_start_units(p)
 	if not cfg.get("replica", false) and not cfg.get("showcase", false) and save.is_empty():
@@ -166,6 +171,8 @@ func start(cfg: Dictionary) -> void:
 		_make_showcase()
 	else:
 		hud.setup(self)
+	if cfg.get("tutorial", false):
+		_start_tutorial(not save.is_empty())
 	day_night = DayNight.new()
 	day_night.name = "DayNight"
 	add_child(day_night)
@@ -315,6 +322,17 @@ func rebuild_hud() -> void:
 	add_child(hud)
 	hud.setup(self)
 	EventBus.selection_changed.emit(keep)
+
+
+func _start_tutorial(restored: bool) -> void:
+	tutorial = TutorialSystem.new()
+	tutorial.name = "Tutorial"
+	systems.add_child(tutorial)
+	tutorial.setup(self, GameData.tutorial, restored)
+	var panel := TutorialPanel.new()
+	panel.name = "TutorialPanel"
+	add_child(panel)
+	panel.setup(self, tutorial)
 
 
 func _spawn_resources() -> void:
@@ -580,8 +598,8 @@ func save_to(slot: String, title: String = "") -> int:
 
 
 func _process(delta: float) -> void:
-	if config.get("showcase", false) or Net.is_networked():
-		return
+	if config.get("showcase", false) or config.get("tutorial", false) or Net.is_networked():
+		return  # a tutorial must not replace the autosave of a real match
 	var minutes := float(GameData.rules.get("autosave_minutes", 5.0))
 	if minutes <= 0.0:
 		return

@@ -448,6 +448,7 @@ func _apply_building(row: Array) -> void:
 			b.add_progress(progress - b.progress)
 	b.hp = int(row[6])
 	b.max_hp = int(row[7])
+	b.update_fires()
 	var q: Array[String] = []
 	for item in row[8]:
 		q.append(String(item))

@@ -8,10 +8,10 @@
   },
   "difficulties": {
     "easy": {
-      "gather_multiplier": 0.75,
-      "villager_target": 14,
+      "gather_multiplier": 0.5,
+      "villager_target": 10,
       "army_attack_size": 3,
-      "first_attack_minute": 13,
+      "first_attack_minute": 22,
       "military_buildings": 1,
       "age_up_villagers": [
         20,
@@ -21,19 +21,19 @@
         99,
         99
       ],
-      "reaction_radius": 10,
-      "max_army": 12,
+      "reaction_radius": 8,
+      "max_army": 5,
       "army_mix": {
-        "swordsman": 3,
-        "spearman": 1,
-        "archer": 1
+        "militia": 4,
+        "swordsman": 1
       },
-      "max_techs": 2,
+      "max_techs": 0,
       "fishing_ships": 1,
       "max_fleet": 1,
       "fleet_mix": {
         "war_galley": 1
-      }
+      },
+      "wave_interval_seconds": 360
     },
     "normal": {
       "gather_multiplier": 1.0,
@@ -71,7 +71,8 @@
       "fleet_mix": {
         "war_galley": 3,
         "fire_ship": 1
-      }
+      },
+      "wave_interval_seconds": 90
     },
     "hard": {
       "gather_multiplier": 1.2,
@@ -136,7 +137,8 @@
         "demolition_ship": 1,
         "cannon_galleon": 1,
         "ironclad": 1
-      }
+      },
+      "wave_interval_seconds": 90
     }
   },
   "tech_priority": [

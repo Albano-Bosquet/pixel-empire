@@ -177,11 +177,40 @@ func _touch() -> void:
 	_check(_game.selection.selected == [v], "a real mouse click still selects in touch mode")
 	await _hold_tips(vils)
 	await _chat()
+	var crew: Array[Unit] = []
+	crew.assign(_game.unit_system.units.filter(func(u): return u.owner_id == 1 and u.is_worker and not u.dead))
+	await _cancel_site(crew)
 	_finish()
 
 
 ## Command buttons on a phone: no keyboard letters, holding a finger shows the
 ## detail card (large preview, cost) without running the button, a tap still runs it.
+## The Deselect button: bigger than the rest, and it cancels a selected construction.
+func _cancel_site(vils: Array[Unit]) -> void:
+	var me := _game.local_state()
+	var btn: Button = _find_button(_game.hud, tr("Deselect"))
+	_check(btn != null and btn.size.y >= float(GameData.touch["big_button_height"]), "Deselect is a big button")
+	var area: Button = _find_button(_game.hud, tr("Area"))
+	_check(area != null and area.size.y >= float(GameData.touch["big_button_height"]), "Area is a big button")
+	me.resources["wood"] = 500
+	var before: int = me.resources["wood"]
+	var spot := _find_build_spot("barracks", _game.map.start_positions[0] + Vector2i(-7, 3))
+	_game.orders.submit({"t": "place", "type": "barracks", "origins": [spot], "builders": [vils[0].entity_id]})
+	await _frames(4)
+	var site: Building = _game.buildings.buildings.filter(func(b): return b.type_id == "barracks" and b.owner_id == 1)[-1]
+	_check(me.resources["wood"] < before and not site.is_complete(), "the construction is paid and unfinished")
+	_game.selection.set_selection([site])
+	await _frames(4)
+	_check(btn.text == tr("Cancel build"), "with a construction selected the button offers to cancel it")
+	await _shot("touch_cancel_build")
+	btn.pressed.emit()
+	await _seconds(0.5)
+	_check(me.resources["wood"] == before, "cancelling refunds the construction (%d of %d)" % [me.resources["wood"], before])
+	_check(not _game.buildings.buildings.has(site), "the construction is gone")
+	_check(_game.pathfinder.is_walkable(spot), "its tiles are free again")
+	_check(btn.text == tr("Deselect"), "the button goes back to Deselect")
+
+
 func _hold_tips(vils: Array[Unit]) -> void:
 	_game.local_state().resources["wood"] = 500
 	_game.selection.set_selection(vils)

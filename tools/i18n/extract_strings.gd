@@ -68,6 +68,12 @@ static func collect() -> PackedStringArray:
 	_scan_code("res://src", keys)
 	for file in ["units_stats.json", "buildings_stats.json", "technologies.json", "ages.json", "map_generation.json", "game_rules.json"]:
 		_scan_data(JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/" + file)), keys)
+	var tutorial: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/tutorial_steps.json"))
+	keys[String(tutorial["enemy_name"])] = true
+	for step in tutorial["steps"]:
+		for field in ["title", "text", "text_touch"]:
+			if step.has(field):
+				keys[String(step[field])] = true
 	var out := PackedStringArray(keys.keys())
 	out.sort()
 	return out

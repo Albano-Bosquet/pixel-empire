@@ -161,7 +161,7 @@ func setup(id: String, building_def: Dictionary, player_id: int, slot: int, at_o
 	_build_overlays()
 	_build_fires()
 	_build_dust()
-	damaged.connect(func(_e: Entity, _a: Entity, _n: int) -> void: _update_fires())
+	damaged.connect(func(_e: Entity, _a: Entity, _n: int) -> void: update_fires())
 	if complete:
 		progress = 1.0
 		hp = max_hp
@@ -283,8 +283,15 @@ func _dust_emitter(n: int, life: float, extent: Vector2) -> CPUParticles2D:
 	return ps
 
 
-## Burning effect scales with damage below burn_below_hp_fraction.
-func _update_fires() -> void:
+## Restores up to `amount` hit points (repairs).
+func heal(amount: int) -> void:
+	hp = mini(max_hp, hp + amount)
+	update_fires()
+
+
+## Burning effect scales with damage below burn_below_hp_fraction. Call it after
+## changing hp by hand: only damage refreshes it by itself.
+func update_fires() -> void:
 	var frac := float(hp) / maxf(1.0, max_hp)
 	var threshold := float(GameData.combat.get("burn_below_hp_fraction", 0.5))
 	for i in _fires.size():

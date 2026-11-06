@@ -45,6 +45,8 @@ var tech_panel: TechPanel
 ## Hold-a-finger tooltips (touch screens only, else null).
 var touch_tips: TouchTooltips
 var _idle_button: Button
+## Touch screens only: clears the selection or cancels a construction.
+var _deselect_button: Button
 var _selection: Array = []
 var _elapsed := 0.0
 var _queue_sig := ""
@@ -92,6 +94,11 @@ func setup(game: Game) -> void:
 	_on_selection_changed([])
 
 
+## The command button for a unit, building or research id, or null (TutorialPanel).
+func command_button(id: String) -> Button:
+	return _commands.button_for(id)
+
+
 func _process(delta: float) -> void:
 	if _game == null:
 		return
@@ -108,6 +115,10 @@ func _process(delta: float) -> void:
 	var idle := _idle_count()
 	_idle_button.text = tr("Idle: %d") % idle
 	_idle_button.modulate = Color(1, 0.85, 0.5) if idle > 0 else Color(0.7, 0.7, 0.7)
+	if _deselect_button != null:
+		var label := tr("Deselect") if _construction_sites().is_empty() else tr("Cancel build")
+		if _deselect_button.text != label:
+			_deselect_button.text = label
 	if _notify_time > 0.0:
 		_notify_time -= delta
 		_notify_label.modulate.a = clampf(_notify_time, 0.0, 1.0)
@@ -355,7 +366,10 @@ func _build_minimap() -> void:
 		var area := _quick_button(touch_row, "Area", "Draw a box to select an area", func() -> void: _game.touch.box_mode = not _game.touch.box_mode)
 		area.toggle_mode = true
 		_game.touch.box_mode_changed.connect(func(on: bool) -> void: area.set_pressed_no_signal(on))
-		_quick_button(touch_row, "Deselect", "Clear the selection  [Esc]", func() -> void: _game.selection.set_selection([]))
+		_deselect_button = _quick_button(touch_row, "Deselect", "Clear the selection  [Esc]", _deselect_or_cancel)
+		for b in [area, _deselect_button]:
+			b.custom_minimum_size.y = float(GameData.touch.get("big_button_height", 50))
+			b.add_theme_font_size_override("font_size", int(GameData.touch.get("big_button_font", 19)))
 	var row := _quick_row(bar)
 	_idle_button = _quick_button(row, "", "Select the next idle villager  [.]", func() -> void: _game.selection.select_idle_worker())
 	var r := SpriteLibrary.prop("icon_pop")
@@ -365,6 +379,25 @@ func _build_minimap() -> void:
 	_idle_button.icon = at
 	_quick_button(row, "Army", "Select every military unit  [Ctrl+A]", func() -> void: controls.select_military())
 	_quick_button(row, "Alert", "Jump to the latest attack  [Space]", func() -> void: controls.jump_to_alert())
+
+
+## Own unfinished buildings in the selection, or [] when anything else is selected.
+func _construction_sites() -> Array:
+	var sel: Array = _game.selection.selected
+	var own := _game.selection.own_buildings()
+	if sel.is_empty() or own.size() != sel.size() or own.any(func(b: Building) -> bool: return b.is_complete()):
+		return []
+	return own
+
+
+## Touch button: clears the selection, or cancels the construction selected.
+func _deselect_or_cancel() -> void:
+	var sites := _construction_sites()
+	if sites.is_empty():
+		_game.selection.set_selection([])
+		return
+	_game.orders.submit({"t": "delete", "ids": OrderRouter.ids(sites)})
+	EventBus.ui_sound.emit("ui_cancel")
 
 
 func _quick_row(bar: VBoxContainer) -> HBoxContainer:

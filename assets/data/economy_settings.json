@@ -27,6 +27,7 @@
   "builder_count_formula": "aoe",
   "repair_rate_hp_per_second": 25,
   "repair_cost_fraction": 0.5,
+  "cancel_build_refund": 1.0,
   "train_queue_limit": 15,
   "foundation_start_hp": 1,
   "auto_reseed_farms": true,

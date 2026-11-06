@@ -251,7 +251,7 @@ func _repair(u: Unit, b: Building, delta: float) -> bool:
 	t["hp_frac"] = float(t.get("hp_frac", 0.0)) + hp_gain
 	var whole := floori(t["hp_frac"])
 	t["hp_frac"] -= whole
-	b.hp = mini(b.max_hp, b.hp + whole)
+	b.heal(whole)
 	return true
 
 

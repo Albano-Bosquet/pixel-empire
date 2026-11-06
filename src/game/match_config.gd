@@ -58,6 +58,16 @@ static func build(settings: Dictionary, players: Array) -> Dictionary:
 	}
 
 
+## Config of the guided first match (tutorial_steps.json): the player against a
+## bandit camp nobody controls, which TutorialSystem places itself.
+static func tutorial() -> Dictionary:
+	var data: Dictionary = GameData.tutorial
+	var cfg := build(data.get("match", {}), [{"name": TranslationServer.translate("Player"), "ai": false},
+		{"name": TranslationServer.translate(String(data.get("enemy_name", "Bandits"))), "ai": false}])
+	cfg["tutorial"] = true
+	return cfg
+
+
 ## Small maps grow to fit many players (game_rules.json min_map_size_by_players).
 static func map_size_for(size: String, player_count: int) -> String:
 	var order: Array = GameData.rules.get("map_sizes_menu", ["tiny", "small", "medium", "large", "huge"])

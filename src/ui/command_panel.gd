@@ -15,6 +15,8 @@ const BTN := Vector2(50, 50)
 const BTN_COMPACT := Vector2(42, 42)
 const WIDE_COLS := 8
 const RES_ORDER: Array[String] = ["food", "wood", "gold", "stone"]
+## Id of the button that flips between the economy and military build pages.
+const PAGE_FLIP := "page_flip"
 
 var _game: Game
 var _grid := GridContainer.new()
@@ -95,11 +97,13 @@ func _build_pages() -> void:
 			"lines": [_age_req(int(def.get("age", 0)))].filter(func(s): return s != "")}
 		_add_button(Building.atlas_texture(), reg["rect"], tip, def.get("hotkey", ""), func() -> void: _game.placement.begin(id),
 			func() -> String: return _game.buildings.requirement_error(_game.local_state(), id))
+		_buttons[-1]["id"] = id
 	var other := "military" if _page == "economy" else "economy"
 	var flip := func() -> void:
 		_page = other
 		rebuild()
 	_add_button(null, Rect2(), tr("Show %s buildings  [Tab]") % tr(other), "Tab", flip, func() -> String: return "", tr(other.capitalize()))
+	_buttons[-1]["id"] = PAGE_FLIP
 
 
 func _build_training(b: Building) -> void:
@@ -117,6 +121,7 @@ func _build_training(b: Building) -> void:
 				for k in n:
 					_game.orders.submit({"t": "enqueue", "b": bb.entity_id, "item": unit_id}),
 			func() -> String: return _game.production.enqueue_error(bb, unit_id))
+		_buttons[-1]["id"] = unit_id
 	if b.def.get("exchange", false):
 		_build_exchange(b)
 	var shown_age := false
@@ -217,6 +222,7 @@ func _add_research_button(b: Building, id: String, region: Rect2, tip: Dictionar
 			return err
 		return "Already researching - tap to cancel (refund)" if _touch() else "Already researching - click to cancel (refund)"
 	_add_button(SpriteLibrary.props_texture(), region, tip, hotkey, start, check, "", click)
+	_buttons[-1]["id"] = id
 
 
 func _age_req(age: int) -> String:
@@ -296,6 +302,22 @@ func _refresh_states() -> void:
 			b.modulate = Color(0.6, 0.6, 0.6)
 		else:
 			b.modulate = Color.WHITE if err == "" else (Color(0.45, 0.45, 0.45) if err.begins_with("Requires") or err.begins_with("Already") else Color(1.0, 0.6, 0.55))
+
+
+## The button that builds, trains or researches `id` right now, or null. A
+## building on the other build page answers with the page flip button.
+func button_for(id: String) -> Button:
+	if id == "" or not is_visible_in_tree():
+		return null
+	var flip: Button = null
+	for e in _buttons:
+		if not is_instance_valid(e["button"]):
+			continue
+		if e.get("id", "") == id:
+			return e["button"]
+		if e.get("id", "") == PAGE_FLIP:
+			flip = e["button"]
+	return flip if GameData.buildings.has(id) else null
 
 
 func handle_key(keycode: int) -> bool:

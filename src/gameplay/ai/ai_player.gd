@@ -578,7 +578,7 @@ func _attack() -> void:
 		if arrived and not enemy_targets.is_empty():
 			_game.commands.attack_move(wave, enemy_targets[0])
 		return
-	if elapsed - last_wave_time < 90.0 or _threat != Vector2.INF:
+	if elapsed - last_wave_time < float(diff.get("wave_interval_seconds", 90.0)) or _threat != Vector2.INF:
 		return
 	var ready: Array[Unit] = []
 	for u in _army:

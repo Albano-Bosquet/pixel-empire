@@ -91,6 +91,8 @@ static func header(data: Dictionary) -> Dictionary:
 static func capture(game: Game) -> Dictionary:
 	var cfg := game.config.duplicate(true)
 	cfg.erase("save")
+	if game.tutorial != null:
+		cfg["tutorial_step"] = game.tutorial.index
 	var players := []
 	for p in game.players:
 		players.append({"name": p.name, "color_slot": p.color_slot, "is_ai": p.is_ai, "team": p.team, "age": p.age,
@@ -234,6 +236,7 @@ static func restore_world(game: Game, data: Dictionary) -> void:
 		if not done and float(b["progress"]) > 0.0:
 			bl.add_progress(float(b["progress"]))
 		bl.hp = int(b["hp"])
+		bl.update_fires()
 		var q: Array[String] = []
 		for item in b.get("queue", []):
 			q.append(String(item))

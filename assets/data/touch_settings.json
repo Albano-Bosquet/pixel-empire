@@ -1,6 +1,8 @@
 {
   "drag_threshold_px": 14,
   "long_press_ms": 450,
+  "big_button_height": 50,
+  "big_button_font": 19,
   "long_press_vibrate_ms": 25,
   "tip_linger_ms": 2500,
   "pinch_min_zoom_step": 0.02,

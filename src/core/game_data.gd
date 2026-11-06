@@ -26,6 +26,8 @@ var wildlife: Dictionary = {}
 var ambience: Dictionary = {}
 ## Touch-screen gestures: thresholds and timings (touch_settings.json).
 var touch: Dictionary = {}
+## The guided first match: steps, camp, match setup (tutorial_steps.json).
+var tutorial: Dictionary = {}
 
 var _errors: PackedStringArray = []
 
@@ -54,6 +56,7 @@ func reload() -> void:
 	wildlife = _load("wildlife_settings.json")
 	ambience = _load("ambience_settings.json")
 	touch = _load("touch_settings.json")
+	tutorial = _load("tutorial_steps.json")
 	_validate()
 	for e in _errors:
 		push_error("GameData: " + e)

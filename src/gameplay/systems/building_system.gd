@@ -260,6 +260,22 @@ func nearest_drop_site(player_id: int, resource: String, from: Vector2, by_ship:
 
 
 ## Destroyed building: rubble decal fades out after rubble_seconds.
+## Takes down a building that is not finished and gives its cost back
+## (economy_settings.json cancel_build_refund). No rubble and no alert: nothing
+## was lost. Its builders find it gone and go idle.
+func cancel_construction(b: Building) -> void:
+	if b.dead or b.is_complete():
+		return
+	var refund := float(GameData.economy.get("cancel_build_refund", 1.0))
+	var p := _game.player(b.owner_id)
+	var cost: Dictionary = b.def.get("cost", {})
+	for k in cost:
+		p.add(k, floori(int(cost[k]) * refund))
+	b.dead = true
+	b.selectable = false
+	remove(b)
+
+
 func destroy(b: Building) -> void:
 	var n := clampi(b.size, 1, 4)
 	var r := SpriteLibrary.prop("rubble_%d" % n)
