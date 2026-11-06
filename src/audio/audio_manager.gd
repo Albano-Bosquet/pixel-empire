@@ -111,7 +111,9 @@ func stream(key: String, loop: bool = false) -> AudioStream:
 			var w: AudioStreamWAV = s
 			w.loop_mode = AudioStreamWAV.LOOP_FORWARD
 			w.loop_begin = 0
-			w.loop_end = int(w.get_length() * w.mix_rate)
+			# Last valid sample: the mixer also reads the one at loop_end, and with
+			# QOA a length that is a multiple of the frame size would read past the data.
+			w.loop_end = int(round(w.get_length() * w.mix_rate)) - 1
 		_streams[name] = s
 	return _streams[name]
 

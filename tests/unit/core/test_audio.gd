@@ -98,3 +98,19 @@ func test_player_errors_sound_as_errors() -> void:
 	for text in ["Something is in the way", "Queue is full", "The transport is full", Loc.msg("Requires %s", ["Feudal Age"])]:
 		assert_eq(SoundRules.notify_key(_cfg, text), "ui_error", "'%s' -> ui_error" % text)
 	assert_eq(SoundRules.notify_key(_cfg, Loc.msg("%s has built a Wonder! %s to victory", ["Ana", "5:00"])), "wonder_built", "wonder fanfare")
+
+
+## The mixer reads the sample at loop_end too. A QOA sound whose length is an
+## exact multiple of the 5120-sample frame (amb_wind) would decode a frame past
+## its data there: a SIGSEGV in the audio thread on Android.
+func test_looped_sounds_end_on_their_last_sample() -> void:
+	var keys: Array = _cfg.get("ambient", {}).get("loops", {}).keys()
+	keys.append_array(_cfg.get("loops", {}).keys())
+	assert_true(keys.has("amb_wind"), "amb_wind is a loop")
+	for key in keys:
+		var w: AudioStreamWAV = Audio.stream(String(key), true)
+		if w == null:
+			continue
+		var samples := int(round(w.get_length() * w.mix_rate))
+		assert_eq(w.loop_mode, AudioStreamWAV.LOOP_FORWARD, "%s loops" % key)
+		assert_eq(w.loop_end, samples - 1, "%s loop_end is its last sample" % key)
