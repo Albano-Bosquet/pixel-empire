@@ -209,6 +209,28 @@ func _cancel_site(vils: Array[Unit]) -> void:
 	_check(not _game.buildings.buildings.has(site), "the construction is gone")
 	_check(_game.pathfinder.is_walkable(spot), "its tiles are free again")
 	_check(btn.text == tr("Deselect"), "the button goes back to Deselect")
+	await _cancel_ghost(btn, vils)
+
+
+## The same button backs out of placing a new building: a real finger on it removes
+## the ghost, keeps the villagers selected and places nothing.
+func _cancel_ghost(btn: Button, vils: Array[Unit]) -> void:
+	var count := _game.buildings.buildings.size()
+	var wood: int = _game.local_state().resources["wood"]
+	_game.selection.set_selection(vils)
+	_game.placement.begin("house")
+	await _frames(4)
+	_check(btn.text == tr("Cancel build"), "with a ghost on the map the button offers to cancel it")
+	await _shot("touch_cancel_ghost")
+	var at := btn.get_global_rect().get_center()
+	_finger(0, true, at)
+	await _frames(3)
+	_finger(0, false, at)
+	await _frames(4)
+	_check(not _game.placement.is_active(), "the button removes the ghost")
+	_check(_game.selection.selected.size() == vils.size(), "cancelling the ghost keeps the villagers selected")
+	_check(_game.buildings.buildings.size() == count and _game.local_state().resources["wood"] == wood, "cancelling the ghost places and charges nothing")
+	_check(btn.text == tr("Deselect"), "the button goes back to Deselect after the ghost")
 
 
 func _hold_tips(vils: Array[Unit]) -> void:

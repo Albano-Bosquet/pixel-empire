@@ -116,7 +116,8 @@ func _process(delta: float) -> void:
 	_idle_button.text = tr("Idle: %d") % idle
 	_idle_button.modulate = Color(1, 0.85, 0.5) if idle > 0 else Color(0.7, 0.7, 0.7)
 	if _deselect_button != null:
-		var label := tr("Deselect") if _construction_sites().is_empty() else tr("Cancel build")
+		var cancels := _game.placement.is_active() or not _construction_sites().is_empty()
+		var label := tr("Cancel build") if cancels else tr("Deselect")
 		if _deselect_button.text != label:
 			_deselect_button.text = label
 	if _notify_time > 0.0:
@@ -390,8 +391,13 @@ func _construction_sites() -> Array:
 	return own
 
 
-## Touch button: clears the selection, or cancels the construction selected.
+## Touch button: removes the ghost of a building being placed (the villagers stay
+## selected to pick another), else cancels the construction selected, else clears
+## the selection.
 func _deselect_or_cancel() -> void:
+	if _game.placement.is_active():
+		_game.placement.abort()
+		return
 	var sites := _construction_sites()
 	if sites.is_empty():
 		_game.selection.set_selection([])
