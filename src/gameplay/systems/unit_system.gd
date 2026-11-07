@@ -8,6 +8,8 @@ extends Node
 
 ## Sprites this many world pixels off screen still animate (tall and flying ones).
 const VIEW_MARGIN := 160.0
+## Units nobody can see update once every this many frames, each on its own frame.
+const OFFSCREEN_ANIM_EVERY := 4
 const SEPARATION_CELL := 1.0
 
 var units: Array[Unit] = []
@@ -224,8 +226,12 @@ func _separation(i: int, entity_id: int) -> Vector2:
 
 func _process(delta: float) -> void:
 	var view := _view_rect()
+	var turn := Engine.get_process_frames() % OFFSCREEN_ANIM_EVERY
 	for u in units:
-		u.animate(delta, u.visible and view.has_point(u.position))
+		if u.visible and view.has_point(u.position):
+			u.animate(delta)
+		elif u.entity_id % OFFSCREEN_ANIM_EVERY == turn:
+			u.animate(delta * OFFSCREEN_ANIM_EVERY, false)
 	if corpses.is_empty():
 		return
 	for c in corpses:

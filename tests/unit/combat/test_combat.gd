@@ -144,3 +144,27 @@ func test_corpse_lies_then_fades_gradually() -> void:
 	assert_true(mid > 0.2 and mid < 0.8, "half way through the fade it is half transparent (%.2f)" % mid)
 	assert_true(UnitSystem.corpse_alpha(1.0, 5.0) < UnitSystem.corpse_alpha(2.0, 5.0), "keeps fading")
 	assert_near(UnitSystem.corpse_alpha(0.0, 5.0), 0.0, 0.001, "gone at the end")
+
+
+func test_building_reach_filter_never_drops_a_building_in_reach() -> void:
+	var center := Vector2(10.5, 10.5)
+	for size: int in [1, 2, 3, 4, 5]:
+		var half: float = size * 0.5
+		var corner := center + Vector2(half, half)
+		var from := corner + Vector2(4.0, 0.0)  # 4 tiles from the footprint's far corner
+		assert_true(CombatSystem.in_building_reach(from, center, size, 4.0), "size %d: a corner in reach counts" % size)
+
+
+func test_building_reach_filter_drops_far_buildings() -> void:
+	assert_true(not CombatSystem.in_building_reach(Vector2(100, 0), Vector2.ZERO, 3, 5.0), "far away")
+
+
+func test_fog_update_serves_the_local_player_first() -> void:
+	assert_eq(FogSystem.pending_order([1, 2, 3], 2), [2, 1, 3], "local player first")
+	assert_eq(FogSystem.pending_order([1, 2], 0), [1, 2], "a spectator changes nothing")
+
+
+func test_fog_update_fits_all_players_in_its_interval() -> void:
+	assert_eq(FogSystem.players_per_tick(8, 3.75), 3, "8 players in 3 whole ticks")
+	assert_eq(FogSystem.players_per_tick(2, 75.0), 1, "plenty of ticks")
+	assert_eq(FogSystem.players_per_tick(8, 0.5), 8, "less than one tick: all at once")

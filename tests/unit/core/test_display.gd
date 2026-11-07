@@ -13,6 +13,17 @@ func test_scale_never_shrinks_pc_layouts() -> void:
 	assert_eq(DisplayScript.scale_for(480, 640, 3.0), 1.0, "small screens keep native pixels")
 
 
+func test_phones_start_limited_and_pcs_do_not() -> void:
+	assert_eq(DisplayScript.default_fps_limit(true), 60, "phone")
+	assert_eq(DisplayScript.default_fps_limit(false), 0, "PC")
+
+
+func test_fps_limit_choices_cycle_back_to_the_first() -> void:
+	assert_eq(DisplayScript.next_fps_limit(60), 90, "next choice")
+	assert_eq(DisplayScript.next_fps_limit(0), 60, "after no limit")
+	assert_eq(DisplayScript.next_fps_limit(45), 60, "a value from an old file")
+
+
 func test_scale_is_capped() -> void:
 	assert_eq(DisplayScript.scale_for(4000, 640, 3.0), 3.0, "huge tablets stop at max_ui_scale")
 	assert_eq(DisplayScript.scale_for(1080, 0, 3.0), 1.0, "a missing target means no scaling")

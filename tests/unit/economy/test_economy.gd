@@ -120,3 +120,23 @@ func test_farming_alternates_hoe_and_basket() -> void:
 	assert_eq(phases.slice(0, int(cycle.x * 20.0)).count(true), int(cycle.x * 20.0), "starts with the hoe for the whole hoe time")
 	assert_true(not EconomySystem.farm_hoeing(cycle.x + 0.01, cycle), "then the basket")
 	assert_near(EconomySystem.farm_clock(cycle.x + cycle.y - 0.5, 1.0, cycle), 0.5, 0.0001, "the clock wraps back to hoeing")
+
+
+class StubWorker:
+	var task: Dictionary = {}
+
+
+func _worker(task: Dictionary) -> StubWorker:
+	var w := StubWorker.new()
+	w.task = task
+	return w
+
+
+func test_occupied_nodes_lists_each_assigned_node_once() -> void:
+	var farm := RefCounted.new()
+	var other := RefCounted.new()
+	var units := [_worker({"node": farm}), _worker({"node": farm}), _worker({}), _worker({"type": "build"})]
+	var occupied := EconomySystem.occupied_nodes(units)
+	assert_true(occupied.has(farm), "a worked farm counts as occupied")
+	assert_true(not occupied.has(other), "an unworked farm stays free")
+	assert_eq(occupied.size(), 1, "idle units and other tasks add nothing")

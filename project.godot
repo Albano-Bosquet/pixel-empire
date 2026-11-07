@@ -41,7 +41,7 @@ wav={
 
 [physics]
 
-common/physics_ticks_per_second=30
+common/physics_ticks_per_second=20
 common/max_physics_steps_per_frame=2
 
 [rendering]

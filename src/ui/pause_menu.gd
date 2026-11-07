@@ -58,6 +58,7 @@ func _ready() -> void:
 	lang.add_child(pick)
 	v.add_child(lang)
 	v.add_child(UiStyle.fullscreen_toggle())
+	v.add_child(UiStyle.fps_limit_button(280, 40, 16))
 	(v.get_child(1) as Button).grab_focus()
 
 

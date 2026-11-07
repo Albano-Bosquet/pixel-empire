@@ -297,6 +297,14 @@ func _explode(u: Unit, where: Vector2) -> void:
 
 
 ## Finds the best visible enemy within sight (units before buildings, nearest first).
+## False only when no tile of a building of `size` tiles around `center` can be
+## within `reach` of `from`. Generous on purpose: never rejects a building in reach.
+## Example: in_building_reach(Vector2(0, 0), 3, Vector2(100, 0), 5.0) == false
+static func in_building_reach(from: Vector2, center: Vector2, size: int, reach: float) -> bool:
+	var limit := reach + float(size) * 1.5
+	return from.distance_squared_to(center) <= limit * limit
+
+
 func _acquire(u: Unit) -> void:
 	if not _can_attack(u):
 		return  # e.g. an aircraft out of ammunition heading home
@@ -323,6 +331,10 @@ func _acquire(u: Unit) -> void:
 		best = o
 	if best == null and u.is_military() and not Wildlife.is_animal(u):
 		for b in _game.buildings.buildings:
+			# Distance first: every idle soldier walks every building of the match here,
+			# and the fog check behind it is far dearer than this one.
+			if not in_building_reach(from, b.grid_pos, b.size, sight):
+				continue
 			if b.dead or not is_enemy(u, b) or not _game.fog.is_visible(u.owner_id, b) or not can_target(u.def, b):
 				continue
 			var d2 := u.grid_pos.distance_to(b.closest_point(u.grid_pos))
@@ -427,6 +439,7 @@ func _buildings_fire(delta: float) -> void:
 				best_d = d
 				best = o
 		if best == null:
+			b.attack_timer = float(_cfg.get("scan_interval", 0.4))  # same pace as a unit's scan
 			continue
 		b.attack_timer = float(atk.get("cooldown", 2.0))
 		# Guns point at the aircraft as drawn (lifted by its altitude), not at its ground spot.

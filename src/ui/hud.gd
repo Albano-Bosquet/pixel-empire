@@ -11,6 +11,8 @@ const PANEL_BORDER := Color("#8a6d3b")
 const TEXT := Color("#f1e6cf")
 const TEXT_DIM := Color("#b5a88e")
 const NOTIFY_SECONDS := 3.5
+## Seconds between refreshes of the top bar's clock, population and fps.
+const STATUS_INTERVAL := 0.1
 ## Right edge of the minimap frame (bottom-left corner).
 const MINIMAP_RIGHT := 306.0
 ## Narrowest the unit / building info column may get in the selection panel.
@@ -49,6 +51,7 @@ var _idle_button: Button
 var _deselect_button: Button
 var _selection: Array = []
 var _elapsed := 0.0
+var _status_timer := 0.0
 var _queue_sig := ""
 ## Phase 5 shortcuts (alerts, idle military, Town Center, speed...).
 var controls: ControlKeys
@@ -105,16 +108,10 @@ func _process(delta: float) -> void:
 	_elapsed += delta
 	if Net.is_client():
 		_elapsed = _game.victory.elapsed  # the host's match clock
-	var s := int(_elapsed)
-	_clock_label.text = "%02d:%02d" % [s / 60, s % 60]
-	var pop := _game.population(_game.local_player)
-	var cap := _game.population_cap(_game.local_player)
-	_pop_label.text = "%d/%d" % [pop, cap]
-	_pop_label.add_theme_color_override("font_color", Color("#ff8a7a") if pop >= cap else TEXT)
-	_fps_label.text = tr("%d fps · %d units") % [Engine.get_frames_per_second(), _game.unit_system.units.size()]
-	var idle := _idle_count()
-	_idle_button.text = tr("Idle: %d") % idle
-	_idle_button.modulate = Color(1, 0.85, 0.5) if idle > 0 else Color(0.7, 0.7, 0.7)
+	_status_timer -= delta
+	if _status_timer <= 0.0:
+		_status_timer = STATUS_INTERVAL
+		_refresh_status()
 	if _deselect_button != null:
 		var cancels := _game.placement.is_active() or not _construction_sites().is_empty()
 		var label := tr("Cancel build") if cancels else tr("Deselect")
@@ -127,6 +124,21 @@ func _process(delta: float) -> void:
 		_refresh_single(_selection[0])
 	elif _selection.size() > 0 and _selection.any(func(e): return not is_instance_valid(e)):
 		_on_selection_changed(_selection.filter(func(e): return is_instance_valid(e)))
+
+
+## Clock, population, fps and the idle button: they walk the units and restyle
+## labels, too much for every frame of a 120 Hz screen.
+func _refresh_status() -> void:
+	var s := int(_elapsed)
+	_clock_label.text = "%02d:%02d" % [s / 60, s % 60]
+	var pop := _game.population(_game.local_player)
+	var cap := _game.population_cap(_game.local_player)
+	_pop_label.text = "%d/%d" % [pop, cap]
+	_pop_label.add_theme_color_override("font_color", Color("#ff8a7a") if pop >= cap else TEXT)
+	_fps_label.text = tr("%d fps · %d units") % [Engine.get_frames_per_second(), _game.unit_system.units.size()]
+	var idle := _idle_count()
+	_idle_button.text = tr("Idle: %d") % idle
+	_idle_button.modulate = Color(1, 0.85, 0.5) if idle > 0 else Color(0.7, 0.7, 0.7)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:

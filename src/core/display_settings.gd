@@ -10,8 +10,16 @@ extends Node
 signal fullscreen_changed(on: bool)
 
 const SETTINGS_PATH := "user://settings.cfg"
+## Frame rate limits offered in the menus (0 = no limit).
+const FPS_CHOICES: Array[int] = [60, 90, 120, 0]
+## Phones start limited: at 120 fps they heat up and throttle within a minute.
+const MOBILE_FPS_LIMIT := 60
+
+signal fps_limit_changed(limit: int)
 
 var fullscreen := false
+## Highest frame rate the game draws at (0 = no limit). Stored in settings.cfg.
+var fps_limit := 0
 ## Factor applied to the root window's content (1 = native pixels).
 var ui_scale := 1.0
 
@@ -25,6 +33,28 @@ static func scale_for(short_side_px: int, target_height: int, max_scale: float) 
 	return clampf(float(short_side_px) / float(target_height), 1.0, max_scale)
 
 
+## Limit before the player picks one: phones are limited, PCs are not.
+static func default_fps_limit(mobile: bool) -> int:
+	return MOBILE_FPS_LIMIT if mobile else 0
+
+
+## The choice after `limit` in FPS_CHOICES, wrapping; unknown limits go to the first.
+## Example: Display.next_fps_limit(60) -> 90
+static func next_fps_limit(limit: int) -> int:
+	return FPS_CHOICES[(FPS_CHOICES.find(limit) + 1) % FPS_CHOICES.size()]
+
+
+## Stores and applies a frame rate limit (0 = none).
+func set_fps_limit(limit: int) -> void:
+	fps_limit = limit
+	Engine.max_fps = limit
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS_PATH)
+	cfg.set_value("display", "fps_limit", limit)
+	cfg.save(SETTINGS_PATH)
+	fps_limit_changed.emit(limit)
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Pixel-art skin for every control that does not style itself. Merged into
@@ -32,9 +62,12 @@ func _ready() -> void:
 	# controls under CanvasLayers, which do not inherit a window theme.
 	if DisplayServer.get_name() != "headless":
 		ThemeDB.get_default_theme().merge_with(UiStyle.theme())
+	fps_limit = default_fps_limit(OS.has_feature("mobile"))
 	var cfg := ConfigFile.new()
 	if cfg.load(SETTINGS_PATH) == OK:
 		fullscreen = bool(cfg.get_value("display", "fullscreen", fullscreen))
+		fps_limit = int(cfg.get_value("display", "fps_limit", fps_limit))
+	Engine.max_fps = fps_limit
 	for a in OS.get_cmdline_user_args():
 		if a == "--fullscreen":
 			fullscreen = true

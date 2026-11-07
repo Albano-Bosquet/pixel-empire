@@ -26,6 +26,10 @@ var _explored_img: Dictionary = {}  # player_id -> Image
 var _discs: Dictionary = {}     # sight radius -> sight_disc()
 var _timer := 0.0
 var _interval := 0.125
+## The update in progress: what can be seen, who is left, how many per tick.
+var _sources: Dictionary = {}
+var _pending: Array = []
+var _per_tick := 0
 var _tex: ImageTexture
 var _explored_tex: ImageTexture
 var _overlay: Node2D
@@ -133,22 +137,52 @@ func _physics_process(delta: float) -> void:
 	_timer -= delta
 	if _timer <= 0.0:
 		_timer = _interval
-		update_now()
+		_sources = _sight_sources()
+		_pending = pending_order(_visible_img.keys(), _game.local_player)
+		_per_tick = players_per_tick(_pending.size(), _interval * Engine.physics_ticks_per_second)
+	for i in mini(_per_tick, _pending.size()):
+		var pid: int = _pending.pop_front()
+		_rebuild(pid, _sources)
+		if pid == _game.local_player:
+			_refresh_local()
 
 
+## Rebuilds every player's grids at once. The regular update spreads the players
+## over the ticks of an interval: eight at once stood out as a slow tick.
 func update_now() -> void:
 	var sources := _sight_sources()
 	for pid in _visible_img:
-		var vis: Image = _visible_img[pid]
-		var exp: Image = _explored_img[pid]
-		vis.fill(Color.BLACK)
-		for owner in sources:
-			if CombatSystem.are_allies(owner, pid):
-				for key in sources[owner]:
-					_stamp(vis, exp, Vector2i(key.x, key.y), key.z)
-		_visible[pid] = vis.get_data()
-		_explored[pid] = exp.get_data()
+		_rebuild(pid, sources)
+	_pending.clear()
 	_refresh_local()
+
+
+## The players of a spread update, the local one first (the screen shows its grid).
+## Example: FogSystem.pending_order([1, 2, 3], 2) -> [2, 1, 3]
+static func pending_order(players: Array, local_player: int) -> Array:
+	var out := players.duplicate()
+	if out.has(local_player):
+		out.erase(local_player)
+		out.push_front(local_player)
+	return out
+
+
+## Players per tick so `count` of them fit in `ticks` ticks.
+## Example: FogSystem.players_per_tick(8, 3.75) -> 3
+static func players_per_tick(count: int, ticks: float) -> int:
+	return ceili(float(count) / maxf(1.0, floorf(ticks)))
+
+
+func _rebuild(pid: int, sources: Dictionary) -> void:
+	var vis: Image = _visible_img[pid]
+	var exp: Image = _explored_img[pid]
+	vis.fill(Color.BLACK)
+	for owner in sources:
+		if CombatSystem.are_allies(owner, pid):
+			for key in sources[owner]:
+				_stamp(vis, exp, Vector2i(key.x, key.y), key.z)
+	_visible[pid] = vis.get_data()
+	_explored[pid] = exp.get_data()
 
 
 ## player id -> {Vector3i(tile x, tile y, sight radius): true}. A crowd on one

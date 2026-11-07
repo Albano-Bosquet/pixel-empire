@@ -135,6 +135,7 @@ func _ready() -> void:
 	full.add_theme_icon_override("unchecked", load(UiStyle.UI_ART + "toggle_off.png"))
 	full.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	v.add_child(full)
+	v.add_child(UiStyle.fps_limit_button(400, 44, 17))
 	_message = UiStyle.label("", 14, Color("#ff8a7a"))
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

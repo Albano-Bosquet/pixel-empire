@@ -1,5 +1,7 @@
 {
   "think_interval": 1.0,
+  "storehouse_check_seconds": 5.0,
+  "fish_retry_seconds": 15.0,
   "military_min_villagers": 9,
   "hunt_spacing_tiles": 12,
   "resource_split": {

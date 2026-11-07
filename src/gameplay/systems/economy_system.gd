@@ -80,10 +80,22 @@ func _set_task(u: Unit, t: Dictionary) -> void:
 # --- Tick ---------------------------------------------------------------------
 
 func _physics_process(delta: float) -> void:
+	var turn := Engine.get_physics_frames() % 2
 	for u in _game.unit_system.units:
 		if not u.task.is_empty() and not u.dead:
-			_tick(u, delta)
+			if _works_in_place(u):
+				# Standing at a tree or a mine: half of them each tick, double the time.
+				if u.entity_id % 2 == turn:
+					_tick(u, delta * 2.0)
+			else:
+				_tick(u, delta)
 	_game.buildings.apply_construction(delta)
+
+
+## Gathering from a node without moving (farmers walk their field: every tick).
+func _works_in_place(u: Unit) -> bool:
+	var t := u.task
+	return t["type"] == "gather" and t["phase"] == "work" and Iso.alive(t.get("node")) is ResourceNode
 
 
 func _tick(u: Unit, delta: float) -> void:
@@ -168,13 +180,16 @@ func find_node(kind: String, around: Vector2, radius: int, owner_id: int, naval:
 	return _find_node(kind, around, around, radius, owner_id, naval)
 
 
-## Villagers currently assigned to gather `node`.
-func farmers(node: Entity) -> int:
-	var n := 0
-	for u in _game.unit_system.units:
-		if not u.task.is_empty() and u.task.get("node") == node:
-			n += 1
-	return n
+## Every node some unit in `units` is assigned to, as dictionary keys. One pass:
+## asking per farm tile walked the whole army thousands of times in one search.
+## Example: occupied_nodes(game.unit_system.units).has(farm)
+static func occupied_nodes(units: Array) -> Dictionary:
+	var out := {}
+	for u in units:
+		var node: Variant = u.task.get("node")
+		if node != null:
+			out[node] = true
+	return out
 
 
 ## Carry capacity of a player's villagers (carry_capacity modifier).
@@ -452,10 +467,15 @@ func _find_node(kind: String, around: Vector2, from: Vector2, radius: int = -1, 
 	var c := Iso.tile_of(around)
 	var best: Entity = null
 	var best_d := INF
+	var occupied: Variant = null  # filled when the first farm shows up
 	for dy in range(-r, r + 1):
 		for dx in range(-r, r + 1):
 			var e: Entity = _game.static_entity_at(c + Vector2i(dx, dy))
-			if e is Building and not naval and e.is_farm() and kind == "food" and not e.is_depleted() and (owner_id < 0 or e.owner_id == owner_id) and farmers(e) == 0:
+			if e is Building and not naval and e.is_farm() and kind == "food" and not e.is_depleted() and (owner_id < 0 or e.owner_id == owner_id):
+				if occupied == null:
+					occupied = occupied_nodes(_game.unit_system.units)
+				if occupied.has(e):
+					continue
 				var df: float = e.grid_pos.distance_squared_to(around)
 				if df < best_d:
 					best_d = df

@@ -46,6 +46,10 @@ var _fleet: Array[Unit] = []
 var _transports: Array[Unit] = []
 ## Next time a dock site search may run (it is skipped when no shore is near).
 var _dock_retry := 0.0
+## Next time idle fishing ships may look for a shoal after finding none.
+var _fish_retry := 0.0
+## Next time the distance from resources to their drop sites is checked.
+var _storehouse_check := 0.0
 ## -1 unknown, 0 enemy reachable on foot, 1 needs a transport.
 var _needs_boat := -1
 ## Sea invasion in progress: {"phase": "boarding"|"sailing", "ship": Unit, "units": Array, "since": float}.
@@ -69,6 +73,9 @@ func setup(game: Game, p: PlayerState, level: String) -> void:
 	difficulty = level if GameData.ai.get("difficulties", {}).has(level) else "normal"
 	_cfg = GameData.ai
 	diff = _cfg["difficulties"][difficulty]
+	# Each AI thinks at its own moment of the interval: seven of them on one tick
+	# was a frame hitch every second.
+	_think = float(_cfg.get("think_interval", 1.0)) * float(p.id % game.players.size()) / float(game.players.size())
 	for r in ECO_RESOURCES:
 		player.modifiers["gather_" + r] = float(diff.get("gather_multiplier", 1.0))
 	var start := Vector2(game.map.start_positions[p.id - 1])
@@ -306,7 +313,8 @@ func _build() -> void:
 		if berries is ResourceNode:
 			_place("mill", berries.grid_pos, 2, 5, _builders(1))
 			return
-	if _villagers.size() >= 6:
+	if _villagers.size() >= 6 and elapsed >= _storehouse_check:
+		_storehouse_check = elapsed + float(_cfg.get("storehouse_check_seconds", 5.0))
 		for r in ["wood", "gold", "stone"]:
 			if r == "stone" and player.age < 1:
 				continue
@@ -755,12 +763,17 @@ func _naval() -> void:
 	# Dock: once, if a shore site exists near home.
 	_try_dock()
 	# Idle fishing ships go to the nearest shoal.
-	for f in _fishers:
-		if f.task.is_empty() and f.state == Unit.State.IDLE:
-			var fish := _game.economy.find_node("food", f.grid_pos, 30, -1, true)
-			if fish != null:
-				var one: Array[Unit] = [f]
-				_game.economy.order_gather(one, fish)
+	if elapsed >= _fish_retry:
+		for f in _fishers:
+			if f.task.is_empty() and f.state == Unit.State.IDLE:
+				var fish := _game.economy.find_node("food", f.grid_pos, 30, -1, true)
+				if fish != null:
+					var one: Array[Unit] = [f]
+					_game.economy.order_gather(one, fish)
+				else:
+					# The shoals are gone: this search is thousands of tiles per ship.
+					_fish_retry = elapsed + float(_cfg.get("fish_retry_seconds", 15.0))
+					break
 	# An idle transport (no invasion under way) explores the coasts.
 	if _naval_op.is_empty():
 		for tr_ship in _transports:

@@ -86,6 +86,20 @@ static func fullscreen_toggle() -> CheckButton:
 	return c
 
 
+## Text of the frame rate limit button.
+static func fps_limit_text(limit: int) -> String:
+	return TranslationServer.translate("FPS limit: %s") % (str(limit) if limit > 0 else TranslationServer.translate("No limit"))
+
+
+## Button that steps through Display.FPS_CHOICES.
+static func fps_limit_button(width: float, height: float, font_size: int) -> Button:
+	var b := pixel_button(fps_limit_text(Display.fps_limit), width, height, font_size)
+	b.pressed.connect(func() -> void:
+		Display.set_fps_limit(Display.next_fps_limit(Display.fps_limit))
+		b.text = fps_limit_text(Display.fps_limit))
+	return b
+
+
 # --- Pixel-art skins (assets/ui, painted by tools/art/make_ui_art.py) ----------
 
 const UI_ART := "res://assets/ui/"

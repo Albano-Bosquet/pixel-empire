@@ -13,6 +13,8 @@ const PROP_SHADER := preload("res://assets/shaders/xray_prop.gdshader")
 const BODY_HALF_WIDTH := 32.0
 ## World pixels from a body's feet to the far edge of its sprite, with room to spare.
 const REACH := 160.0
+## Silhouettes are rebuilt once every this many frames.
+const UPDATE_EVERY := 2
 
 var _game: Game
 var _cfg: Dictionary
@@ -23,6 +25,8 @@ var _shown: Dictionary = {}
 var _tints: Dictionary = {}
 ## On-screen building sprites, grown by REACH: bodies elsewhere are skipped cheaply.
 var _covers: Array[Rect2] = []
+## The view grown by REACH: feet outside it cannot put a sprite on screen.
+var _near := Rect2()
 ## Per map tile: props that can cover a body standing there, or null.
 var _tile_props: Array = []
 ## Prop sprite -> Node2D holding its silhouettes.
@@ -38,9 +42,12 @@ func setup(game: Game, cfg: Dictionary) -> void:
 
 
 func _process(_delta: float) -> void:
+	if Engine.get_process_frames() % UPDATE_EVERY != 0:
+		return  # the costliest per-frame work in the game, and a frame late is invisible
 	if _tile_props.is_empty():
 		_index_props()
 	var view := _view_rect()
+	_near = view.grow(REACH)
 	_covers.clear()
 	for b in _game.buildings.buildings:
 		var cover := b.body_rect()
@@ -213,6 +220,8 @@ func _bodies(view: Rect2) -> Array:
 
 func _add(out: Array, e: Entity, view: Rect2) -> void:
 	var feet := e.position
+	if not _near.has_point(feet):
+		return  # most of the map, every frame: leave before any other work
 	var tile := e.tile()
 	var map: MapData = _game.map
 	var props: Variant = _tile_props[tile.y * map.width + tile.x] if map.in_bounds(tile) else null
