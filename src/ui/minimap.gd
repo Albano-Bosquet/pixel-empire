@@ -8,6 +8,8 @@ extends Control
 ## Left click/drag: move the camera. Right click: order selected units there.
 
 const UPDATE_HZ := 4.0
+## Unit dots redraw this often; the frame follows the camera at full rate.
+const DOTS_HZ := 10.0
 const PING_SECONDS := 3.0
 const RESOURCE_COLORS := {"wood": Color("#2c5222"), "gold": Color("#e8c13a"), "stone": Color("#b8bec6"), "food": Color("#c9405a")}
 
@@ -18,6 +20,8 @@ var _base: PackedByteArray  # RGB per tile: terrain + static resources
 var _img: Image
 var _tex: ImageTexture
 var _timer := 0.0
+var _dots_timer := 0.0
+var _last_view := Vector4.ZERO
 var _pings: Array[Dictionary] = []
 var _dragging := false
 var _palette: Array[Color] = []
@@ -94,7 +98,12 @@ func _process(delta: float) -> void:
 	for p in _pings:
 		p["t"] -= delta
 	_pings = _pings.filter(func(p): return p["t"] > 0.0)
-	queue_redraw()
+	_dots_timer -= delta
+	var view := Vector4(_game.camera.position.x, _game.camera.position.y, _game.camera.zoom.x, size.x)
+	if _dots_timer <= 0.0 or view != _last_view or not _pings.is_empty():
+		_dots_timer = 1.0 / DOTS_HZ
+		_last_view = view
+		queue_redraw()
 
 
 func _refresh() -> void:

@@ -119,8 +119,8 @@ func _physics_process(delta: float) -> void:
 	var check := _timer <= 0.0
 	if check:
 		_timer = float(_cfg.get("check_interval", 0.5))
-	for u in _game.unit_system.units:
-		if u.dead or not Wildlife.is_animal(u):
+	for u in _game.unit_system.animals:
+		if u.dead:
 			continue
 		if check and Wildlife.is_herdable(u):
 			_claim(u)

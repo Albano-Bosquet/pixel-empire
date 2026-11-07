@@ -380,7 +380,7 @@ func _farm_walk(u: Unit, farm: Building, delta: float) -> void:
 		t["farm_k"] = k + 1
 		return
 	var step := minf(dist, float(_cfg.get("farm_walk_speed", 0.32)) * delta)
-	u.set_grid_pos(u.grid_pos + to / dist * step)
+	u.glide_to(u.grid_pos + to / dist * step)
 	u.face(Iso.direction_index(to))
 
 

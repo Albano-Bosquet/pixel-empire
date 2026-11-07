@@ -34,6 +34,11 @@ var carry_amount := 0.0
 var work_anim := ""
 var is_worker := false
 var color_slot := 0
+## Cached from `def`: the per-tick loops read these for every unit.
+var naval := false
+var loiter := false
+## Ticks an undisturbed standing unit skips its separation check (UnitSystem).
+var rest_ticks := 0
 
 var range_bonus := 0.0
 
@@ -82,6 +87,24 @@ var _anim_time := 0.0
 var _turn_time := 0.0
 ## Last work-animation cycle that made a sound (tool strikes, see _work_sound).
 var _work_cycle := -1
+# The playing animation, cached from _anim_rows (0 frames = none).
+var _row := 0
+var _frames := 0
+var _fps := 1.0
+var _is_work_anim := false
+var _is_walk_anim := false
+# What the sprite shows now: its setters redraw even when nothing changes.
+var _shown_frame := -1
+var _shown_flip := false
+var _walk_rate_min := 0.35
+var _walk_rate_max := 1.4
+var _turn_step := 0.025
+# World positions of the last two simulation ticks: the simulation runs slower
+# than the screen, so `position` blends between them on every drawn frame.
+var _glide_from := Vector2.ZERO
+var _glide_to := Vector2.ZERO
+## Physics tick of the last glide_to(); -1 = not gliding.
+var _glide_tick := -1
 
 
 func setup(id: String, unit_def: Dictionary, player_id: int, color_slot_arg: int, at: Vector2) -> void:
@@ -96,6 +119,11 @@ func setup(id: String, unit_def: Dictionary, player_id: int, color_slot_arg: int
 	radius = float(def.get("radius", 0.22))
 	sight = int(def.get("sight", 4))
 	is_worker = bool(def.get("worker", false))
+	naval = bool(def.get("naval", false))
+	loiter = bool(def.get("loiter", false))
+	_walk_rate_min = float(GameData.movement.get("walk_anim_min_rate", 0.35))
+	_walk_rate_max = float(GameData.movement.get("walk_anim_max_rate", 1.4))
+	_turn_step = 1.0 / maxf(1.0, float(GameData.movement.get("turn_steps_per_second", 40.0)))
 	var sprite_id: String = def.get("sprite", id)
 	_layout = SpriteLibrary.unit_layout(sprite_id)
 	shadow_sprite = _layout.get("shadow", "shadow_s")
@@ -131,6 +159,35 @@ func setup(id: String, unit_def: Dictionary, player_id: int, color_slot_arg: int
 	_anim_time = randf() * 2.0
 	facing = randi() % Iso.DIR_COUNT
 	facing_target = facing
+
+
+## Places the unit at once (spawning, teleports, host snapshots).
+func set_grid_pos(g: Vector2) -> void:
+	super.set_grid_pos(g)
+	_glide_tick = -1
+
+
+## Moves the unit during a simulation tick. Its drawn `position` catches up
+## smoothly on the following frames (see _glide).
+func glide_to(g: Vector2) -> void:
+	var tick := Engine.get_physics_frames()
+	if tick != _glide_tick:
+		_glide_from = position if _glide_tick < 0 else _glide_to
+		_glide_tick = tick
+	grid_pos = g
+	_glide_to = Iso.grid_to_world(g)
+
+
+## Blends the drawn position across the last tick; it rests once a tick passes
+## without movement. Rounded, so sprites stay on whole pixels.
+func _glide() -> void:
+	if _glide_tick < 0:
+		return
+	if Engine.get_physics_frames() == _glide_tick:
+		position = _glide_from.lerp(_glide_to, Engine.get_physics_interpolation_fraction()).round()
+	else:
+		position = _glide_to.round()
+		_glide_tick = -1
 
 
 ## Marks the unit as moving while its path request waits in the queue.
@@ -209,16 +266,16 @@ func face(dir: int) -> void:
 func play_once(anim: String, with_sound: bool = true) -> void:
 	if not _anim_rows.has(anim):
 		return
-	_anim = anim
+	_use_anim(anim)
 	_anim_time = 0.0
-	var info: Dictionary = _anim_rows[anim]
-	anim_lock = float(info["frames"]) / maxf(1.0, info["fps"])
+	anim_lock = float(_frames) / maxf(1.0, _fps)
 	if anim == "attack" and with_sound:
 		EventBus.sound_at.emit(SoundRules.attack_key(GameData.audio, type_id, def), position)
 
 
 ## Switches to the death animation (holds its last frame).
 func die() -> void:
+	set_grid_pos(grid_pos)  # the body settles exactly where the unit fell
 	EventBus.sound_at.emit(SoundRules.death_key(GameData.audio, def), position)
 	stop()
 	target = null
@@ -265,58 +322,75 @@ func has_anim(anim: String) -> bool:
 
 func play(anim: String) -> void:
 	if anim != _anim and _anim_rows.has(anim):
-		_anim = anim
+		_use_anim(anim)
 		_anim_time = 0.0
 		_work_cycle = -1
 
 
-## Advances the sprite animation; called by UnitSystem every frame.
-func animate(delta: float) -> void:
+func _use_anim(anim: String) -> void:
+	_anim = anim
+	var info: Dictionary = _anim_rows[anim]
+	_row = info["row"]
+	_frames = info["frames"]
+	_fps = info["fps"]
+	_is_work_anim = anim in WORK_ANIMS
+	_is_walk_anim = anim == "walk" or anim.begins_with("carry_")
+
+
+## Advances the animation; called by UnitSystem every frame. With `drawn` false
+## (off screen or under the fog) time and sounds advance but the sprite is left alone.
+func animate(delta: float, drawn: bool = true) -> void:
+	_glide()
 	var rate := 1.0
-	if (_anim == "walk" or _anim.begins_with("carry_")) and speed > 0.0:
+	if _is_walk_anim and speed > 0.0:
 		# Stride follows ground speed so feet do not slide when slowing or crowding.
-		rate = clampf(velocity.length() / speed, float(GameData.movement.get("walk_anim_min_rate", 0.35)),
-				float(GameData.movement.get("walk_anim_max_rate", 1.4)))
+		rate = clampf(velocity.length() / speed, _walk_rate_min, _walk_rate_max)
 	_anim_time += delta * rate
 	anim_lock -= delta
 	_turn(delta)
 	since_damaged += delta
-	var info: Dictionary = _anim_rows.get(_anim, {})
-	if info.is_empty():
+	if _frames == 0:
+		return
+	if not dead and (_is_work_anim or (naval and state == State.IDLE and task.get("type", "") == "gather")):
+		_work_sound()
+	if not drawn:
 		return
 	var sd := Iso.sheet_direction(facing)
-	var frame := int(_anim_time * info["fps"]) % int(info["frames"])
+	var frame := int(_anim_time * _fps) % _frames
 	if dead:
-		frame = mini(int(_anim_time * info["fps"]), int(info["frames"]) - 1)
-	_sprite.frame = (int(info["row"]) + sd.x) * _sprite.hframes + frame
+		frame = mini(int(_anim_time * _fps), _frames - 1)
+	frame += (_row + sd.x) * _sprite.hframes
+	if frame != _shown_frame:
+		_shown_frame = frame
+		_sprite.frame = frame
 	if altitude > 0.0 and not dead:
 		_sprite.position.y = -flight_height() + sin(_anim_time * 2.2) * 1.5
-	_sprite.flip_h = sd.y == 1
-	if not dead and (_anim in WORK_ANIMS or (task.get("type", "") == "gather" and def.get("naval", false) and state == State.IDLE)):
-		_work_sound(info)
-	# Mirroring happens inside the frame rect, so mirror the anchor too.
-	_sprite.offset.x = -(_frame_w - _anchor.x) if _sprite.flip_h else -_anchor.x
+	var flip := sd.y == 1
+	if flip != _shown_flip:
+		_shown_flip = flip
+		_sprite.flip_h = flip
+		# Mirroring happens inside the frame rect, so mirror the anchor too.
+		_sprite.offset.x = -(_frame_w - _anchor.x) if flip else -_anchor.x
 
 
 func _turn(delta: float) -> void:
 	if facing == facing_target:
 		_turn_time = 0.0
 		return
-	var step_time := 1.0 / maxf(1.0, float(GameData.movement.get("turn_steps_per_second", 40.0)))
 	_turn_time += delta
-	while _turn_time >= step_time and facing != facing_target:
-		_turn_time -= step_time
+	while _turn_time >= _turn_step and facing != facing_target:
+		_turn_time -= _turn_step
 		facing = posmod(facing + signi(Iso.direction_delta(facing, facing_target)), Iso.DIR_COUNT)
 
 
 ## Emits the work sound once per animation cycle, at the strike frame
 ## ("at" = fraction of the cycle, "every" = only every n-th cycle).
-func _work_sound(info: Dictionary) -> void:
+func _work_sound() -> void:
 	var farming: bool = task.get("type", "") == "gather" and task.get("kind", "") == "food" and _anim == "build"
 	var entry := SoundRules.work_entry(GameData.audio, "fish" if def.get("naval", false) else _anim, farming)
 	if entry.is_empty():
 		return
-	var period := float(info["frames"]) / maxf(1.0, float(info["fps"])) if _anim in WORK_ANIMS else 2.0
+	var period := float(_frames) / maxf(1.0, _fps) if _is_work_anim else 2.0
 	var cycle := floori(_anim_time / period - float(entry.get("at", 0.5)))
 	if cycle < 0 or cycle == _work_cycle:
 		return

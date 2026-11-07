@@ -10,6 +10,8 @@ var _cell: float
 var _cols: int
 var _rows: int
 var _buckets: Array = []
+## Indices of the buckets holding items, so clear() skips the empty ones.
+var _used := PackedInt32Array()
 
 
 func _init(map_w: int, map_h: int, cell_size: float = 2.0) -> void:
@@ -22,12 +24,17 @@ func _init(map_w: int, map_h: int, cell_size: float = 2.0) -> void:
 
 
 func clear() -> void:
-	for b in _buckets:
-		b.clear()
+	for i in _used:
+		_buckets[i].clear()
+	_used.clear()
 
 
 func insert(item: Object, pos: Vector2) -> void:
-	_buckets[_index(pos)].append(item)
+	var i := _index(pos)
+	var bucket: Array = _buckets[i]
+	if bucket.is_empty():
+		_used.append(i)
+	bucket.append(item)
 
 
 ## Appends to `out` every item whose bucket overlaps the query square.

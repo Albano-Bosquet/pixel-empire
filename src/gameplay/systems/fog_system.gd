@@ -6,6 +6,8 @@ extends Node
 ## are hidden; other players' buildings appear once actually seen and out of sight
 ## show as they were last seen (BuildingMemory). AI players use their
 ## own grids, so they never see through the fog either.
+## Grids live in R8 images (255 = yes) and sight discs are blitted natively:
+## this runs several times a second over every unit, too hot for script loops.
 ## Example: if game.fog.is_visible(player_id, enemy): ...
 
 const SHADER := preload("res://assets/shaders/fog.gdshader")
@@ -17,13 +19,15 @@ var pending_reveal := false
 var _game: Game
 var _w := 0
 var _h := 0
-var _visible: Dictionary = {}   # player_id -> PackedByteArray (1 = visible now)
-var _explored: Dictionary = {}  # player_id -> PackedByteArray (1 = ever seen)
-var _offsets: Dictionary = {}   # sight radius -> Array[Vector2i]
+var _visible: Dictionary = {}   # player_id -> PackedByteArray (non-zero = visible now)
+var _explored: Dictionary = {}  # player_id -> PackedByteArray (non-zero = ever seen)
+var _visible_img: Dictionary = {}   # player_id -> Image the grid above is read from
+var _explored_img: Dictionary = {}  # player_id -> Image
+var _discs: Dictionary = {}     # sight radius -> sight_disc()
 var _timer := 0.0
 var _interval := 0.125
-var _img: Image
 var _tex: ImageTexture
+var _explored_tex: ImageTexture
 var _overlay: Node2D
 ## What the local player remembers of other players' buildings out of sight.
 var memory := BuildingMemory.new()
@@ -38,20 +42,20 @@ func setup(game: Game, cfg: Dictionary, fog_enabled: bool) -> void:
 	_h = game.map.height
 	_interval = 1.0 / maxf(1.0, float(cfg.get("fog_update_hz", 8)))
 	for p in game.players:
-		var v := PackedByteArray()
-		v.resize(_w * _h)
-		_visible[p.id] = v
-		var e := PackedByteArray()
-		e.resize(_w * _h)
-		_explored[p.id] = e
-	_img = Image.create_empty(_w, _h, false, Image.FORMAT_R8)
-	_tex = ImageTexture.create_from_image(_img)
+		_visible_img[p.id] = Image.create_empty(_w, _h, false, Image.FORMAT_R8)
+		_explored_img[p.id] = Image.create_empty(_w, _h, false, Image.FORMAT_R8)
+		_visible[p.id] = _visible_img[p.id].get_data()
+		_explored[p.id] = _explored_img[p.id].get_data()
+	var blank := Image.create_empty(_w, _h, false, Image.FORMAT_R8)
+	_tex = ImageTexture.create_from_image(blank)
+	_explored_tex = ImageTexture.create_from_image(blank)
 	_overlay = FogOverlay.new()
 	_overlay.z_index = 46
 	_overlay.visible = enabled
 	var mat := ShaderMaterial.new()
 	mat.shader = SHADER
 	mat.set_shader_parameter("fog_map", _tex)
+	mat.set_shader_parameter("explored_map", _explored_tex)
 	mat.set_shader_parameter("noise_tex", load(SpriteLibrary.TERRAIN_NOISE))
 	mat.set_shader_parameter("map_size", Vector2(_w, _h))
 	_overlay.material = mat
@@ -106,7 +110,12 @@ func explored_grid(player_id: int) -> PackedByteArray:
 ## Restores a saved exploration grid.
 func set_explored(player_id: int, grid: PackedByteArray) -> void:
 	if _explored.has(player_id) and grid.size() == _explored[player_id].size():
-		_explored[player_id] = grid.duplicate()
+		var data := grid.duplicate()
+		for i in data.size():
+			if data[i] != 0:
+				data[i] = 255  # older saves stored 1
+		_explored_img[player_id].set_data(_w, _h, false, Image.FORMAT_R8, data)
+		_explored[player_id] = data
 	# Saves keep no building memory: count what stands on explored ground as seen.
 	if player_id == _game.local_player:
 		for b in _game.buildings.buildings:
@@ -117,7 +126,7 @@ func set_explored(player_id: int, grid: PackedByteArray) -> void:
 ## Tiles explored by `player_id` (0..1), for statistics and the AI.
 func explored_fraction(player_id: int) -> float:
 	var e: PackedByteArray = _explored[player_id]
-	return float(e.count(1)) / float(e.size())
+	return float(e.size() - e.count(0)) / float(e.size())
 
 
 func _physics_process(delta: float) -> void:
@@ -128,54 +137,80 @@ func _physics_process(delta: float) -> void:
 
 
 func update_now() -> void:
-	for pid in _visible:
-		var vis: PackedByteArray = _visible[pid]
-		vis.fill(0)
-		for u in _game.unit_system.units:
-			if u.owner_id != Entity.GAIA and CombatSystem.are_allies(u.owner_id, pid) and not u.dead and u.aboard == null:
-				_stamp(vis, u.tile(), u.sight)
-		for b in _game.buildings.buildings:
-			if b.owner_id != Entity.GAIA and CombatSystem.are_allies(b.owner_id, pid) and not b.dead:
-				_stamp(vis, Iso.tile_of(b.grid_pos), int(b.def.get("sight", 4)) if b.is_complete() else 2)
-		var exp: PackedByteArray = _explored[pid]
-		for i in vis.size():
-			if vis[i] != 0:
-				exp[i] = 1
+	var sources := _sight_sources()
+	for pid in _visible_img:
+		var vis: Image = _visible_img[pid]
+		var exp: Image = _explored_img[pid]
+		vis.fill(Color.BLACK)
+		for owner in sources:
+			if CombatSystem.are_allies(owner, pid):
+				for key in sources[owner]:
+					_stamp(vis, exp, Vector2i(key.x, key.y), key.z)
+		_visible[pid] = vis.get_data()
+		_explored[pid] = exp.get_data()
 	_refresh_local()
 
 
-func _stamp(vis: PackedByteArray, c: Vector2i, radius: int) -> void:
-	if not _offsets.has(radius):
-		var list: Array[Vector2i] = []
-		var r2 := (radius + 0.5) * (radius + 0.5)
-		for dy in range(-radius, radius + 1):
-			for dx in range(-radius, radius + 1):
-				if dx * dx + dy * dy <= r2:
-					list.append(Vector2i(dx, dy))
-		_offsets[radius] = list
-	for o in _offsets[radius]:
-		var x: int = c.x + o.x
-		var y: int = c.y + o.y
-		if x >= 0 and y >= 0 and x < _w and y < _h:
-			vis[y * _w + x] = 1
+## player id -> {Vector3i(tile x, tile y, sight radius): true}. A crowd on one
+## tile counts once: repeating the same disc reveals nothing more.
+func _sight_sources() -> Dictionary:
+	var sources := {}
+	for u in _game.unit_system.units:
+		if u.owner_id != Entity.GAIA and not u.dead and u.aboard == null:
+			var t := u.tile()
+			_owner_sources(sources, u.owner_id)[Vector3i(t.x, t.y, u.sight)] = true
+	for b in _game.buildings.buildings:
+		if b.owner_id != Entity.GAIA and not b.dead:
+			var t := Iso.tile_of(b.grid_pos)
+			_owner_sources(sources, b.owner_id)[Vector3i(t.x, t.y, int(b.def.get("sight", 4)) if b.is_complete() else 2)] = true
+	return sources
+
+
+static func _owner_sources(sources: Dictionary, owner: int) -> Dictionary:
+	if not sources.has(owner):
+		sources[owner] = {}
+	return sources[owner]
+
+
+func _stamp(vis: Image, exp: Image, c: Vector2i, radius: int) -> void:
+	if not _discs.has(radius):
+		_discs[radius] = sight_disc(radius)
+	var disc: Dictionary = _discs[radius]
+	stamp_disc(vis, disc, c)
+	stamp_disc(exp, disc, c)
+
+
+## Images that paint a filled disc of `radius` tiles with stamp_disc().
+static func sight_disc(radius: int) -> Dictionary:
+	var side := radius * 2 + 1
+	var solid := Image.create_empty(side, side, false, Image.FORMAT_R8)
+	solid.fill(Color.WHITE)
+	var mask := Image.create_empty(side, side, false, Image.FORMAT_LA8)
+	var r2 := (radius + 0.5) * (radius + 0.5)
+	for dy in range(-radius, radius + 1):
+		for dx in range(-radius, radius + 1):
+			if dx * dx + dy * dy <= r2:
+				mask.set_pixel(dx + radius, dy + radius, Color.WHITE)
+	return {"solid": solid, "mask": mask, "rect": Rect2i(0, 0, side, side), "radius": radius}
+
+
+## Paints `disc` centred on tile `c` of `grid`, clipped to the grid.
+static func stamp_disc(grid: Image, disc: Dictionary, c: Vector2i) -> void:
+	var r: int = disc["radius"]
+	grid.blit_rect_mask(disc["solid"], disc["mask"], disc["rect"], c - Vector2i(r, r))
 
 
 func _refresh_local() -> void:
 	var pid := _game.local_player
 	if not _visible.has(pid):
 		return
-	var vis: PackedByteArray = _visible[pid]
 	if pending_reveal:
 		pending_reveal = false
-		for p2 in _explored:
-			_explored[p2].fill(1)
-	var exp: PackedByteArray = _explored[pid]
-	var data := PackedByteArray()
-	data.resize(_w * _h)
-	for i in data.size():
-		data[i] = 255 if vis[i] != 0 else (128 if exp[i] != 0 else 0)
-	_img.set_data(_w, _h, false, Image.FORMAT_R8, data)
-	_tex.update(_img)
+		for p2 in _explored_img:
+			_explored_img[p2].fill(Color.WHITE)
+			_explored[p2] = _explored_img[p2].get_data()
+	_tex.update(_visible_img[pid])
+	_explored_tex.update(_explored_img[pid])
 	# Hide what the local player cannot see.
 	for u in _game.unit_system.units:
 		if u.owner_id != pid:

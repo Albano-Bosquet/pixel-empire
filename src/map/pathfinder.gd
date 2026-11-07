@@ -14,6 +14,11 @@ var astar := AStarGrid2D.new()
 var naval := false
 ## Gate tile -> owner player id.
 var gates: Dictionary = {}
+## One byte per tile mirroring astar's solid flags (1 = solid): is_walkable runs
+## thousands of times per path, and a byte read is far cheaper than an engine call.
+var _solid := PackedByteArray()
+var _w := 0
+var _h := 0
 
 
 func _init(map_data: MapData, for_ships: bool = false) -> void:
@@ -25,11 +30,20 @@ func _init(map_data: MapData, for_ships: bool = false) -> void:
 	astar.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
 	astar.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
 	astar.update()
+	_w = map.width
+	_h = map.height
+	_solid.resize(_w * _h)
+	_solid.fill(0)
 	for y in map.height:
 		for x in map.width:
 			var t := Vector2i(x, y)
 			if not _open(t):
-				astar.set_point_solid(t, true)
+				_set_solid(t, true)
+
+
+func _set_solid(t: Vector2i, solid: bool) -> void:
+	astar.set_point_solid(t, solid)
+	_solid[t.y * _w + t.x] = 1 if solid else 0
 
 
 func _open(t: Vector2i) -> bool:
@@ -39,13 +53,13 @@ func _open(t: Vector2i) -> bool:
 ## Call after MapData.blocked changes for a tile (tree cut, building placed).
 func refresh_tile(t: Vector2i) -> void:
 	if map.in_bounds(t):
-		astar.set_point_solid(t, not _open(t))
+		_set_solid(t, not _open(t))
 
 
 func is_walkable(t: Vector2i, owner: int = -1) -> bool:
-	if not map.in_bounds(t) or astar.is_point_solid(t):
+	if t.x < 0 or t.y < 0 or t.x >= _w or t.y >= _h or _solid[t.y * _w + t.x] != 0:
 		return false
-	return owner < 0 or int(gates.get(t, owner)) == owner
+	return owner < 0 or gates.is_empty() or int(gates.get(t, owner)) == owner
 
 
 func set_gate(t: Vector2i, owner: int) -> void:
@@ -122,11 +136,11 @@ func find_path(from: Vector2, to: Vector2, owner: int = -1) -> PackedVector2Arra
 	if owner >= 0:
 		for g in gates:
 			if int(gates[g]) != owner and not astar.is_point_solid(g):
-				astar.set_point_solid(g, true)
+				_set_solid(g, true)
 				closed.append(g)
 	var path := _find_path(from, to, owner)
 	for g in closed:
-		astar.set_point_solid(g, false)
+		_set_solid(g, false)
 	return path
 
 
@@ -182,8 +196,25 @@ func line_walkable(a: Vector2, b: Vector2, half_width: float = 0.3, owner: int =
 	var dir := d / length
 	var perp := Vector2(-dir.y, dir.x) * half_width
 	var steps := ceili(length / 0.25)
+	# Samples are a quarter tile apart: each lane only checks a tile when it enters it.
+	var mid := Vector2i(-9999, 0)
+	var left := mid
+	var right := mid
 	for s in steps + 1:
 		var p := a + d * (float(s) / steps)
-		if not is_walkable(Iso.tile_of(p), owner) or not is_walkable(Iso.tile_of(p + perp), owner) or not is_walkable(Iso.tile_of(p - perp), owner):
-			return false
+		var t := Iso.tile_of(p)
+		if t != mid:
+			mid = t
+			if not is_walkable(t, owner):
+				return false
+		t = Iso.tile_of(p + perp)
+		if t != left:
+			left = t
+			if not is_walkable(t, owner):
+				return false
+		t = Iso.tile_of(p - perp)
+		if t != right:
+			right = t
+			if not is_walkable(t, owner):
+				return false
 	return true

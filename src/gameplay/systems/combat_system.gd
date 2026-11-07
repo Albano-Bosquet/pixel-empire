@@ -16,6 +16,9 @@ extends Node
 ## "self_destruct" units (petards) explode with area damage on their first hit.
 ## Data: units_stats.json, buildings_stats.json (attack), combat_settings.json.
 
+## A fighter waiting out its cooldown re-checks its target every this many ticks.
+const FIGHT_CHECK_TICKS := 4
+
 var projectiles: Array = []
 
 ## Team of each player id (0 = no team). Set by Game.start from the match
@@ -25,7 +28,7 @@ static var teams: Dictionary = {}
 
 var _game: Game
 var _cfg: Dictionary
-var _scan_timer := 0.0
+var _tick_no := 0
 var _near: Array = []
 var _attack_notice := {}
 
@@ -140,10 +143,12 @@ func _can_attack(u: Unit) -> bool:
 # --- Tick ---------------------------------------------------------------------
 
 func _physics_process(delta: float) -> void:
-	_scan_timer -= delta
-	var scan := _scan_timer <= 0.0
-	if scan:
-		_scan_timer = float(_cfg.get("scan_interval", 0.4))
+	# Each unit scans once per scan_interval, on its own tick: a crowd never
+	# searches for targets all at once.
+	_tick_no += 1
+	var scan_period := maxi(1, roundi(float(_cfg.get("scan_interval", 0.4)) / maxf(delta, 0.0001)))
+	var scan_slot := _tick_no % scan_period
+	var cooling := delta * FIGHT_CHECK_TICKS
 	for u in _game.unit_system.units:
 		if u.dead:
 			continue
@@ -154,8 +159,10 @@ func _physics_process(delta: float) -> void:
 			if u.hit_timer < 0.0:
 				_land_melee(u)
 		if u.target != null or is_instance_valid(u.target):
-			_fight(u)
-		elif scan and u.is_military() and u.state == Unit.State.IDLE or scan and u.attack_move_goal != Vector2.INF:
+			# A soldier standing through its cooldown has nothing to decide on most ticks.
+			if u.attack_timer <= cooling or u.state != Unit.State.IDLE or u.altitude > 0.0 or (u.entity_id + _tick_no) % FIGHT_CHECK_TICKS == 0:
+				_fight(u)
+		elif u.entity_id % scan_period == scan_slot and (u.attack_move_goal != Vector2.INF or u.state == Unit.State.IDLE and u.is_military()):
 			_acquire(u)
 			if not u.has_target() and u.attack_move_goal != Vector2.INF and u.state == Unit.State.IDLE:
 				u.attack_move_goal = Vector2.INF
@@ -300,15 +307,20 @@ func _acquire(u: Unit) -> void:
 		sight = maxf(u.attack_range() + 0.5, 1.0)
 	_near.clear()
 	_game.unit_system.units_near(u.grid_pos, sight, _near)
+	var from := u.grid_pos
+	var owner := u.owner_id
 	for o in _near:
-		if o.dead or not is_enemy(u, o) or not _game.fog.is_visible(u.owner_id, o) or not can_target(u.def, o):
+		if o.owner_id == owner or o.dead:
+			continue
+		var d: float = from.distance_to(o.grid_pos)
+		if d > sight or d >= best_d:
+			continue
+		if not is_enemy(u, o) or not _game.fog.is_visible(owner, o) or not can_target(u.def, o):
 			continue
 		if Wildlife.is_animal(o) and not Wildlife.is_predator(o):
 			continue  # soldiers never wander off chasing sheep and deer
-		var d: float = u.grid_pos.distance_to(o.grid_pos)
-		if d <= sight and d < best_d:
-			best_d = d
-			best = o
+		best_d = d
+		best = o
 	if best == null and u.is_military() and not Wildlife.is_animal(u):
 		for b in _game.buildings.buildings:
 			if b.dead or not is_enemy(u, b) or not _game.fog.is_visible(u.owner_id, b) or not can_target(u.def, b):
@@ -458,6 +470,7 @@ func _move_projectiles(delta: float) -> void:
 		pr["t"] += delta * pr["speed"] / total
 		var k: float = minf(pr["t"], 1.0)
 		var prev: Vector2 = pr["screen"]
+		pr["screen_prev"] = prev  # FxLayer blends between ticks
 		pr["pos"] = pr["from"].lerp(pr["dest"], k)
 		var h: float = lerpf(pr["start_h"], float(pr.get("end_h", 10.0)), k) + sin(k * PI) * pr["arc"] * clampf(total / 4.0, 0.4, 2.0)
 		pr["screen"] = Iso.grid_to_world(pr["pos"]) - Vector2(0, h)

@@ -62,8 +62,11 @@ func _draw() -> void:
 		var col: Color = p["col"]
 		col.a = clampf(p["life"] * 3.0, 0.0, 1.0)
 		draw_rect(Rect2(p["p"].round(), Vector2(s, s)), col)
+	var blend := Engine.get_physics_interpolation_fraction()
 	for pr in projectiles:
 		var pos: Vector2 = pr["screen"]
+		if pr.has("screen_prev"):
+			pos = pr["screen_prev"].lerp(pos, blend)
 		match String(pr["kind"]):
 			"rock", "boulder":
 				if _rock.is_empty():

@@ -8,7 +8,8 @@
   "crowd_stuck_time": 0.6,
   "repath_stuck_time": 2.5,
   "formation_spacing": 0.62,
-  "path_budget_ms": 3.0,
+  "path_budget_ms": 6.0,
+  "rest_ticks": 2,
   "turn_steps_per_second": 40.0,
   "walk_anim_min_rate": 0.35,
   "walk_anim_max_rate": 1.4

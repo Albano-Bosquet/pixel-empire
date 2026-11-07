@@ -6,12 +6,18 @@ extends Node
 ## Config: render_sprites.json "xray" {alpha, lighten, neutral_color}.
 
 const SHADER := preload("res://assets/shaders/xray.gdshader")
+## World pixels from a body's feet to the far edge of its sprite, with room to spare.
+const REACH := 160.0
 
 var _game: Game
 var _cfg: Dictionary
 var _material := ShaderMaterial.new()
 ## Buildings that showed silhouettes last frame (cleared when nothing is behind them).
 var _shown: Dictionary = {}
+## Base tint per colour slot (-1 = neutral), parsed once.
+var _tints: Dictionary = {}
+## On-screen building sprites, grown by REACH: bodies elsewhere are skipped cheaply.
+var _covers: Array[Rect2] = []
 
 
 func setup(game: Game, cfg: Dictionary) -> void:
@@ -22,6 +28,11 @@ func setup(game: Game, cfg: Dictionary) -> void:
 
 func _process(_delta: float) -> void:
 	var view := _view_rect()
+	_covers.clear()
+	for b in _game.buildings.buildings:
+		var cover := b.body_rect()
+		if cover.size != Vector2.ZERO and view.intersects(cover):
+			_covers.append(cover.grow(REACH))
 	var bodies := _bodies(view)
 	var now: Dictionary = {}
 	if not bodies.is_empty():
@@ -35,6 +46,8 @@ func _process(_delta: float) -> void:
 			for body in bodies:
 				# Drawn before the building (y-sort) and overlapping its sprite.
 				if body["y"] < b.position.y and rect.intersects(body["rect"]):
+					if not body.has("tint"):
+						body["tint"] = _tint(body["entity"])
 					items.append(body)
 			if not items.is_empty():
 				b.set_xray(items, _material)
@@ -53,7 +66,8 @@ func _view_rect() -> Rect2:
 	return Rect2(a, c - a)
 
 
-## Every visible ground body on screen: {"sprite", "at", "tint", "y", "rect"}.
+## Every visible ground body on screen: {"sprite", "at", "entity", "y", "rect"};
+## "tint" is added when a building turns out to cover it.
 func _bodies(view: Rect2) -> Array:
 	var out := []
 	for u in _game.unit_system.units:
@@ -70,13 +84,19 @@ func _bodies(view: Rect2) -> Array:
 
 
 func _add(out: Array, e: Entity, view: Rect2) -> void:
-	if not e.is_visible_in_tree() or e.modulate.a < 0.05:
+	var feet := e.position
+	var covered := false
+	for cover in _covers:
+		if cover.has_point(feet):
+			covered = true
+			break
+	if not covered or not e.visible or e.modulate.a < 0.05:
 		return
 	var sp: Sprite2D = e.body_sprite()
 	var rect := Rect2(e.position + sp.position + sp.offset, _frame_size(sp))
 	if not view.intersects(rect):
 		return
-	out.append({"sprite": sp, "at": e.position, "tint": _tint(e), "y": e.position.y, "rect": rect})
+	out.append({"sprite": sp, "at": e.position, "entity": e, "y": e.position.y, "rect": rect})
 
 
 static func _frame_size(sp: Sprite2D) -> Vector2:
@@ -86,9 +106,12 @@ static func _frame_size(sp: Sprite2D) -> Vector2:
 
 
 func _tint(e: Entity) -> Color:
-	var col := Color(String(_cfg.get("neutral_color", "#f2e3a0")))
-	if e is Unit and e.owner_id != Entity.GAIA and not e.def.has("animal"):
-		col = Color(String(GameData.player_color(e.color_slot).get("primary", "#ffffff")))
-	col = col.lightened(float(_cfg.get("lighten", 0.2)))
+	var slot: int = e.color_slot if e is Unit and e.owner_id != Entity.GAIA and not e.def.has("animal") else -1
+	if not _tints.has(slot):
+		var hex := String(_cfg.get("neutral_color", "#f2e3a0"))
+		if slot >= 0:
+			hex = String(GameData.player_color(slot).get("primary", "#ffffff"))
+		_tints[slot] = Color(hex).lightened(float(_cfg.get("lighten", 0.2)))
+	var col: Color = _tints[slot]
 	col.a = float(_cfg.get("alpha", 0.6)) * e.modulate.a
 	return col

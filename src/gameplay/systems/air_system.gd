@@ -117,8 +117,8 @@ func _physics_process(delta: float) -> void:
 
 ## Idle armed planes fly small circles around where they stopped.
 func _loiter_idle() -> void:
-	for u in _game.unit_system.units:
-		if u.dead or not u.def.get("loiter", false) or _state.has(u.entity_id) or u.has_target():
+	for u in _game.unit_system.loiterers:
+		if u.dead or _state.has(u.entity_id) or u.has_target():
 			continue
 		if u.state != Unit.State.IDLE:
 			continue
@@ -212,8 +212,8 @@ func _circle(center: Vector2, radius: float, start_angle: float) -> PackedVector
 func _shape_flight(delta: float) -> void:
 	var depth := float(_cfg.get("dive_depth", 0.45))
 	var rate := float(_cfg.get("dive_rate", 40.0))
-	for u in _game.unit_system.units:
-		if u.dead or u.altitude <= 0.0 or not u.def.get("loiter", false):
+	for u in _game.unit_system.loiterers:
+		if u.dead or u.altitude <= 0.0:
 			continue
 		if _runs.has(u.entity_id) and (not u.has_target() or _state.has(u.entity_id)):
 			_runs.erase(u.entity_id)
