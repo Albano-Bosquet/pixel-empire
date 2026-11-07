@@ -76,3 +76,27 @@ func test_ai_waits_for_the_minute_of_its_next_age() -> void:
 	ai._villagers.resize(1)
 	assert_true(not ai._ready_for_age(), "minute reached but few villagers")
 	ai.free()
+
+
+func test_wood_waits_for_the_first_barracks() -> void:
+	assert_true(AIPlayer.wood_goes_to_barracks(0, 3, 9, 9, false, false), "no military building yet: wood is saved")
+
+
+func test_wood_is_free_once_a_military_building_exists() -> void:
+	assert_true(not AIPlayer.wood_goes_to_barracks(1, 3, 20, 9, false, false), "the first one is placed: ships may be built")
+
+
+func test_wood_is_not_saved_before_the_economy_can_afford_it() -> void:
+	assert_true(not AIPlayer.wood_goes_to_barracks(0, 3, 8, 9, false, false), "too few villagers to think about an army")
+
+
+func test_an_island_start_still_builds_its_dock_first() -> void:
+	assert_true(not AIPlayer.wood_goes_to_barracks(0, 3, 12, 9, true, false), "without a dock the enemy cannot be reached")
+
+
+func test_wood_is_released_when_the_barracks_is_already_affordable() -> void:
+	assert_true(not AIPlayer.wood_goes_to_barracks(0, 3, 12, 9, false, true), "no spot for the building must not stall the rest")
+
+
+func test_an_ai_that_wants_no_military_saves_nothing() -> void:
+	assert_true(not AIPlayer.wood_goes_to_barracks(0, 0, 12, 9, false, false), "nothing to save for")

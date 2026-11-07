@@ -322,7 +322,7 @@ func _build() -> void:
 	var have := 0
 	for t in order:
 		have += _count(t)
-	if have < mil_wanted and _villagers.size() >= 9:
+	if have < mil_wanted and _villagers.size() >= int(_cfg.get("military_min_villagers", 9)):
 		for t in order:
 			if _count(t) == 0 and player.age >= int(GameData.building(t).get("age", 0)):
 				_place(t, _home(), 5, 14, _builders(2))
@@ -340,6 +340,21 @@ func _build() -> void:
 				return
 	if difficulty == "hard" and player.age >= 1 and _count("tower") < 2 and player.resources["stone"] >= 150:
 		_place("tower", _home(), 5, 9, _builders(1))
+
+
+## Whether wood must wait for the first military building. Ships and docks cost
+## wood in small steps, and without this an AI with a shore never saved enough for
+## a Barracks and never fielded an army. An island map (`dock_first`) still needs
+## its dock before anything else, and wood that already covers the cost (`can_pay`)
+## is released: having the wood and no spot for the building must not stall the rest.
+static func wood_goes_to_barracks(military_buildings: int, wanted: int, villagers: int, min_villagers: int, dock_first: bool, can_pay: bool) -> bool:
+	return military_buildings == 0 and wanted > 0 and villagers >= min_villagers and not dock_first and not can_pay
+
+
+func _saving_for_barracks() -> bool:
+	return wood_goes_to_barracks(_count("barracks") + _count("archery_range") + _count("stable"), int(diff.get("military_buildings", 1)),
+			_villagers.size(), int(_cfg.get("military_min_villagers", 9)), _enemy_needs_boat() and _count("dock") == 0,
+			player.can_afford(GameData.building("barracks")["cost"]))
 
 
 ## Picks builders: idle first, then wood gatherers.
@@ -488,7 +503,7 @@ func _age_up() -> void:
 ## Researches technologies in tech_priority order, one per building at a time,
 ## never while saving for the next age, up to the difficulty's max_techs.
 func _research() -> void:
-	if player.researched.size() >= int(diff.get("max_techs", 0)) or _ready_for_age() or _villagers.size() < 10:
+	if player.researched.size() >= int(diff.get("max_techs", 0)) or _ready_for_age() or _villagers.size() < 10 or _saving_for_barracks():
 		return
 	for id in _cfg.get("tech_priority", []):
 		var t: Dictionary = GameData.techs.get(id, {})
@@ -783,7 +798,7 @@ func _naval() -> void:
 ## retries soon; without any shore site it waits a minute.
 func _try_dock() -> bool:
 	var min_vil := int(_cfg.get("dock_min_villagers_islands", 6)) if _enemy_needs_boat() else int(_cfg.get("dock_min_villagers", 10))
-	if _count("dock") > 0 or _villagers.size() < min_vil or elapsed < _dock_retry:
+	if _count("dock") > 0 or _villagers.size() < min_vil or elapsed < _dock_retry or _saving_for_barracks():
 		return false
 	if _game.buildings.requirement_error(player, "dock") != "":
 		_dock_retry = elapsed + 5.0
@@ -793,6 +808,8 @@ func _try_dock() -> bool:
 
 
 func _train_dock(b: Building) -> void:
+	if _saving_for_barracks():
+		return
 	var want_fish := int(diff.get("fishing_ships", 3))
 	if _fishers.size() + b.queue.count("fishing_ship") < want_fish and _game.production.enqueue_error(b, "fishing_ship") == "":
 		_game.production.enqueue(b, "fishing_ship")
