@@ -32,7 +32,47 @@ func test_easy_ai_is_weaker_than_normal_on_every_axis() -> void:
 		assert_true(float(easy[key]) > float(normal[key]), "easy has more %s" % key)
 
 
-func test_easy_ai_only_trains_units_of_its_own_age() -> void:
-	var easy: Dictionary = GameData.ai["difficulties"]["easy"]
-	for id in easy["army_mix"]:
-		assert_eq(int(GameData.unit(id)["age"]), 0, "%s needs no age up" % id)
+func test_every_difficulty_trains_the_same_units() -> void:
+	var diffs: Dictionary = GameData.ai["difficulties"]
+	for d in diffs:
+		assert_eq(diffs[d]["army_mix"].size(), diffs["hard"]["army_mix"].size(), "%s army" % d)
+		for id in diffs["hard"]["army_mix"]:
+			assert_true(diffs[d]["army_mix"].has(id), "%s trains %s" % [d, id])
+		assert_eq(diffs[d]["fleet_mix"].size(), diffs["hard"]["fleet_mix"].size(), "%s fleet" % d)
+
+
+func test_easier_ai_reaches_every_age_later() -> void:
+	var diffs: Dictionary = GameData.ai["difficulties"]
+	for i in diffs["easy"]["age_up_minutes"].size():
+		assert_true(float(diffs["hard"]["age_up_minutes"][i]) < float(diffs["normal"]["age_up_minutes"][i]), "hard before normal, age %d" % (i + 1))
+		assert_true(float(diffs["normal"]["age_up_minutes"][i]) < float(diffs["easy"]["age_up_minutes"][i]), "normal before easy, age %d" % (i + 1))
+
+
+func test_hunt_sweep_covers_the_whole_map() -> void:
+	var spacing := 12
+	var points := AIPlayer.sweep_points(96, 96, spacing)
+	assert_eq(points.size(), 64, "8 x 8 waypoints on a 96 tile map")
+	for corner in [Vector2(0, 0), Vector2(95, 0), Vector2(0, 95), Vector2(95, 95)]:
+		var near: Vector2 = points[AIPlayer.closest_index(points, corner)]
+		assert_true(near.distance_to(corner) <= spacing, "corner %s is covered" % corner)
+
+
+func test_hunt_goes_to_the_closest_waypoint_first() -> void:
+	var points: Array[Vector2] = [Vector2(50, 50), Vector2(10, 10), Vector2(30, 30)]
+	assert_eq(AIPlayer.closest_index(points, Vector2(12, 12)), 1, "closest waypoint")
+	var none: Array[Vector2] = []
+	assert_eq(AIPlayer.closest_index(none, Vector2.ZERO), -1, "no waypoints")
+
+
+func test_ai_waits_for_the_minute_of_its_next_age() -> void:
+	var ai := AIPlayer.new()
+	ai.player = PlayerState.new(1, "AI", 0, true, {})
+	ai.diff = {"age_up_villagers": [2], "age_up_minutes": [10]}
+	ai._villagers.resize(2)
+	ai.elapsed = 599.0
+	assert_true(not ai._ready_for_age(), "too early")
+	ai.elapsed = 600.0
+	assert_true(ai._ready_for_age(), "minute reached")
+	ai._villagers.resize(1)
+	assert_true(not ai._ready_for_age(), "minute reached but few villagers")
+	ai.free()

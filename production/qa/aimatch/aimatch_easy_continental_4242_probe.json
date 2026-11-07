@@ -1,0 +1,1205 @@
+{
+	"ages": {
+		"1": {},
+		"2": {}
+	},
+	"buildings_lost": {
+		"1": [],
+		"2": []
+	},
+	"combats": [],
+	"delta": [
+		0.0166666666666667,
+		0.0166666666666667
+	],
+	"difficulty": "easy",
+	"effective_speed": 5.91981343618313,
+	"end": "tope de tiempo",
+	"ending": {
+		"1": {
+			"age": 0,
+			"age_threshold": [
+				20.0,
+				99.0,
+				99.0,
+				99.0,
+				99.0,
+				99.0
+			],
+			"defeated": false,
+			"enemy_targets": 6,
+			"next_age": "feudal_age",
+			"ready_for_age": false,
+			"villager_target": 10
+		},
+		"2": {
+			"age": 0,
+			"age_threshold": [
+				20.0,
+				99.0,
+				99.0,
+				99.0,
+				99.0,
+				99.0
+			],
+			"defeated": false,
+			"enemy_targets": 1,
+			"next_age": "feudal_age",
+			"ready_for_age": false,
+			"villager_target": 10
+		}
+	},
+	"events": [
+		{
+			"kind": "start",
+			"t": 0.0,
+			"text": "Empieza la partida: Azul contra Rojo, IA easy, mapa continental, semilla 4242"
+		},
+		{
+			"kind": "engage",
+			"t": 296.0,
+			"text": "PRIMER COMBATE: se enfrentan cerca de la base de Rojo"
+		},
+		{
+			"kind": "fight",
+			"t": 296.0,
+			"text": "Combate cerca de la base de Rojo (Azul 1, Rojo 0 unidades peleando)"
+		},
+		{
+			"kind": "cap",
+			"t": 330.0,
+			"text": "Se llegó al tope de 5 minutos de juego sin ganador"
+		}
+	],
+	"fingerprints": {
+		"1": 2892258576,
+		"2": 2977709822,
+		"3": 2946622067,
+		"4": 375473389,
+		"5": 2148377480
+	},
+	"firsts": {
+		"first_engagement": 296.000000000059
+	},
+	"forced_ticks": 0,
+	"game_seconds": 330.000000000029,
+	"kills": {
+		"1": 0,
+		"2": 0
+	},
+	"map": "continental",
+	"samples": [
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 5,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 0,
+				"pop": 4,
+				"res": {
+					"food": 150,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 0,
+					"idle": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"trained": 0,
+				"villagers": 3,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 5,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 0,
+				"pop": 4,
+				"res": {
+					"food": 150,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 0,
+					"idle": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"trained": 0,
+				"villagers": 3,
+				"wild_deaths": 0
+			},
+			"t": 0.3
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 5,
+				"res": {
+					"food": 100,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 0,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 1,
+				"villagers": 4,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 5,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 5,
+				"res": {
+					"food": 100,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 0,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 1,
+				"villagers": 4,
+				"wild_deaths": 0
+			},
+			"t": 30.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 6,
+				"res": {
+					"food": 50,
+					"gold": 100,
+					"stone": 200,
+					"wood": 75
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 2,
+				"villagers": 5,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 6,
+				"res": {
+					"food": 50,
+					"gold": 100,
+					"stone": 200,
+					"wood": 75
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 2,
+				"villagers": 5,
+				"wild_deaths": 0
+			},
+			"t": 60.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 20,
+					"gold": 10,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 7,
+				"res": {
+					"food": 20,
+					"gold": 110,
+					"stone": 200,
+					"wood": 50
+				},
+				"tasks": {
+					"build": 2,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 3,
+				"villagers": 6,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 20,
+					"gold": 10,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 7,
+				"res": {
+					"food": 20,
+					"gold": 110,
+					"stone": 200,
+					"wood": 50
+				},
+				"tasks": {
+					"build": 2,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 3,
+				"villagers": 6,
+				"wild_deaths": 0
+			},
+			"t": 90.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 20,
+					"gold": 10,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 8,
+				"res": {
+					"food": 20,
+					"gold": 110,
+					"stone": 200,
+					"wood": 50
+				},
+				"tasks": {
+					"build": 0,
+					"food": 3,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 4,
+				"villagers": 7,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 20,
+					"gold": 10,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 8,
+				"res": {
+					"food": 20,
+					"gold": 110,
+					"stone": 200,
+					"wood": 50
+				},
+				"tasks": {
+					"build": 0,
+					"food": 3,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 4,
+				"villagers": 7,
+				"wild_deaths": 0
+			},
+			"t": 120.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 40,
+					"gold": 20,
+					"stone": 0,
+					"wood": 9
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 8,
+				"res": {
+					"food": 40,
+					"gold": 120,
+					"stone": 200,
+					"wood": 59
+				},
+				"tasks": {
+					"build": 0,
+					"food": 3,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 4,
+				"villagers": 7,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 40,
+					"gold": 20,
+					"stone": 0,
+					"wood": 9
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 8,
+				"res": {
+					"food": 40,
+					"gold": 120,
+					"stone": 200,
+					"wood": 59
+				},
+				"tasks": {
+					"build": 0,
+					"food": 3,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 4,
+				"villagers": 7,
+				"wild_deaths": 0
+			},
+			"t": 150.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 50,
+					"gold": 20,
+					"stone": 0,
+					"wood": 27
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 8,
+				"res": {
+					"food": 0,
+					"gold": 120,
+					"stone": 200,
+					"wood": 77
+				},
+				"tasks": {
+					"build": 0,
+					"food": 3,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 4,
+				"villagers": 7,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 50,
+					"gold": 20,
+					"stone": 0,
+					"wood": 27
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 9,
+				"res": {
+					"food": 0,
+					"gold": 120,
+					"stone": 200,
+					"wood": 77
+				},
+				"tasks": {
+					"build": 0,
+					"food": 4,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 5,
+				"villagers": 8,
+				"wild_deaths": 0
+			},
+			"t": 180.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 70,
+					"gold": 30,
+					"stone": 0,
+					"wood": 45
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 9,
+				"res": {
+					"food": 20,
+					"gold": 130,
+					"stone": 200,
+					"wood": 95
+				},
+				"tasks": {
+					"build": 0,
+					"food": 4,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 5,
+				"villagers": 8,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 80,
+					"gold": 30,
+					"stone": 0,
+					"wood": 45
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 9,
+				"res": {
+					"food": 30,
+					"gold": 130,
+					"stone": 200,
+					"wood": 95
+				},
+				"tasks": {
+					"build": 0,
+					"food": 4,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 5,
+				"villagers": 8,
+				"wild_deaths": 0
+			},
+			"t": 210.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 80,
+					"gold": 30,
+					"stone": 0,
+					"wood": 63
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 9,
+				"res": {
+					"food": 30,
+					"gold": 130,
+					"stone": 200,
+					"wood": 113
+				},
+				"tasks": {
+					"build": 0,
+					"food": 4,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 5,
+				"villagers": 8,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 80,
+					"gold": 30,
+					"stone": 0,
+					"wood": 54
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 9,
+				"res": {
+					"food": 30,
+					"gold": 130,
+					"stone": 200,
+					"wood": 104
+				},
+				"tasks": {
+					"build": 0,
+					"food": 4,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 5,
+				"villagers": 8,
+				"wild_deaths": 0
+			},
+			"t": 240.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 110,
+					"gold": 40,
+					"stone": 0,
+					"wood": 81
+				},
+				"idle": 1,
+				"kills": 0,
+				"lost": 1,
+				"pop": 10,
+				"res": {
+					"food": 10,
+					"gold": 140,
+					"stone": 200,
+					"wood": 131
+				},
+				"tasks": {
+					"build": 0,
+					"food": 4,
+					"gold": 1,
+					"idle": 1,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 6,
+				"villagers": 9,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 120,
+					"gold": 40,
+					"stone": 0,
+					"wood": 81
+				},
+				"idle": 1,
+				"kills": 0,
+				"lost": 1,
+				"pop": 10,
+				"res": {
+					"food": 20,
+					"gold": 140,
+					"stone": 200,
+					"wood": 131
+				},
+				"tasks": {
+					"build": 0,
+					"food": 4,
+					"gold": 1,
+					"idle": 1,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 6,
+				"villagers": 9,
+				"wild_deaths": 0
+			},
+			"t": 270.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 120,
+					"gold": 40,
+					"stone": 0,
+					"wood": 90
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 2,
+				"pop": 10,
+				"res": {
+					"food": 20,
+					"gold": 140,
+					"stone": 200,
+					"wood": 140
+				},
+				"tasks": {
+					"build": 0,
+					"food": 5,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 6,
+				"villagers": 9,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 120,
+					"gold": 40,
+					"stone": 0,
+					"wood": 90
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 10,
+				"res": {
+					"food": 20,
+					"gold": 140,
+					"stone": 200,
+					"wood": 140
+				},
+				"tasks": {
+					"build": 0,
+					"food": 5,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 6,
+				"villagers": 9,
+				"wild_deaths": 0
+			},
+			"t": 300.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 150,
+					"gold": 50,
+					"stone": 0,
+					"wood": 108
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 2,
+				"pop": 10,
+				"res": {
+					"food": 0,
+					"gold": 150,
+					"stone": 200,
+					"wood": 158
+				},
+				"tasks": {
+					"build": 0,
+					"food": 5,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 6,
+				"villagers": 9,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 160,
+					"gold": 50,
+					"stone": 0,
+					"wood": 108
+				},
+				"idle": 1,
+				"kills": 0,
+				"lost": 1,
+				"pop": 11,
+				"res": {
+					"food": 10,
+					"gold": 150,
+					"stone": 200,
+					"wood": 158
+				},
+				"tasks": {
+					"build": 0,
+					"food": 5,
+					"gold": 1,
+					"idle": 1,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 7,
+				"villagers": 10,
+				"wild_deaths": 0
+			},
+			"t": 330.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 150,
+					"gold": 50,
+					"stone": 0,
+					"wood": 108
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 2,
+				"pop": 10,
+				"res": {
+					"food": 0,
+					"gold": 150,
+					"stone": 200,
+					"wood": 158
+				},
+				"tasks": {
+					"build": 0,
+					"food": 5,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 6,
+				"villagers": 9,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 2,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 15,
+				"gathered": {
+					"food": 160,
+					"gold": 50,
+					"stone": 0,
+					"wood": 108
+				},
+				"idle": 1,
+				"kills": 0,
+				"lost": 1,
+				"pop": 11,
+				"res": {
+					"food": 10,
+					"gold": 150,
+					"stone": 200,
+					"wood": 158
+				},
+				"tasks": {
+					"build": 0,
+					"food": 5,
+					"gold": 1,
+					"idle": 1,
+					"stone": 0,
+					"wood": 3
+				},
+				"trained": 7,
+				"villagers": 10,
+				"wild_deaths": 0
+			},
+			"t": 330.0
+		}
+	],
+	"seed": 4242,
+	"size": 96,
+	"speed": 20.0,
+	"victory": "conquest",
+	"wall_seconds": 55.745,
+	"waves": [],
+	"wild_kills": {
+		"1": 0,
+		"2": 0
+	},
+	"winners": []
+}

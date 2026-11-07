@@ -9,14 +9,16 @@ extends Node
 ##   build    — houses before pop cap, mill/storehouses next to resources, farms when
 ##              forage runs out, military buildings by difficulty, towers on hard
 ##   train    — villagers up to villager_target, army from army_mix
-##   age_up   — when villager thresholds and resources allow
+##   age_up   — when the minute, villager thresholds and resources allow
 ##   scout    — explore unexplored waypoints; remember enemy buildings seen
 ##   naval    — a dock when there is shore nearby, fishing ships on fish, a small
 ##              war fleet that joins attack waves; when the enemy cannot be
 ##              reached by land (islands) the wave sails over in a transport:
 ##              boarding -> sailing (unload at the target) -> attack.
 ##   defend   — army attack-moves to enemies near own buildings; villagers flee
-##   attack   — waves of army_attack_size from first_attack_minute on
+##   attack   — waves of army_attack_size from first_attack_minute on; with no
+##              enemy building left in sight but the enemy still standing, the wave
+##              sweeps the map (hunt_spacing_tiles) until it finds what remains.
 ## Data: ai_settings.json.
 
 const ECO_RESOURCES: Array[String] = ["food", "wood", "gold", "stone"]
@@ -54,6 +56,10 @@ var _sea_points: Array[Vector2] = []
 var _scout_last: Dictionary = {}
 var _my_buildings: Array[Building] = []
 var _threat := Vector2.INF
+## Target the wave was last sent to (a second arrival means it cannot be reached).
+var _wave_goal := Vector2.INF
+## Sweep waypoints not yet visited by the hunting wave.
+var _hunt_points: Array[Vector2] = []
 
 
 func setup(game: Game, p: PlayerState, level: String) -> void:
@@ -321,18 +327,17 @@ func _build() -> void:
 			if _count(t) == 0 and player.age >= int(GameData.building(t).get("age", 0)):
 				_place(t, _home(), 5, 14, _builders(2))
 				return
-	if difficulty != "easy" and player.age >= 1 and _count("blacksmith") == 0 and _villagers.size() >= 14:
+	if player.age >= 1 and _count("blacksmith") == 0 and _villagers.size() >= 14:
 		_place("blacksmith", _home(), 5, 13, _builders(1))
 		return
-	if difficulty != "easy" and player.age >= int(GameData.ai.get("siege_workshop_from_age", 2)) and _count("siege_workshop") == 0 and _villagers.size() >= 18:
+	if player.age >= int(GameData.ai.get("siege_workshop_from_age", 2)) and _count("siege_workshop") == 0 and _villagers.size() >= 18:
 		_place("siege_workshop", _home(), 5, 14, _builders(2))
 		return
-	# Gunpowder/Industrial ages: one of each modern production building (normal/hard).
-	if difficulty != "easy":
-		for mid in GameData.ai.get("modern_buildings", []):
-			if player.age >= int(GameData.building(mid).get("age", 99)) and _count(mid) == 0 and _villagers.size() >= 20:
-				if _place(mid, _home(), 5, 15, _builders(2)) != null:
-					return
+	# Castle and modern ages: one of each later production building.
+	for mid in GameData.ai.get("modern_buildings", []):
+		if player.age >= int(GameData.building(mid).get("age", 99)) and _count(mid) == 0 and _villagers.size() >= 20:
+			if _place(mid, _home(), 5, 15, _builders(2)) != null:
+				return
 	if difficulty == "hard" and player.age >= 1 and _count("tower") < 2 and player.resources["stone"] >= 150:
 		_place("tower", _home(), 5, 9, _builders(1))
 
@@ -461,8 +466,13 @@ func _next_age_cost() -> Dictionary:
 	return GameData.ages[id].get("cost", {}) if id != "" else {}
 
 
+## The next age needs its villager threshold and, per difficulty, its earliest
+## game minute (age_up_minutes): easier opponents reach each age later.
 func _ready_for_age() -> bool:
 	var thresholds: Array = diff.get("age_up_villagers", [99, 99, 99])
+	var minutes: Array = diff.get("age_up_minutes", [])
+	if player.age < minutes.size() and elapsed < float(minutes[player.age]) * 60.0:
+		return false
 	return _next_age_id() != "" and player.age < thresholds.size() and _villagers.size() >= int(thresholds[player.age])
 
 
@@ -572,11 +582,13 @@ func _attack() -> void:
 	if not _naval_op.is_empty():
 		_run_naval_op()
 		return
+	if _hunting():
+		_hunt_with_fleet()
 	if not wave.is_empty():
 		# Keep an active wave pushing to the next known target.
 		var arrived := wave.all(func(u): return not u.has_target() and u.state == Unit.State.IDLE)
-		if arrived and not enemy_targets.is_empty():
-			_game.commands.attack_move(wave, enemy_targets[0])
+		if arrived:
+			_push_wave()
 		return
 	if elapsed - last_wave_time < float(diff.get("wave_interval_seconds", 90.0)) or _threat != Vector2.INF:
 		return
@@ -584,7 +596,13 @@ func _attack() -> void:
 	for u in _army:
 		if not u.has_target():
 			ready.append(u)
-	if ready.size() < int(diff.get("army_attack_size", 8)) or enemy_targets.is_empty():
+	if ready.size() < int(diff.get("army_attack_size", 8)):
+		return
+	if enemy_targets.is_empty():
+		if _hunting():
+			last_wave_time = elapsed
+			wave = ready
+			_hunt()
 		return
 	last_wave_time = elapsed
 	if not _fleet.is_empty():
@@ -603,6 +621,79 @@ func _attack() -> void:
 		return
 	wave = ready
 	_game.commands.attack_move(wave, enemy_targets[0])
+
+
+## Sends an idle wave to the next target. A target it already reached and could
+## not attack goes to the back of the list.
+func _push_wave() -> void:
+	if enemy_targets.is_empty():
+		_hunt()
+		return
+	if enemy_targets[0] == _wave_goal and enemy_targets.size() > 1:
+		enemy_targets.push_back(enemy_targets.pop_front())
+	_wave_goal = enemy_targets[0]
+	_game.commands.attack_move(wave, _wave_goal)
+
+
+## No enemy building is known, yet the match goes on: someone is out there.
+func _hunting() -> bool:
+	return enemy_targets.is_empty() and _game.players.any(func(p): return not p.defeated and _is_foe(p.id))
+
+
+## Walks the wave to the closest sweep waypoint left; a full sweep starts over,
+## because units seen moved on or were out of sight when the wave passed.
+func _hunt() -> void:
+	if wave.is_empty() or not _hunting():
+		return
+	var spacing := int(_cfg.get("hunt_spacing_tiles", 12))
+	if _hunt_points.is_empty():
+		_hunt_points = AIPlayer.sweep_points(_game.map.width, _game.map.height, spacing)
+	var from: Vector2 = wave[0].grid_pos
+	while not _hunt_points.is_empty():
+		var i := AIPlayer.closest_index(_hunt_points, from)
+		var point: Vector2 = _hunt_points[i]
+		_hunt_points.remove_at(i)
+		var t := _game.pathfinder.nearest_walkable(Iso.tile_of(point), spacing / 2, from)
+		if t.x >= 0:
+			_game.commands.attack_move(wave, Iso.tile_center(t))
+			return
+
+
+## Idle warships sweep the water: the last enemy may be a ship.
+func _hunt_with_fleet() -> void:
+	var idle: Array[Unit] = []
+	for s in _fleet:
+		if not s.has_target() and s.state == Unit.State.IDLE:
+			idle.append(s)
+	if idle.is_empty():
+		return
+	var spacing := int(_cfg.get("hunt_spacing_tiles", 12))
+	var points := AIPlayer.sweep_points(_game.map.width, _game.map.height, spacing)
+	var water := _game.naval_pathfinder.nearest_walkable(Iso.tile_of(points[_rng.randi() % points.size()]), spacing, idle[0].grid_pos)
+	if water.x >= 0:
+		_game.commands.attack_move(idle, Iso.tile_center(water))
+
+
+## Evenly spaced waypoints covering a `width` x `height` map.
+static func sweep_points(width: int, height: int, spacing: int) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var step := maxi(1, spacing)
+	for y in range(step / 2, height, step):
+		for x in range(step / 2, width, step):
+			out.append(Vector2(x, y))
+	return out
+
+
+## Index in `points` of the one closest to `from` (-1 when empty).
+static func closest_index(points: Array[Vector2], from: Vector2) -> int:
+	var best := -1
+	var best_d := INF
+	for i in points.size():
+		var d := points[i].distance_squared_to(from)
+		if d < best_d:
+			best_d = d
+			best = i
+	return best
 
 
 ## True when no land path leads from home to the first enemy target (cached).
@@ -679,7 +770,7 @@ func _naval() -> void:
 	for b in _my_buildings:
 		if b.type_id == "dock" and b.is_complete():
 			dock = b
-	if dock != null:
+	if dock != null and not _hunting():
 		var idle: Array[Unit] = []
 		for s in _fleet:
 			if not s.has_target() and s.state == Unit.State.IDLE and s.grid_pos.distance_to(dock.grid_pos) > 10.0:

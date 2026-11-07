@@ -1,0 +1,1270 @@
+{
+	"ages": {
+		"1": {},
+		"2": {},
+		"3": {},
+		"4": {}
+	},
+	"buildings_lost": {
+		"1": [],
+		"2": [],
+		"3": [],
+		"4": []
+	},
+	"combats": [],
+	"delta": [
+		0.0166666666666667,
+		0.0166666666666667
+	],
+	"difficulty": "easy",
+	"effective_speed": 2.57892173713753,
+	"end": "tope de tiempo",
+	"ending": {
+		"1": {
+			"age": 0,
+			"age_threshold": [
+				10.0,
+				20.0,
+				40.0,
+				45.0,
+				55.0,
+				57.0
+			],
+			"defeated": false,
+			"enemy_targets": 3,
+			"next_age": "feudal_age",
+			"ready_for_age": false,
+			"villager_target": 300
+		},
+		"2": {
+			"age": 0,
+			"age_threshold": [
+				10.0,
+				20.0,
+				40.0,
+				45.0,
+				55.0,
+				57.0
+			],
+			"defeated": false,
+			"enemy_targets": 4,
+			"next_age": "feudal_age",
+			"ready_for_age": false,
+			"villager_target": 300
+		},
+		"3": {
+			"age": 0,
+			"age_threshold": [
+				10.0,
+				20.0,
+				40.0,
+				45.0,
+				55.0,
+				57.0
+			],
+			"defeated": false,
+			"enemy_targets": 3,
+			"next_age": "feudal_age",
+			"ready_for_age": false,
+			"villager_target": 300
+		},
+		"4": {
+			"age": 0,
+			"age_threshold": [
+				10.0,
+				20.0,
+				40.0,
+				45.0,
+				55.0,
+				57.0
+			],
+			"defeated": false,
+			"enemy_targets": 4,
+			"next_age": "feudal_age",
+			"ready_for_age": false,
+			"villager_target": 300
+		}
+	},
+	"events": [
+		{
+			"kind": "start",
+			"t": 0.0,
+			"text": "Empieza la partida: Azul y Verde contra Rojo y Amarillo, IA easy, mapa continental, semilla 4242"
+		},
+		{
+			"kind": "scout",
+			"t": 43.0,
+			"text": "Un explorador de Rojo se cruza con el enemigo (roce, no es un ataque)"
+		},
+		{
+			"kind": "cap",
+			"t": 60.0,
+			"text": "Se llegó al tope de 1 minutos de juego sin ganador"
+		}
+	],
+	"final_state": {
+		"ai": [
+			{
+				"army": 0,
+				"free": 0,
+				"last_wave": -1e99999,
+				"needs_boat": 0,
+				"p": 1,
+				"targets": [
+					"(32.0, 68.0)",
+					"(22.5, 66.5)",
+					"(74.5, 30.5)"
+				],
+				"threat": "(inf, inf)",
+				"wave": 0
+			},
+			{
+				"army": 0,
+				"free": 0,
+				"last_wave": -1e99999,
+				"needs_boat": 0,
+				"p": 2,
+				"targets": [
+					"(30.0, 22.0)",
+					"(36.0, 20.0)",
+					"(66.5, 74.5)",
+					"(30.5, 22.5)"
+				],
+				"threat": "(inf, inf)",
+				"wave": 0
+			},
+			{
+				"army": 0,
+				"free": 0,
+				"last_wave": -1e99999,
+				"needs_boat": 0,
+				"p": 3,
+				"targets": [
+					"(32.0, 68.0)",
+					"(22.5, 66.5)",
+					"(74.5, 30.5)"
+				],
+				"threat": "(inf, inf)",
+				"wave": 0
+			},
+			{
+				"army": 0,
+				"free": 0,
+				"last_wave": -1e99999,
+				"needs_boat": 0,
+				"p": 4,
+				"targets": [
+					"(30.0, 22.0)",
+					"(36.0, 20.0)",
+					"(66.5, 74.5)",
+					"(30.5, 22.5)"
+				],
+				"threat": "(inf, inf)",
+				"wave": 0
+			}
+		],
+		"buildings": [
+			{
+				"at": [
+					66.0,
+					74.0
+				],
+				"done": true,
+				"hp": 2400,
+				"p": 1,
+				"type": "town_center"
+			},
+			{
+				"at": [
+					22.0,
+					66.0
+				],
+				"done": true,
+				"hp": 2400,
+				"p": 2,
+				"type": "town_center"
+			},
+			{
+				"at": [
+					30.0,
+					22.0
+				],
+				"done": true,
+				"hp": 2400,
+				"p": 3,
+				"type": "town_center"
+			},
+			{
+				"at": [
+					74.0,
+					30.0
+				],
+				"done": true,
+				"hp": 2400,
+				"p": 4,
+				"type": "town_center"
+			},
+			{
+				"at": [
+					72.0,
+					69.0
+				],
+				"done": true,
+				"hp": 550,
+				"p": 1,
+				"type": "house"
+			},
+			{
+				"at": [
+					19.0,
+					74.0
+				],
+				"done": true,
+				"hp": 550,
+				"p": 2,
+				"type": "house"
+			},
+			{
+				"at": [
+					36.0,
+					20.0
+				],
+				"done": true,
+				"hp": 550,
+				"p": 3,
+				"type": "house"
+			},
+			{
+				"at": [
+					71.0,
+					34.0
+				],
+				"done": true,
+				"hp": 550,
+				"p": 4,
+				"type": "house"
+			},
+			{
+				"at": [
+					32.0,
+					68.0
+				],
+				"done": false,
+				"hp": 1,
+				"p": 2,
+				"type": "mill"
+			},
+			{
+				"at": [
+					67.0,
+					24.0
+				],
+				"done": false,
+				"hp": 1,
+				"p": 4,
+				"type": "mill"
+			},
+			{
+				"at": [
+					25.0,
+					25.0
+				],
+				"done": false,
+				"hp": 1,
+				"p": 3,
+				"type": "mill"
+			},
+			{
+				"at": [
+					61.0,
+					75.0
+				],
+				"done": false,
+				"hp": 1,
+				"p": 1,
+				"type": "mill"
+			}
+		],
+		"units": [
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					62.2,
+					73.4
+				],
+				"p": 1,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					61.3,
+					70.5
+				],
+				"p": 1,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					69.7,
+					68.3
+				],
+				"p": 1,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					43.6,
+					49.7
+				],
+				"p": 1,
+				"state": 1,
+				"task": "",
+				"type": "scout"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					16.3,
+					73.5
+				],
+				"p": 2,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					29.7,
+					64.3
+				],
+				"p": 2,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					26.7,
+					67.7
+				],
+				"p": 2,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					39.6,
+					77.1
+				],
+				"p": 2,
+				"state": 1,
+				"task": "",
+				"type": "scout"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					25.0,
+					22.0
+				],
+				"p": 3,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					26.3,
+					26.8
+				],
+				"p": 3,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					40.3,
+					22.7
+				],
+				"p": 3,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					34.6,
+					48.3
+				],
+				"p": 3,
+				"state": 1,
+				"task": "",
+				"type": "scout"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					76.5,
+					38.7
+				],
+				"p": 4,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					69.0,
+					24.9
+				],
+				"p": 4,
+				"state": 0,
+				"task": "build",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					71.4,
+					27.1
+				],
+				"p": 4,
+				"state": 1,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					51.5,
+					53.3
+				],
+				"p": 4,
+				"state": 1,
+				"task": "",
+				"type": "scout"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					62.5,
+					73.1
+				],
+				"p": 1,
+				"state": 0,
+				"task": "build",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					30.2,
+					66.4
+				],
+				"p": 2,
+				"state": 0,
+				"task": "build",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					26.5,
+					23.2
+				],
+				"p": 3,
+				"state": 0,
+				"task": "build",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					67.3,
+					31.2
+				],
+				"p": 4,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					77.8,
+					24.3
+				],
+				"p": 4,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					19.3,
+					60.3
+				],
+				"p": 2,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					25.3,
+					22.3
+				],
+				"p": 3,
+				"state": 0,
+				"task": "gather",
+				"type": "villager"
+			},
+			{
+				"aboard": false,
+				"aim": "-",
+				"at": [
+					63.5,
+					75.0
+				],
+				"p": 1,
+				"state": 1,
+				"task": "gather",
+				"type": "villager"
+			}
+		]
+	},
+	"fingerprints": {
+		"1": 2285199630
+	},
+	"firsts": {
+		"first_scout_contact": 43.0166666666655
+	},
+	"forced_ticks": 0,
+	"game_seconds": 60.0166666666645,
+	"kills": {
+		"1": 0,
+		"2": 0,
+		"3": 0,
+		"4": 0
+	},
+	"map": "continental",
+	"players": 4,
+	"samples": [
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 5,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 0,
+				"pop": 4,
+				"res": {
+					"food": 150,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 0,
+					"idle": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"trained": 0,
+				"villagers": 3,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 5,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 0,
+				"pop": 4,
+				"res": {
+					"food": 150,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 0,
+					"idle": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"trained": 0,
+				"villagers": 3,
+				"wild_deaths": 0
+			},
+			"3": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 5,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 0,
+				"pop": 4,
+				"res": {
+					"food": 150,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 0,
+					"idle": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"trained": 0,
+				"villagers": 3,
+				"wild_deaths": 0
+			},
+			"4": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 5,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 0,
+				"pop": 4,
+				"res": {
+					"food": 150,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 0,
+					"idle": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"trained": 0,
+				"villagers": 3,
+				"wild_deaths": 0
+			},
+			"t": 0.3
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 5,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 5,
+				"res": {
+					"food": 100,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 0,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 1,
+				"villagers": 4,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 5,
+				"res": {
+					"food": 100,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 0,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 1,
+				"villagers": 4,
+				"wild_deaths": 0
+			},
+			"3": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 0,
+				"pop": 5,
+				"res": {
+					"food": 100,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 0,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 1,
+				"villagers": 4,
+				"wild_deaths": 0
+			},
+			"4": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 5,
+				"res": {
+					"food": 100,
+					"gold": 100,
+					"stone": 200,
+					"wood": 175
+				},
+				"tasks": {
+					"build": 0,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 1,
+				"villagers": 4,
+				"wild_deaths": 0
+			},
+			"t": 30.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 6,
+				"res": {
+					"food": 50,
+					"gold": 100,
+					"stone": 200,
+					"wood": 75
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 2,
+				"villagers": 5,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 6,
+				"res": {
+					"food": 50,
+					"gold": 100,
+					"stone": 200,
+					"wood": 75
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 2,
+				"villagers": 5,
+				"wild_deaths": 0
+			},
+			"3": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 2,
+				"pop": 6,
+				"res": {
+					"food": 50,
+					"gold": 100,
+					"stone": 200,
+					"wood": 75
+				},
+				"tasks": {
+					"build": 1,
+					"food": 3,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"trained": 2,
+				"villagers": 5,
+				"wild_deaths": 0
+			},
+			"4": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 6,
+				"res": {
+					"food": 50,
+					"gold": 100,
+					"stone": 200,
+					"wood": 75
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 2,
+				"villagers": 5,
+				"wild_deaths": 0
+			},
+			"t": 60.0
+		},
+		{
+			"1": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 6,
+				"res": {
+					"food": 50,
+					"gold": 100,
+					"stone": 200,
+					"wood": 75
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 2,
+				"villagers": 5,
+				"wild_deaths": 0
+			},
+			"2": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 6,
+				"res": {
+					"food": 50,
+					"gold": 100,
+					"stone": 200,
+					"wood": 75
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 2,
+				"villagers": 5,
+				"wild_deaths": 0
+			},
+			"3": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 2,
+				"pop": 6,
+				"res": {
+					"food": 50,
+					"gold": 100,
+					"stone": 200,
+					"wood": 75
+				},
+				"tasks": {
+					"build": 1,
+					"food": 3,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"trained": 2,
+				"villagers": 5,
+				"wild_deaths": 0
+			},
+			"4": {
+				"age": 0,
+				"army": 1,
+				"army_types": {
+					"scout": 1
+				},
+				"buildings": {
+					"house": 1,
+					"mill": 1,
+					"town_center": 1
+				},
+				"buildings_lost": 0,
+				"cap": 10,
+				"gathered": {
+					"food": 0,
+					"gold": 0,
+					"stone": 0,
+					"wood": 0
+				},
+				"idle": 0,
+				"kills": 0,
+				"lost": 1,
+				"pop": 6,
+				"res": {
+					"food": 50,
+					"gold": 100,
+					"stone": 200,
+					"wood": 75
+				},
+				"tasks": {
+					"build": 1,
+					"food": 2,
+					"gold": 1,
+					"idle": 0,
+					"stone": 0,
+					"wood": 1
+				},
+				"trained": 2,
+				"villagers": 5,
+				"wild_deaths": 0
+			},
+			"t": 60.0
+		}
+	],
+	"seed": 4242,
+	"size": 96,
+	"speed": 20.0,
+	"victory": "conquest",
+	"wall_seconds": 23.272,
+	"waves": [],
+	"wild_kills": {
+		"1": 0,
+		"2": 0,
+		"3": 0,
+		"4": 0
+	},
+	"winners": []
+}

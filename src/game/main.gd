@@ -3,7 +3,7 @@ extends Node
 ## pause / end screens -> back to the title or a rematch.
 ## Command line (skips the menu):
 ##   -- --mode=sandbox|skirmish|tutorial --difficulty=easy|normal|hard --size=small --map=continental|coast|islands|desert
-##      --seed=123 --victory=conquest|town_center --nofog --smoke[=combat|ai|fx|stage4|naval|modern|military|lang|audio|features|work|touch|layout|terrain] --lang=es|en
+##      --seed=123 --victory=conquest|town_center --nofog --smoke[=combat|ai|fx|stage4|naval|modern|military|lang|audio|features|work|touch|layout|terrain|aimatch] --lang=es|en
 ##   multiplayer smoke: -- --mp=host --smoke=mp  /  -- --mp=client --smoke=mp
 
 var game: Game
@@ -41,7 +41,7 @@ func _ready() -> void:
 		if opts.has("smoke"):
 			_start_smoke(opts["smoke"])
 	elif opts.has("mode") or opts.has("smoke"):
-		start_game({
+		var cfg := {
 			"mode": opts.get("mode", "sandbox"),
 			"size": opts.get("size", GameData.map_gen.get("default_size", "small")),
 			"map_type": opts.get("map", GameData.map_gen.get("default_map_type", "continental")),
@@ -49,7 +49,18 @@ func _ready() -> void:
 			"difficulty": opts.get("difficulty", "normal"),
 			"victory": opts.get("victory", GameData.rules.get("default_victory", "conquest")),
 			"fog": not opts.has("nofog"),
-		})
+		}
+		if str(opts.get("smoke", "")) == "aimatch":
+			var d: String = opts.get("difficulty", "normal")
+			if opts.has("ai_file"):  # same match under other rules, to compare
+				GameData.ai = JSON.parse_string(FileAccess.get_file_as_string(String(opts["ai_file"])))
+			var names := ["Azul", "Rojo", "Verde", "Amarillo"]
+			var defs := []
+			for i in clampi(int(opts.get("players", "2")), 2, names.size()):
+				defs.append({"name": names[i], "ai": true, "difficulty": d, "team": i % 2 + 1 if opts.has("teams") else 0})
+			cfg["players"] = defs
+			cfg["size"] = MatchConfig.map_size_for(String(cfg["size"]), defs.size())
+		start_game(cfg)
 		if opts.has("smoke"):
 			_start_smoke(opts["smoke"])
 	else:
@@ -57,6 +68,8 @@ func _ready() -> void:
 
 
 func _start_smoke(mode: Variant) -> void:
+	# Smokes wait on wall-clock time at high game speed: they must never fall behind.
+	Engine.max_physics_steps_per_frame = 8
 	var script := "res://src/debug/smoke_combat.gd" if mode is String else "res://src/debug/smoke_test.gd"
 	if mode is String and mode == "stage4":
 		script = "res://src/debug/smoke_stage4.gd"
@@ -90,6 +103,8 @@ func _start_smoke(mode: Variant) -> void:
 		script = "res://src/debug/smoke_terrain.gd"
 	if mode is String and mode == "tutorial":
 		script = "res://src/debug/smoke_tutorial.gd"
+	if mode is String and mode == "aimatch":
+		script = "res://src/debug/smoke_aimatch.gd"
 	if mode is String and mode == "showcase":
 		script = "res://src/debug/smoke_showcase.gd"
 	var smoke: Node = load(script).new()
