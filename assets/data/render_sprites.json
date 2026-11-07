@@ -2144,6 +2144,7 @@
   "xray": {
     "alpha": 0.6,
     "lighten": 0.2,
-    "neutral_color": "#f2e3a0"
+    "neutral_color": "#f2e3a0",
+    "min_prop_height": 24
   }
 }

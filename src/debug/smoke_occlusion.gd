@@ -7,6 +7,7 @@ extends "res://src/debug/smoke_combat.gd"
 ##    wins the click over the building.
 ## 3. Corpses stay in the y-sort (z 0) instead of sinking under everything.
 ## 4. A diagonal stone wall line is one piece per step and links at the corners.
+## 5. A villager behind a tree shows through it; one in front does not.
 
 
 func run_mode(game: Game, _mode: String) -> void:
@@ -124,7 +125,41 @@ func _run_occlusion() -> void:
 	_game.camera.focus_world(Iso.grid_to_world(Vector2(w0) + Vector2(4, 6)))
 	await _frames(3)
 	await _shot("occlusion_04_diagonal_wall")
+
+	# --- 5. Villager behind a tree -----------------------------------------------------------
+	var tree := _lone_tree(tc.grid_pos)
+	_check(tree != null, "a tree with free ground behind it")
+	if tree != null:
+		var holder_of := func() -> Node2D: return _game.xray._holders.get(tree.body_sprite())
+		var hidden := _game.spawn_unit("villager", 1, tree.grid_pos + Vector2(-1.0, -1.0))
+		_game.camera.set_zoom_index(_game.camera.zoom_levels.size() - 1)
+		_game.camera.focus_world(tree.position + Vector2(0, -30))
+		await _frames(4)
+		_check(hidden.position.y < tree.position.y, "the villager stands behind the tree")
+		var shown: Node2D = holder_of.call()
+		_check(shown != null and shown.visible and _visible_children(shown) >= 1, "a silhouette is drawn over the tree")
+		await _shot("occlusion_06_villager_behind_tree")
+		hidden.set_grid_pos(tree.grid_pos + Vector2(1.0, 1.0))
+		await _frames(4)
+		_check(hidden.position.y > tree.position.y, "the villager walked in front of the tree")
+		shown = holder_of.call()
+		_check(shown == null or not shown.visible, "in front of the tree it needs no silhouette")
+		await _shot("occlusion_07_villager_before_tree")
 	_finish()
+
+
+## A tall tree near `from` whose far side is open ground.
+func _lone_tree(from: Vector2) -> ResourceNode:
+	var best: ResourceNode = null
+	var best_d := INF
+	for c in _game.entities_root.get_children():
+		if c is ResourceNode and c.resource_type == "wood" and c.body_sprite().region_rect.size.y >= 40.0:
+			var t: Vector2i = c.tile()
+			var d: float = c.grid_pos.distance_to(from)
+			if d < best_d and _game.pathfinder.is_walkable(t + Vector2i(-1, -1)) and _game.pathfinder.is_walkable(t + Vector2i(1, 1)):
+				best_d = d
+				best = c
+	return best
 
 
 func _visible_children(n: Node) -> int:
