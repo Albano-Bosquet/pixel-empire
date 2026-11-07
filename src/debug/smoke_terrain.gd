@@ -81,7 +81,29 @@ func _run() -> void:
 		await _seconds(1.0)
 		await _grab("terrain_%s_04_cliff" % tag)
 	await _climb_a_ramp(tag)
+	await _film_a_road(tag)
 	_finish()
+
+
+## Close-up of a dirt road. Roads only join allies and this smoke has none, so
+## a stretch is painted on the grass near the start, running across the screen.
+func _film_a_road(tag: String) -> void:
+	var map := _game.map
+	var road := _nearest_of(MapData.Terrain.GRASS, map.start_positions[0] + Vector2i(8, 8))
+	_check(road.x >= 0, "grass to lay a road on")
+	if road.x < 0:
+		return
+	for i in range(-10, 11):
+		var wobble := Vector2i(1, 1) * (i / 4 % 2)
+		for o in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)]:
+			var t: Vector2i = road + Vector2i(i, -i) + wobble + o
+			if map.in_bounds(t) and map.get_terrain(t) in [MapData.Terrain.GRASS, MapData.Terrain.MEADOW]:
+				map.set_terrain(t, MapData.Terrain.PATH)
+	_game.terrain.refresh()
+	_game.camera.set_zoom_index(_game.camera.zoom_levels.size() - 1)
+	_game.camera.focus_world(Iso.grid_to_world(Iso.tile_center(road)))
+	await _seconds(1.0)
+	await _grab("terrain_%s_07_road" % tag)
 
 
 ## A villager walks up a ramp onto a plateau, and a house fits up there.
@@ -121,6 +143,8 @@ func _climb_a_ramp(tag: String) -> void:
 	_game.camera.focus_world(Iso.grid_to_world(u.grid_pos))
 	await _seconds(0.5)
 	await _grab("terrain_%s_06_on_plateau" % tag)
+	await _seconds(3.0)
+	print("FPS on the plateau: %d" % Engine.get_frames_per_second())
 
 
 func _nearest_of(id: int, from: Vector2i) -> Vector2i:

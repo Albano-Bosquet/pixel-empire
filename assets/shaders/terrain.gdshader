@@ -12,7 +12,8 @@
 // ground, whose camera-facing edges get a rock wall (a pixel is wall when the
 // cliff line lies within cliff_height below it) and whose rest is a plateau
 // top. The rim under the walls is impassable MOUNTAIN; PLATEAU behind it is
-// walkable, and the blue channel marks RAMP cuts where no wall is painted.
+// walkable. The blue channel fades out from RAMP cuts: walls shrink with it, so
+// a cliff sinks into the ramp, whose ground blends with the plateau top.
 // Target: gl_compatibility on PC and Android; cliff sampling only runs on and
 // right below mountain tiles.
 shader_type canvas_item;
@@ -29,9 +30,12 @@ uniform float coast_wobble = 0.16;
 uniform vec3 wet_sand = vec3(0.84, 0.80, 0.76); // tint of sand the waves reached
 uniform float cliff_height = 42.0; // wall height in world pixels
 uniform float cliff_jag = 18.0; // slow variation of that height along the cliff
+uniform float cliff_jag_scale = 720.0; // world pixels the noise texture spans for it
 uniform float cliff_chip = 4.0; // block-by-block notches on the wall's top edge
 uniform float cliff_rim = 11.0; // rock crest along the plateau's far edge, in pixels
 uniform float cliff_wobble = 0.30; // how far the cliff line wanders off the tile edges
+uniform float cliff_wobble_scale = 480.0; // world pixels the noise texture spans for it
+uniform float cliff_flank = 14.0; // rock showing on edges that run up the screen, in pixels
 uniform float cliff_shadow = 0.72; // brightness of the ground at the wall's foot
 uniform vec3 grass_dry = vec3(1.07, 1.03, 0.86); // sun-dried grass tint
 uniform vec3 grass_lush = vec3(0.93, 1.03, 0.94); // lush grass tint
@@ -50,7 +54,10 @@ const int ROCKY_ID = 8;
 const int MOUNTAIN_ID = 9;
 const int DESERT_ID = 10;
 const int PLATEAU_ID = 11;
-const float RAMP_REACH = 0.02; // ramp field value where cliff painting gives way to blended ground
+const int RAMP_ID = 12;
+const float RAMP_NEAR = 0.5; // ramp field value above which ground belongs to the ramp: no lip, no wall shadow
+const float RAMP_FLAT = 0.7; // ramp field value where a wall has sunk away, reached before the ramp's foot
+const float CLIFF_REACH = 4.0; // tiles from the cliff line past which no rock can show: skips the sampling
 const int CLIFF_ID = 13; // atlas entry only: the wall texture
 const int GRASS_FIRST_ID = 3; // grass, meadow and forest floor take the lush tint
 const int GRASS_LAST_ID = 5;
@@ -79,13 +86,19 @@ int terrain_at(vec2 g) {
 }
 
 // The ground a land pixel blends from: water tiles count as beach, and the
-// cliff rim as rocky ground.
-int ground_id(vec2 g) {
+// cliff rim as rocky ground, or as plateau for a pixel on top of the cliff
+// (`on_top`). `flat_top` also turns low ground into plateau, so the top keeps
+// its colour right up to the crest; near a ramp it stays off and the slope
+// fades into the ground at its foot.
+int ground_id(vec2 g, bool on_top, bool flat_top) {
 	int id = terrain_at(g);
-	if (id <= WATER_MAX_ID) {
-		return SAND_ID;
+	if (id == MOUNTAIN_ID) {
+		return on_top ? PLATEAU_ID : ROCKY_ID;
 	}
-	return id == MOUNTAIN_ID ? ROCKY_ID : id;
+	if (flat_top && id != RAMP_ID && id != PLATEAU_ID) {
+		return PLATEAU_ID;
+	}
+	return id <= WATER_MAX_ID ? SAND_ID : id;
 }
 
 float is_grass(int id) {
@@ -120,39 +133,41 @@ vec3 water_band(int k) {
 
 // Above 0 on the plateau, below 0 off it; the 0 contour is the cliff line.
 float plateau_at(vec2 w) {
-	float wob = (texture(noise_smooth, w / 90.0).g - 0.5) * 2.0 * cliff_wobble;
+	float wob = (texture(noise_smooth, w / cliff_wobble_scale).g - 0.5) * 2.0 * cliff_wobble;
 	return texture(depth_map, to_grid(w) / map_size).g * depth_scale + wob - 0.5;
 }
 
-// A mountain pixel: rock wall if the cliff line is just below it, else plateau.
-vec4 paint_mountain(vec2 wp) {
-	float h = cliff_height + (texture(noise_smooth, vec2(wp.x / 80.0, 0.31)).r - 0.5) * cliff_jag
+// A pixel on raised ground: rock if the cliff line is just below it or to its
+// side, else alpha 0, which leaves it to the ground blend. `lip` is the
+// brightness of that ground: the sunlit edge above a wall is lighter.
+vec4 paint_cliff(vec2 wp, out float lip) {
+	lip = 1.0;
+	float h = cliff_height + (texture(noise_smooth, vec2(wp.x / cliff_jag_scale, 0.31)).r - 0.5) * cliff_jag
 		+ (hash(vec2(floor(wp.x / CLIFF_BLOCK), 5.0)) - 0.5) * cliff_chip;
-	// No wall above a ramp: the ground climbs straight onto the plateau.
-	float ramp_ahead = max(texture(depth_map, to_grid(wp + vec2(0.0, h * 0.5)) / map_size).b,
-		texture(depth_map, to_grid(wp + vec2(0.0, h)) / map_size).b);
-	if (ramp_ahead > 0.5) {
-		return sample_terrain(PLATEAU_ID, wp);
-	}
+	// Walls sink into a ramp: what counts is the ramp field near the wall's foot.
+	float ramp = texture(depth_map, to_grid(wp + vec2(0.0, h * 0.5)) / map_size).b;
+	float fade = 1.0 - smoothstep(0.0, RAMP_FLAT, ramp);
+	h *= fade;
+	float flank = cliff_flank * fade;
 	float low = plateau_at(wp + vec2(0.0, h * 0.34));
 	float mid = plateau_at(wp + vec2(0.0, h * 0.67));
 	float high = plateau_at(wp + vec2(0.0, h));
-	if (min(low, min(mid, high)) >= 0.0) {
+	float left = plateau_at(wp + vec2(-flank, h * 0.5));
+	float right = plateau_at(wp + vec2(flank, h * 0.5));
+	if (min(min(low, mid), min(high, min(left, right))) >= 0.0) {
 		// Far edge: a low crest of the same rock closes the plateau.
-		float rim = cliff_rim + (hash(vec2(floor(wp.x / CLIFF_BLOCK), 9.0)) - 0.5) * cliff_chip;
+		float rim = (cliff_rim + (hash(vec2(floor(wp.x / CLIFF_BLOCK), 9.0)) - 0.5) * cliff_chip) * fade;
 		if (plateau_at(wp - vec2(0.0, rim)) < 0.0) {
 			return sample_terrain(CLIFF_ID, wp);
 		}
-		vec4 top = sample_terrain(PLATEAU_ID, wp);
-		// Sunlit lip along the wall's top edge.
-		if (plateau_at(wp + vec2(0.0, h + 3.0)) < 0.0) {
-			top.rgb *= 1.16;
+		if (ramp < RAMP_NEAR && plateau_at(wp + vec2(0.0, h + 3.0)) < 0.0) {
+			lip = 1.16;
 		}
-		return top;
+		return vec4(0.0);
 	}
 	// Which way the wall faces, from the field's slope; its strata run along
 	// the cliff line, so the texture is sheared to the iso edge it follows.
-	float side = plateau_at(wp + vec2(8.0, 0.0)) >= plateau_at(wp - vec2(8.0, 0.0)) ? 1.0 : -1.0;
+	float side = right >= left ? 1.0 : -1.0;
 	vec4 wall = sample_terrain(CLIFF_ID, floor(vec2(wp.x, wp.y - side * 0.5 * wp.x)));
 	wall.rgb *= side > 0.0 ? LIT_FACE : SHADE_FACE;
 	wall.rgb *= low < 0.0 ? WALL_LOW : (mid < 0.0 ? WALL_MID : 1.0);
@@ -223,6 +238,13 @@ void fragment() {
 		float shore = depth - 0.5; // 0 on the coastline, > 0 out at sea
 		float ebb = 0.5 + 0.5 * sin(TIME * 0.9 + texture(noise_smooth, wp / 300.0).b * 12.0);
 		vec4 col;
+		bool on_top = shore <= 0.0 && field.g > 0.0 && plateau_at(wp) > 0.0;
+		bool flat_top = on_top && field.b < RAMP_NEAR;
+		float lip = 1.0;
+		vec4 rock = vec4(0.0);
+		if (on_top && field.g * depth_scale < CLIFF_REACH) {
+			rock = paint_cliff(wp, lip);
+		}
 		if (shore > 0.0) {
 			// Depth bands, nudged by a slow drifting swell, ordered-dithered.
 			float swell = texture(noise_smooth, wp / 260.0 + vec2(TIME * 0.010, TIME * 0.004)).b
@@ -247,8 +269,8 @@ void fragment() {
 			if (abs(shore - wave_at) < 0.03 + 0.02 * roll) {
 				col.rgb = mix(col.rgb, foam_color, 0.42 * roll);
 			}
-		} else if (field.g > 0.0 && field.b < RAMP_REACH && plateau_at(wp) > 0.0) {
-			col = paint_mountain(wp);
+		} else if (rock.a > 0.0) {
+			col = rock;
 		} else {
 			// Land: the four nearest tiles, weighted by how close this pixel is
 			// to each, so one biome fades into the next. Next to the sea the
@@ -256,10 +278,10 @@ void fragment() {
 			vec2 q = gj - 0.5;
 			vec2 cell = floor(q) + 0.5;
 			vec2 f = smoothstep(0.0, 1.0, fract(q));
-			int a = ground_id(cell);
-			int b = ground_id(cell + vec2(1.0, 0.0));
-			int c = ground_id(cell + vec2(0.0, 1.0));
-			int d = ground_id(cell + vec2(1.0, 1.0));
+			int a = ground_id(cell, on_top, flat_top);
+			int b = ground_id(cell + vec2(1.0, 0.0), on_top, flat_top);
+			int c = ground_id(cell + vec2(0.0, 1.0), on_top, flat_top);
+			int d = ground_id(cell + vec2(1.0, 1.0), on_top, flat_top);
 			vec4 w = vec4((1.0 - f.x) * (1.0 - f.y), f.x * (1.0 - f.y), (1.0 - f.x) * f.y, f.x * f.y);
 			col = sample_terrain(a, wp);
 			if (a != b || a != c || a != d) {
@@ -270,9 +292,9 @@ void fragment() {
 			// Broad, non-repeating dry and lush areas, stepped by dither.
 			float lush = texture(noise_smooth, wp / 520.0).g * 0.6 + texture(noise_smooth, wp / 210.0).r * 0.4;
 			float step_t = floor(clamp((lush - 0.3) * 2.5, 0.0, 1.0) * 4.0 + bayer4(wp)) / 4.0;
-			col.rgb *= mix(vec3(1.0), mix(grass_dry, grass_lush, step_t), green);
+			col.rgb *= mix(vec3(1.0), mix(grass_dry, grass_lush, step_t), green) * lip;
 			// The wall's shadow on the ground at its foot.
-			if (field.b < RAMP_REACH && texture(depth_map, to_grid(wp - vec2(4.0, 6.0)) / map_size).g > 0.0
+			if (!on_top && field.b < RAMP_NEAR && texture(depth_map, to_grid(wp - vec2(4.0, 6.0)) / map_size).g > 0.0
 					&& (plateau_at(wp - vec2(0.0, 7.0)) > 0.0 || plateau_at(wp - vec2(9.0, 5.0)) > 0.0)) {
 				col.rgb *= cliff_shadow;
 			}

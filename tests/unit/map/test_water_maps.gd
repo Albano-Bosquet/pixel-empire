@@ -178,6 +178,17 @@ func test_mountain_field_marks_only_mountains() -> void:
 	assert_true(img.get_pixel(4, 0).g8 > img.get_pixel(1, 0).g8, "field grows into the mountain")
 
 
+func test_ramp_field_fades_away_from_the_ramp() -> void:
+	var m := MapData.new(8, 1, 1)
+	for x in 8:
+		m.terrain[x] = MapData.Terrain.RAMP if x == 0 else MapData.Terrain.MOUNTAIN
+	var img := TerrainRenderer.depth_image(m)
+	assert_eq(img.get_pixel(0, 0).b8, 255, "full on the ramp")
+	assert_true(img.get_pixel(1, 0).b8 > img.get_pixel(2, 0).b8, "the wall grows back step by step")
+	assert_true(img.get_pixel(2, 0).b8 > 0, "a wall two tiles off the ramp is still shortened")
+	assert_eq(img.get_pixel(TerrainRenderer.RAMP_FADE, 0).b8, 0, "full wall height past the fade")
+
+
 func test_decor_lists_use_real_sprites_and_grass_gets_life() -> void:
 	var props: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/props/props_atlas.json"))
 	for group in ["decor_sprites", "decor_patch_sprites"]:

@@ -103,10 +103,11 @@ static func _texture(id: String, seed: int) -> Image:
 			_fill(c, _noise_img(seed, 0.045, 2), r, 0.15, 0.85, 1.0)
 			_specks(c, rng, 70, [Color("#82643f"), Color("#92724a")])
 		"path":
-			var r := PixelCanvas.ramp(Color("#a48659"), 4, 0.3)
-			_fill(c, noise, r, 0.2, 0.8, 1.1)
-			_pebbles(c, rng, 6, Color("#b1a796"))
-			_specks(c, rng, 20, [Color("#8c7049")])
+			# Trodden earth, calm like dirt but paler. No pebbles: they show the
+			# 64 px repeat along a road.
+			var r := _soft_ramp(Color("#a48659"), 4, 0.05)
+			_fill(c, _noise_img(seed, 0.045, 2), r, 0.15, 0.85, 1.0)
+			_specks(c, rng, 70, [Color("#9a7d52"), Color("#ae9064")])
 		"rocky":
 			var r := _soft_ramp(Color("#8a7f66"), 4, 0.06)
 			_fill(c, _noise_img(seed, 0.045, 2), r, 0.15, 0.85, 1.0)
@@ -198,23 +199,6 @@ static func _blades(c: PixelCanvas, rng: RandomNumberGenerator, count: int, dark
 static func _specks(c: PixelCanvas, rng: RandomNumberGenerator, count: int, cols: Array) -> void:
 	for i in count:
 		c.put_wrap(rng.randi_range(0, SIZE - 1), rng.randi_range(0, SIZE - 1), cols[rng.randi() % cols.size()])
-
-
-static func _pebbles(c: PixelCanvas, rng: RandomNumberGenerator, count: int, base: Color) -> void:
-	var r := PixelCanvas.ramp(base, 3, 0.5)
-	for i in count:
-		var x := rng.randi_range(0, SIZE - 1)
-		var y := rng.randi_range(0, SIZE - 1)
-		var big := rng.randf() < 0.35
-		c.put_wrap(x, y, r[1])
-		c.put_wrap(x + 1, y, r[1])
-		c.put_wrap(x, y - 1, r[2])
-		c.put_wrap(x + 1, y + 1, r[0])
-		c.put_wrap(x, y + 1, r[0])
-		if big:
-			c.put_wrap(x + 2, y, r[1])
-			c.put_wrap(x + 1, y - 1, r[2])
-			c.put_wrap(x + 2, y + 1, r[0])
 
 
 static func _waves(c: PixelCanvas, rng: RandomNumberGenerator, count: int, col: Color, min_len: int, max_len: int) -> void:

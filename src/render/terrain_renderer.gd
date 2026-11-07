@@ -7,6 +7,8 @@ const SHADER := preload("res://assets/shaders/terrain.gdshader")
 const VOID_MARGIN := 2400.0
 ## Tiles of open water encoded by depth value 1.0 (must match the shader's depth_scale).
 const DEPTH_SCALE := 8
+## Tiles from a ramp over which a cliff wall grows back to its full height.
+const RAMP_FADE := 4
 ## Terrain the cliff line runs around.
 const RAISED: Array[int] = [MapData.Terrain.MOUNTAIN, MapData.Terrain.PLATEAU, MapData.Terrain.RAMP]
 
@@ -47,25 +49,30 @@ func refresh() -> void:
 ## Depth fields for the shader, in steps of 8-way distance capped at
 ## DEPTH_SCALE and stored as /DEPTH_SCALE. R: water tiles, steps to the nearest
 ## land (land = 0). G: raised tiles (mountain, plateau, ramp), steps to the
-## nearest other tile (else 0). B: 255 on ramps, where no wall may be painted.
+## nearest other tile (else 0). B: 255 on ramps, fading to 0 at RAMP_FADE steps
+## away: walls shrink with it, so a cliff sinks into a ramp instead of stopping.
 ## Sampled bilinearly, R and G have a 0.5 contour that is a smooth coastline or cliff line.
 static func depth_image(map: MapData) -> Image:
 	var size := map.width * map.height
 	var water := PackedByteArray()
 	var mountain := PackedByteArray()
+	var off_ramp := PackedByteArray()
 	water.resize(size)
 	mountain.resize(size)
+	off_ramp.resize(size)
 	for i in size:
 		water[i] = 1 if MapData.terrain_navigable(map.terrain[i]) else 0
 		mountain[i] = 1 if map.terrain[i] in RAISED else 0
+		off_ramp[i] = 0 if map.terrain[i] == MapData.Terrain.RAMP else 1
 	var r := _steps_inside(water, map.width, map.height)
 	var g := _steps_inside(mountain, map.width, map.height)
+	var b := _steps_inside(off_ramp, map.width, map.height)
 	var bytes := PackedByteArray()
 	bytes.resize(size * 3)
 	for i in size:
 		bytes[i * 3] = roundi(255.0 * r[i] / DEPTH_SCALE)
 		bytes[i * 3 + 1] = roundi(255.0 * g[i] / DEPTH_SCALE)
-		bytes[i * 3 + 2] = 255 if map.terrain[i] == MapData.Terrain.RAMP else 0
+		bytes[i * 3 + 2] = roundi(255.0 * maxf(0.0, 1.0 - float(b[i]) / RAMP_FADE))
 	return Image.create_from_data(map.width, map.height, false, Image.FORMAT_RGB8, bytes)
 
 
