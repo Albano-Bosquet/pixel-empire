@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Empire — RTS en pixel art</title>
+<meta name="description" content="Pixel Empire: estrategia en tiempo real de construcción de imperios en pixel art HD. 7 edades, 50 unidades, IA y multijugador hasta 8 jugadores. 1 USD en itch.io, para Windows y Android.">
+<meta property="og:title" content="Pixel Empire — RTS en pixel art">
+<meta property="og:description" content="Recolecta · Construye · Avanza · Conquista. 7 edades, 50 unidades, IA y multijugador online. 1 USD en itch.io, para Windows y Android.">
+<meta property="og:image" content="https://albano-bosquet.github.io/pixel-empire/media/banner.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#120d09">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #120d09;
+    --bg-2: #1a120c;
+    --panel: #231910;
+    --panel-2: #2c2015;
+    --line: #3d2c1b;
+    --line-2: #5a4128;
+    --ink: #f3e7d3;
+    --muted: #c4b293;
+    --gold: #f0c860;
+    --gold-2: #d9973a;
+    --gold-dark: #5a3810;
+    --food: #e0604a;
+    --wood: #b07a45;
+    --gold-res: #f0c860;
+    --stone: #a9b4bd;
+    --px: 4px;
+
+    --ease-out: cubic-bezier(.23, 1, .32, 1);
+    --ease-expo: cubic-bezier(.16, 1, .3, 1);
+    --ease-io: cubic-bezier(.77, 0, .175, 1);
+    --pixel-font: "Pixelify Sans", "Nunito", sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.65 "Nunito", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: clip;
+  }
+  ::selection { background: var(--gold); color: #2b1a06; }
+  img { max-width: 100%; display: block; }
+  a { color: var(--gold); }
+  :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+  h1, h2, h3, .pixel { font-family: var(--pixel-font); letter-spacing: .01em; }
+  h2, h3 { text-wrap: balance; }
+  p { text-wrap: pretty; }
+  .wrap { width: min(1160px, 100% - 32px); margin-inline: auto; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* Scroll progress: a gold pixel line under the top bar (scroll-driven, no JS) */
+  .progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 40; background: var(--gold); transform-origin: 0 50%; transform: scaleX(0); pointer-events: none; }
+  @supports (animation-timeline: scroll()) {
+    .progress { animation: grow linear both; animation-timeline: scroll(root); }
+    @keyframes grow { to { transform: scaleX(1); } }
+  }
+
+  /* ---------- Top bar ---------- */
+  .top {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+    border-bottom: 1px solid transparent;
+    transition: background-color .3s var(--ease-out), border-color .3s var(--ease-out);
+  }
+  .top.scrolled { background: rgba(18, 13, 9, .9); backdrop-filter: blur(10px); border-color: var(--line); }
+  .top .wrap { display: flex; align-items: center; gap: 20px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--gold); text-decoration: none; font: 700 22px var(--pixel-font); text-shadow: 0 2px 0 #000; }
+  .brand img { width: 32px; height: 32px; image-rendering: pixelated; }
+  .top nav { margin-left: auto; display: flex; gap: 4px; position: relative; }
+  .top nav a { position: relative; z-index: 1; color: var(--muted); text-decoration: none; font-weight: 700; font-size: 15px; padding: 6px 12px; transition: color .2s ease; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+  .top nav a[aria-current="true"] { color: var(--ink); }
+  .nav-pill { position: absolute; left: 0; bottom: 0; height: 3px; width: 10px; background: var(--gold); box-shadow: 2px 2px 0 var(--gold-dark); opacity: 0; transform-origin: 0 50%; transition: transform .45s var(--ease-io), width .45s var(--ease-io), opacity .2s ease; }
+  .top .btn { padding: 8px 16px; font-size: 16px; }
+  @media (hover: hover) and (pointer: fine) { .top nav a:hover { color: var(--gold); } }
+  @media (max-width: 860px) { .top nav { display: none; } .top .btn { margin-left: auto; } }
+
+  /* ---------- Pixel button ---------- */
+  .btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    font: 700 21px var(--pixel-font);
+    color: #2b1a06; text-decoration: none; white-space: nowrap;
+    padding: 15px 28px;
+    background: linear-gradient(var(--gold) 0 50%, var(--gold-2) 50% 100%);
+    border: var(--px) solid #1a1008;
+    box-shadow: inset 0 var(--px) 0 #ffe9a8, var(--px) var(--px) 0 var(--gold-dark), calc(var(--px) * 2) calc(var(--px) * 2) 0 rgba(0,0,0,.35);
+    transition: transform .14s var(--ease-out), box-shadow .14s var(--ease-out), filter .2s ease;
+    cursor: pointer;
+  }
+  .btn svg { width: 22px; height: 22px; flex: none; }
+  .btn:active { transform: translate(var(--px), var(--px)); box-shadow: inset 0 var(--px) 0 #ffe9a8, 0 0 0 transparent, 0 0 0 transparent; transition-duration: .08s; }
+  .btn.ghost { background: rgba(18,13,9,.35); color: var(--ink); border-color: var(--line-2); box-shadow: none; backdrop-filter: blur(4px); }
+  .btn.ghost:active { transform: scale(.97); }
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover { filter: brightness(1.08); transform: translate(-2px, -2px); box-shadow: inset 0 var(--px) 0 #ffe9a8, calc(var(--px) + 2px) calc(var(--px) + 2px) 0 var(--gold-dark), calc(var(--px) * 2 + 2px) calc(var(--px) * 2 + 2px) 0 rgba(0,0,0,.35); }
+    .btn.ghost:hover { border-color: var(--gold); color: var(--gold); transform: none; box-shadow: none; }
+  }
+  /* The little download arrow hops once on hover */
+  @media (hover: hover) and (pointer: fine) { .btn:hover .arrow { animation: hop .5s steps(4) 1; } }
+  @keyframes hop { 50% { transform: translateY(3px); } }
+
+  /* ---------- Hero ---------- */
+  .hero { position: relative; overflow: hidden; isolation: isolate; min-height: min(100svh, 860px); display: grid; }
+  .hero-bg { position: absolute; inset: -3%; z-index: -3; background: url(media/hero.jpg) center 40% / cover no-repeat; animation: drift 48s linear infinite alternate; }
+  @keyframes drift { from { transform: scale(1.04) translate3d(-1%, 0, 0); } to { transform: scale(1.1) translate3d(1.5%, -1%, 0); } }
+  /* Drifting pixel cloud shadows, like the ones in the game */
+  .clouds { position: absolute; inset: 0; z-index: -2; pointer-events: none; }
+  .clouds i {
+    position: absolute; display: block; width: 360px; height: 150px; opacity: .2;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 10' shape-rendering='crispEdges'%3E%3Cpath d='M7 0h6v1h3v1h2v1h3v1h1v2h2v2h-2v1h-4v1H8V9H4V8H1V7H0V5h2V4h2V2h2V1h1z' fill='%23000'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+    image-rendering: pixelated;
+    animation: cloud 70s linear infinite;
+  }
+  .clouds i:nth-child(1) { top: 14%; animation-duration: 80s; animation-delay: -10s; }
+  .clouds i:nth-child(2) { top: 52%; width: 520px; height: 210px; animation-duration: 105s; animation-delay: -60s; opacity: .16; }
+  .clouds i:nth-child(3) { top: 74%; width: 280px; height: 120px; animation-duration: 65s; animation-delay: -35s; }
+  @keyframes cloud { from { transform: translate3d(-40vw, 0, 0); } to { transform: translate3d(120vw, -6vh, 0); } }
+  .hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse 70% 60% at 50% 46%, rgba(14,10,8,.62), rgba(14,10,8,.18) 75%), linear-gradient(180deg, rgba(18,13,9,.55) 0, rgba(18,13,9,0) 22%, rgba(18,13,9,0) 62%, var(--bg) 100%); }
+  .hero .wrap { align-self: center; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 120px 0 96px; }
+  .hero h1 { margin: 0; }
+  .hero h1 img { width: min(860px, 92vw); height: auto; image-rendering: pixelated; filter: drop-shadow(0 6px 0 rgba(0,0,0,.45)); }
+  .tag { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px clamp(8px, 1.4vw, 14px); margin: 22px 0 8px; padding: 0; list-style: none; font: 700 clamp(15px, 2.8vw, 30px) var(--pixel-font); text-shadow: 0 2px 0 #000, 0 0 12px rgba(0,0,0,.6); }
+  .tag li + li::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: clamp(8px, 1.4vw, 14px); vertical-align: middle; background: var(--gold); box-shadow: 2px 2px 0 var(--gold-dark); }
+  @media (max-width: 520px) { .tag { gap: 4px 12px; } .tag li + li::before { display: none; } }
+  .sub { color: #f0dcb4; margin: 0 0 36px; font-size: clamp(16px, 1.8vw, 19px); font-weight: 600; text-shadow: 0 1px 4px #000; max-width: 52ch; }
+  .cta { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; align-items: center; }
+  .meta { margin: 20px 0 0; color: #d9c6a4; font-size: 15px; text-shadow: 0 1px 3px #000; max-width: 70ch; }
+  .meta b { color: var(--ink); }
+  .scroll-hint { position: absolute; left: 50%; bottom: 22px; width: 20px; height: 20px; margin-left: -10px; color: var(--gold); opacity: .8; animation: bob 1.6s steps(4) infinite; }
+  @keyframes bob { 50% { transform: translateY(6px); } }
+  @media (max-height: 640px) { .scroll-hint { display: none; } }
+
+  /* Hero entrance: one authored moment. Title wipes in pixel by pixel, the rest follows. */
+  .js .hero h1 img { animation: wipe .9s steps(18) .1s both; }
+  @keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  .js .tag li { animation: rise .7s var(--ease-expo) both; animation-delay: calc(.85s + var(--i) * 110ms); }
+  .js .sub, .js .cta, .js .meta { animation: rise .8s var(--ease-expo) both; }
+  .js .sub { animation-delay: 1.3s; }
+  .js .cta { animation-delay: 1.42s; }
+  .js .meta { animation-delay: 1.54s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); filter: blur(3px); } }
+
+  /* ---------- Stats ---------- */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); background: var(--bg-2); position: relative; z-index: 1; margin-top: -48px; box-shadow: 0 24px 48px -24px rgba(0,0,0,.8); }
+  .stats div { padding: 26px 12px 22px; text-align: center; border-right: 1px solid var(--line); }
+  .stats div:last-child { border-right: 0; }
+  .stats b { display: block; font: 700 clamp(38px, 5vw, 52px)/1 var(--pixel-font); color: var(--gold); font-variant-numeric: tabular-nums; text-shadow: 3px 3px 0 var(--gold-dark); }
+  .stats span { display: block; margin-top: 8px; color: var(--muted); font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: .1em; }
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } .stats div:nth-child(2) { border-right: 0; } .stats div:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
+
+  /* ---------- Sections ---------- */
+  section { padding: 104px 0; }
+  .alt { background: var(--bg-2); border-block: 1px solid var(--line); }
+  h2 { font-size: clamp(32px, 5vw, 52px); line-height: 1.08; margin: 0 0 18px; color: var(--ink); letter-spacing: -.005em; }
+  h2::after { content: ""; display: block; width: 56px; height: 6px; margin-top: 14px; background: var(--gold); box-shadow: 3px 3px 0 var(--gold-dark); transform-origin: 0 50%; }
+  .center h2::after { margin-inline: auto; transform-origin: 50% 50%; }
+  .lead { color: var(--muted); font-size: 19px; max-width: 60ch; margin: 0; }
+  .center { text-align: center; }
+  .center .lead { margin-inline: auto; }
+
+  /* Reveal on scroll — content is visible unless JS is running and the element is still offscreen */
+  .js .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s var(--ease-out), transform .9s var(--ease-expo); transition-delay: calc(var(--d, 0) * 90ms); }
+  .js .reveal.in { opacity: 1; transform: none; }
+  .js .reveal h2::after, .js h2.reveal::after { transform: scaleX(0); transition: transform .6s steps(7) .35s; }
+  .js .reveal.in h2::after, .js h2.reveal.in::after { transform: scaleX(1); }
+
+  /* ---------- Ages ---------- */
+  .ages-head { display: flex; flex-wrap: wrap; gap: 16px 40px; align-items: end; justify-content: space-between; }
+  .ages-head .lead { max-width: 46ch; }
+  .track { position: relative; margin-top: 48px; display: grid; grid-template-columns: repeat(7, minmax(92px, 1fr)); gap: 0; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory; padding-bottom: 4px; }
+  .track::-webkit-scrollbar { display: none; }
+  .track::before, .track .fill { content: ""; position: absolute; left: calc(100% / 14); right: calc(100% / 14); top: 21px; height: 4px; background: var(--line); }
+  .track .fill { background: var(--gold); right: auto; width: calc(100% - 100% / 7); transform-origin: 0 50%; transform: scaleX(0); transition: transform .55s var(--ease-io); box-shadow: 0 2px 0 var(--gold-dark); }
+  .age { position: relative; z-index: 1; scroll-snap-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 6px 4px 8px; background: none; border: 0; color: var(--muted); font: 700 15px var(--pixel-font); cursor: pointer; transition: color .2s ease; }
+  .age .dot { width: 36px; height: 36px; display: grid; place-items: center; background: var(--panel); border: 3px solid var(--line-2); color: var(--muted); font-size: 16px; transition: background-color .3s var(--ease-out), border-color .3s var(--ease-out), color .3s var(--ease-out), transform .14s var(--ease-out); }
+  .age.done .dot { background: var(--gold-2); border-color: #1a1008; color: #2b1a06; }
+  .age[aria-selected="true"] { color: var(--gold); }
+  .age[aria-selected="true"] .dot { background: var(--gold); border-color: #1a1008; color: #2b1a06; box-shadow: 3px 3px 0 var(--gold-dark); transform: translateY(-3px); }
+  .age:active .dot { transform: scale(.94); }
+  @media (hover: hover) and (pointer: fine) { .age:hover { color: var(--ink); } .age:hover .dot { border-color: var(--gold-2); } }
+  .age-panel { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); background: var(--panel); }
+  .age-panel > div { padding: 30px 32px; }
+  .age-panel > div + div { border-left: 1px solid var(--line); }
+  @media (max-width: 760px) { .age-panel { grid-template-columns: 1fr; } .age-panel > div + div { border-left: 0; border-top: 1px solid var(--line); } .age-panel > div { padding: 24px 20px; } }
+  .age-panel h3 { margin: 0; font-size: clamp(26px, 3.4vw, 36px); line-height: 1.1; color: var(--gold); }
+  .age-panel .blurb { margin: 10px 0 18px; color: var(--muted); }
+  .cost { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .cost li { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 10px; background: var(--bg-2); border: 1px solid var(--line); font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .cost li::before { content: ""; width: 10px; height: 10px; background: var(--c); box-shadow: 2px 2px 0 rgba(0,0,0,.45); }
+  .age-panel h4 { margin: 0 0 10px; font: 700 14px "Nunito", sans-serif; text-transform: uppercase; letter-spacing: .1em; color: var(--gold-2); }
+  .age-panel h4 + .chips { margin-bottom: 22px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .chips li { padding: 3px 10px; border: 1px solid var(--line-2); font-size: 15px; font-weight: 600; background: rgba(0,0,0,.18); }
+  .swap { transition: opacity .18s ease, transform .18s var(--ease-out), filter .18s ease; }
+  .swap.out { opacity: 0; transform: translateY(6px); filter: blur(2px); transition-duration: .12s; }
+  .js .chips.stagger li { animation: chip .4s var(--ease-out) both; animation-delay: calc(var(--i) * 28ms); }
+  @keyframes chip { from { opacity: 0; transform: scale(.95); } }
+
+  /* ---------- Feature rows ---------- */
+  .row { display: grid; grid-template-columns: 1.35fr 1fr; gap: 56px; align-items: center; }
+  .row.flip { grid-template-columns: 1fr 1.35fr; }
+  .row.flip .media { order: 2; }
+  .row + .row { margin-top: 104px; }
+  @media (max-width: 900px) { .row, .row.flip { grid-template-columns: 1fr; gap: 28px; } .row.flip .media { order: 0; } .row + .row { margin-top: 72px; } }
+  .frame { position: relative; border: var(--px) solid #0b0805; outline: 1px solid var(--line); box-shadow: 12px 12px 0 rgba(0,0,0,.4); background: #000; overflow: hidden; }
+  .frame img { width: 100%; height: auto; }
+  /* Pixel corner brackets on framed media */
+  .frame::before, .frame::after { content: ""; position: absolute; z-index: 1; width: 18px; height: 18px; border: 4px solid var(--gold); pointer-events: none; transition: transform .35s var(--ease-out); }
+  .frame::before { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+  .frame::after { right: 8px; bottom: 8px; border-left: 0; border-top: 0; }
+  @media (hover: hover) and (pointer: fine) { .frame:hover::before { transform: translate(-3px, -3px); } .frame:hover::after { transform: translate(3px, 3px); } }
+  .bullets { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 10px; }
+  .bullets li { padding-left: 26px; position: relative; color: var(--ink); }
+  .bullets li::before { content: ""; position: absolute; left: 0; top: .6em; width: 10px; height: 10px; background: var(--gold); box-shadow: 2px 2px 0 var(--gold-dark); }
+
+  /* ---------- World ---------- */
+  .world { margin-top: 44px; }
+  .world .labels { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 18px; color: var(--muted); font: 700 16px var(--pixel-font); text-align: center; }
+
+  /* ---------- Everything list ---------- */
+  .feats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 48px; border-top: 1px solid var(--line); }
+  .feat { padding: 28px 28px 30px 0; border-bottom: 1px solid var(--line); position: relative; }
+  .feat:not(:nth-child(3n)) { border-right: 1px solid var(--line); }
+  .feat:not(:nth-child(3n+1)) { padding-left: 28px; }
+  .feat h3 { margin: 0 0 8px; font-size: 23px; color: var(--ink); display: flex; align-items: center; gap: 12px; transition: color .2s ease; }
+  .feat h3::before { content: ""; width: 10px; height: 10px; flex: none; background: var(--gold-2); box-shadow: 2px 2px 0 var(--gold-dark); transition: transform .3s var(--ease-out), background-color .2s ease; }
+  .feat p { margin: 0; color: var(--muted); font-size: 16px; }
+  @media (hover: hover) and (pointer: fine) { .feat:hover h3 { color: var(--gold); } .feat:hover h3::before { background: var(--gold); transform: rotate(45deg); } }
+  @media (max-width: 900px) {
+    .feats { grid-template-columns: repeat(2, 1fr); }
+    .feat, .feat:not(:nth-child(3n+1)) { padding: 24px 22px 26px 0; border-right: 0; }
+    .feat:nth-child(odd) { border-right: 1px solid var(--line); }
+    .feat:nth-child(even) { padding-left: 22px; }
+  }
+  @media (max-width: 600px) { .feats { grid-template-columns: 1fr; } .feat, .feat:nth-child(even) { padding: 22px 0; border-right: 0 !important; } }
+
+  /* ---------- Gallery ---------- */
+  .gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 44px; }
+  .gallery button { position: relative; padding: 0; border: 3px solid #0b0805; outline: 1px solid var(--line); background: #000; cursor: zoom-in; overflow: hidden; aspect-ratio: 16 / 9; transition: outline-color .2s ease; }
+  .gallery button:first-child { grid-column: span 2; grid-row: span 2; }
+  .gallery button:last-child { grid-column: span 2; aspect-ratio: auto; }
+  .gallery img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--ease-out), filter .3s ease; }
+  .gallery .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 12px 10px; text-align: left; font-size: 14px; font-weight: 700; color: var(--ink); background: linear-gradient(transparent, rgba(0,0,0,.85)); opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .3s var(--ease-out); }
+  .gallery button:focus-visible .cap { opacity: 1; transform: none; }
+  @media (hover: hover) and (pointer: fine) {
+    .gallery button:hover { outline-color: var(--gold); }
+    .gallery button:hover img { transform: scale(1.035); filter: brightness(1.06); }
+    .gallery button:hover .cap { opacity: 1; transform: none; }
+  }
+  @media (max-width: 900px) { .gallery { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .gallery { gap: 8px; } .gallery button:first-child { grid-row: span 1; } }
+
+  .lightbox { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 56px 72px 72px; visibility: hidden; }
+  .lightbox.open, .lightbox.closing { visibility: visible; }
+  .lightbox.closing { pointer-events: none; }
+  .lightbox .backdrop { position: absolute; inset: 0; background: rgba(8,6,4,.94); opacity: 0; transition: opacity .25s var(--ease-out); }
+  .lightbox.open .backdrop { opacity: 1; }
+  .lightbox figure { position: relative; margin: 0; max-width: 100%; }
+  .lightbox img { max-height: calc(100svh - 150px); max-width: 100%; width: auto; border: var(--px) solid #000; outline: 1px solid var(--line-2); transform-origin: 0 0; will-change: transform; }
+  .lightbox figcaption { margin-top: 14px; text-align: center; color: var(--ink); font-weight: 700; opacity: 0; transition: opacity .2s ease; }
+  .lightbox.open figcaption { opacity: 1; transition-delay: .15s; }
+  .lightbox figcaption span { color: var(--muted); font-weight: 600; margin-left: 10px; font-variant-numeric: tabular-nums; }
+  .lb-btn { position: absolute; z-index: 1; width: 48px; height: 48px; display: grid; place-items: center; background: var(--panel); border: 3px solid #0b0805; outline: 1px solid var(--line-2); color: var(--gold); cursor: pointer; opacity: 0; transition: opacity .2s ease, transform .14s var(--ease-out), background-color .2s ease; }
+  .lightbox.open .lb-btn { opacity: 1; }
+  .lb-btn svg { width: 20px; height: 20px; }
+  .lb-btn:active { transform: scale(.94); }
+  @media (hover: hover) and (pointer: fine) { .lb-btn:hover { background: var(--panel-2); } }
+  .lb-prev { left: 14px; top: 50%; margin-top: -24px; }
+  .lb-next { right: 14px; top: 50%; margin-top: -24px; }
+  .lb-close { right: 14px; top: 14px; }
+  @media (max-width: 700px) { .lightbox { padding: 64px 12px 96px; } .lb-prev, .lb-next { top: auto; bottom: 18px; margin: 0; } .lb-prev { left: calc(50% - 60px); } .lb-next { right: calc(50% - 60px); } }
+
+  /* ---------- Install ---------- */
+  .tabs { position: relative; display: inline-flex; margin: 36px auto 0; padding: 4px; background: var(--bg); border: 1px solid var(--line); }
+  .tab { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 10px; padding: 10px 22px; background: none; border: 0; color: var(--muted); font: 700 18px var(--pixel-font); cursor: pointer; transition: color .25s ease; }
+  .tab svg { width: 18px; height: 18px; }
+  .tab[aria-selected="true"] { color: #2b1a06; }
+  .tab:active { transform: scale(.97); }
+  .tab-ind { position: absolute; top: 4px; bottom: 4px; left: 0; width: 0; background: linear-gradient(var(--gold) 0 50%, var(--gold-2) 50% 100%); box-shadow: inset 0 3px 0 #ffe9a8, 3px 3px 0 var(--gold-dark); transition: transform .4s var(--ease-io), width .4s var(--ease-io); }
+  @media (hover: hover) and (pointer: fine) { .tab:not([aria-selected="true"]):hover { color: var(--ink); } }
+  .panel { margin-top: 32px; }
+  .panel[hidden] { display: none; }
+  .panel.enter { animation: rise .45s var(--ease-expo) both; }
+  .steps { counter-reset: s; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; text-align: left; border: 1px solid var(--line); background: var(--panel); }
+  @media (max-width: 800px) { .steps { grid-template-columns: 1fr; } }
+  .steps div { counter-increment: s; padding: 24px 24px 26px 78px; position: relative; }
+  .steps div + div { border-left: 1px solid var(--line); }
+  @media (max-width: 800px) { .steps div + div { border-left: 0; border-top: 1px solid var(--line); } }
+  .steps div::before { content: counter(s); position: absolute; left: 22px; top: 22px; width: 38px; height: 38px; display: grid; place-items: center; font: 700 22px var(--pixel-font); color: #2b1a06; background: var(--gold); box-shadow: 3px 3px 0 var(--gold-dark); }
+  .steps b { display: block; margin-bottom: 4px; }
+  .steps p { margin: 0; color: var(--muted); font-size: 15px; }
+  .panel .btn { margin-top: 32px; }
+  .req { color: var(--muted); font-size: 15px; margin: 14px 0 0; }
+
+  .keys-title { margin: 88px 0 0; font-size: 26px; color: var(--ink); text-align: left; }
+  .keys { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 40px; margin-top: 16px; text-align: left; }
+  @media (max-width: 700px) { .keys { grid-template-columns: 1fr; } }
+  .keys div { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px dashed var(--line); font-size: 15px; }
+  .keys span:first-child { color: var(--muted); }
+  .keys span:last-child { text-align: right; }
+  kbd { display: inline-block; font: 700 13px "Nunito", sans-serif; background: var(--panel-2); border: 1px solid var(--line-2); border-bottom-width: 3px; padding: 1px 7px; color: var(--ink); white-space: nowrap; transition: transform .1s var(--ease-out), border-bottom-width .1s; }
+  @media (hover: hover) and (pointer: fine) { .keys div:hover kbd { transform: translateY(2px); border-bottom-width: 1px; margin-bottom: 2px; } }
+
+  /* ---------- Footer ---------- */
+  footer { border-top: 1px solid var(--line); padding: 44px 0 60px; color: var(--muted); font-size: 15px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 18px 32px; align-items: center; justify-content: space-between; }
+  footer a { color: var(--ink); }
+  .code-link { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; transition: color .2s ease; }
+  .code-link svg { width: 22px; height: 22px; fill: currentColor; }
+  @media (hover: hover) and (pointer: fine) { .code-link:hover { color: var(--gold); } }
+
+  /* Reduced motion: keep fades and colour changes, drop movement and loops */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hero-bg, .clouds i, .scroll-hint { animation: none; }
+    .clouds { display: none; }
+    .js .hero h1 img { animation: fade .6s ease both; }
+    .js .tag li, .js .sub, .js .cta, .js .meta, .panel.enter { animation-name: fade; }
+    @keyframes fade { from { opacity: 0; } }
+    .js .reveal { transform: none; transition: opacity .5s ease; }
+    .js .reveal h2::after, .js h2.reveal::after { transform: none; }
+    .swap.out { transform: none; filter: none; }
+    .js .chips.stagger li { animation: none; }
+    .track .fill, .nav-pill, .tab-ind { transition-duration: 0s; }
+    .gallery img, .btn, .age .dot { transition: none; }
+  }
+</style>
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+
+<div class="progress" aria-hidden="true"></div>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="icon.png" alt="" width="32" height="32">Pixel Empire</a>
+    <nav aria-label="Secciones">
+      <a href="#edades">Edades</a>
+      <a href="#combate">Combate</a>
+      <a href="#ciudad">Ciudad</a>
+      <a href="#todo">Características</a>
+      <a href="#galeria">Galería</a>
+      <a href="#instalar">Instalar</a>
+      <span class="nav-pill" aria-hidden="true"></span>
+    </nav>
+    <a class="btn" href="https://albano-bosquet.itch.io/pixel-empire">Comprar · 1 USD</a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-bg" role="img" aria-label="Una ciudad de Pixel Empire con castillo, mercado, granjas y aldeanos trabajando"></div>
+  <div class="clouds" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="wrap">
+    <h1><img src="media/title.png" alt="Pixel Empire" width="908" height="128"></h1>
+    <ul class="tag">
+      <li style="--i:0">Recolecta</li><li style="--i:1">Construye</li><li style="--i:2">Avanza</li><li style="--i:3">Conquista</li>
+    </ul>
+    <p class="sub">Estrategia en tiempo real de construcción de imperios en pixel art HD. De la Edad Oscura a los tanques y los reactores.</p>
+    <div class="cta">
+      <a class="btn dl" data-os="win" href="https://albano-bosquet.itch.io/pixel-empire">
+        <svg class="arrow" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M3 0h2v3h2v1H6v1H5v1H3V5H2V4H1V3h2zM0 7h8v1H0z"/></svg>
+        Comprar para Windows · 1 USD
+      </a>
+      <a class="btn dl-apk" data-os="android" href="https://albano-bosquet.itch.io/pixel-empire">
+        <svg class="arrow" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M3 0h2v3h2v1H6v1H5v1H3V5H2V4H1V3h2zM0 7h8v1H0z"/></svg>
+        Comprar para Android · 1 USD
+      </a>
+    </div>
+    <p class="meta"><span id="ver"><b>Pixel Empire 1.10.0</b></span> · 1 USD en itch.io · Windows 10 y 11 y Android · Online sin abrir puertos · Juego cruzado PC–móvil · Español e inglés</p>
+  </div>
+  <svg class="scroll-hint" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M0 2h2v1h1v1h2V3h1V2h2v2H7v1H6v1H5v1H3V6H2V5H1V4H0z"/></svg>
+</div>
+
+<div class="wrap">
+  <div class="stats" id="stats">
+    <div><b data-count="7">7</b><span>edades</span></div>
+    <div><b data-count="50">50</b><span>unidades</span></div>
+    <div><b data-count="30">30</b><span>edificios</span></div>
+    <div><b data-count="8">8</b><span>jugadores</span></div>
+  </div>
+</div>
+
+<section id="edades">
+  <div class="wrap">
+    <div class="ages-head reveal">
+      <h2>Siete edades,<br>un solo imperio</h2>
+      <p class="lead">Cada avance cuesta recursos y tiempo de investigación en el centro urbano, y desbloquea unidades y edificios nuevos. Elige una edad para ver qué trae.</p>
+    </div>
+    <div class="track reveal" role="tablist" aria-label="Edades" id="track">
+      <span class="fill" aria-hidden="true"></span>
+    </div>
+    <div class="age-panel reveal" id="age-panel" role="tabpanel" aria-live="polite">
+      <div class="swap">
+        <h3 id="age-name">Edad Oscura</h3>
+        <p class="blurb" id="age-blurb">Un centro urbano, unos pocos aldeanos y todo por hacer.</p>
+        <ul class="cost" id="age-cost"><li style="--c:var(--muted)">Punto de partida</li></ul>
+      </div>
+      <div class="swap">
+        <h4>Unidades</h4>
+        <ul class="chips" id="age-units"><li>Aldeano</li><li>Explorador a caballo</li><li>Milicia</li><li>Espadachín</li><li>Barco pesquero</li><li>Barco de transporte</li></ul>
+        <h4>Edificios</h4>
+        <ul class="chips" id="age-bld"><li>Centro urbano</li><li>Casa</li><li>Molino</li><li>Almacén</li><li>Cuartel</li><li>Establo</li><li>Granja</li><li>Campamento maderero</li><li>Campamento minero</li><li>Puesto de vigía</li><li>Empalizada</li><li>Puerto</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="combate" class="alt">
+  <div class="wrap row">
+    <div class="media frame reveal"><img src="media/battle.gif" alt="Caballeros, espadachines y arqueros chocan contra piqueros y ballesteros" loading="lazy" width="720" height="405"></div>
+    <div class="reveal" style="--d:1">
+      <h2>Batallas que se leen de un vistazo</h2>
+      <p class="lead">Lanza a tus caballeros contra un muro de picas mientras los arqueros cubren el flanco y las catapultas machacan las torres.</p>
+      <ul class="bullets">
+        <li>Posturas, formaciones y ataque en movimiento</li>
+        <li>Armaduras y bonificaciones entre clases de unidad</li>
+        <li>Proyectiles visibles, daño en área y edificios en llamas</li>
+        <li>Monjes que convierten unidades enemigas</li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap row flip">
+    <div class="media frame reveal"><img src="media/modern.gif" alt="Tanques, infantería y reactores atacan una base enemiga" loading="lazy" width="720" height="405"></div>
+    <div class="reveal" style="--d:1">
+      <h2>De la espada al tanque</h2>
+      <p class="lead">Las últimas edades cambian la guerra: pólvora, acorazados, aviación y blindados.</p>
+      <ul class="bullets">
+        <li>Mosqueteros, cañones, acorazados y biplanos</li>
+        <li>Tanques, bazucas, ametralladoras y reactores</li>
+        <li>Aviones que atacan en picado, giran sin parar y vuelven a rearmarse a su base</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="ciudad">
+  <div class="wrap row">
+    <div class="media frame reveal"><img src="media/city_life.gif" alt="Aldeanos trabajando en granjas, minas y bosques alrededor de una ciudad" loading="lazy" width="720" height="405"></div>
+    <div class="reveal" style="--d:1">
+      <h2>Levanta tu ciudad</h2>
+      <p class="lead">Empieza con un centro urbano y un puñado de aldeanos. Recolecta comida, madera, oro y piedra y conviértelo en un imperio.</p>
+      <ul class="bullets">
+        <li>Granjas, molinos, mercados, monasterios y castillos</li>
+        <li>Comercio entre mercados y compraventa de recursos</li>
+        <li>Más de 30 tecnologías en el árbol tecnológico</li>
+        <li>Murallas, puertas y la Maravilla: mantenla en pie y ganas</li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap world">
+    <div class="center reveal">
+      <h2>Un mundo vivo</h2>
+      <p class="lead">Ciclo de día y noche con luces en las ventanas, pájaros, sombras de nubes, mariposas y luciérnagas. Ovejas y pavos que son de quien pase cerca, ciervos que huyen y lobos, tigres y osos que atacan.</p>
+    </div>
+    <div class="frame reveal" style="margin-top:40px"><img src="media/day_night.jpg" alt="La misma ciudad de día, al atardecer y de noche" loading="lazy" width="1200" height="675"></div>
+  </div>
+</section>
+
+<section id="todo" class="alt">
+  <div class="wrap">
+    <h2 class="reveal">Un RTS completo</h2>
+    <div class="feats">
+      <div class="feat reveal"><h3>50 unidades</h3><p>Infantería, arqueros, caballería, asedio, monjes, barcos, armas de fuego, artillería, aviones y tanques. Animadas en 16 direcciones.</p></div>
+      <div class="feat reveal" style="--d:1"><h3>Mapas generados</h3><p>Continental, costa o islas, en cinco tamaños, con niebla de guerra. Semilla aleatoria o elegida por ti.</p></div>
+      <div class="feat reveal" style="--d:2"><h3>IA en tres niveles</h3><p>Gestiona su economía, avanza de edad, ataca en oleadas e invade por mar.</p></div>
+      <div class="feat reveal"><h3>Multijugador online</h3><p>Hasta 8 jugadores con un código de partida, sin abrir puertos, o por LAN y VPN. PC y móvil juegan juntos. La IA toma el control si alguien se desconecta.</p></div>
+      <div class="feat reveal" style="--d:1"><h3>Partidas a medida</h3><p>Equipos y alianzas, dificultad por cada IA, recursos y edad iniciales, población, velocidad y animales.</p></div>
+      <div class="feat reveal" style="--d:2"><h3>Sonido en todo</h3><p>Música por edades que cambia en las batallas, voces, golpes, disparos, explosiones y ambiente, todo sintetizado.</p></div>
+      <div class="feat reveal"><h3>Guerra naval</h3><p>Puertos, barcos pesqueros, galeras, brulotes y transportes para desembarcar en la isla enemiga.</p></div>
+      <div class="feat reveal" style="--d:1"><h3>Guarda y sigue</h3><p>Guardar y cargar partidas, guardado rápido con F5 y autoguardado.</p></div>
+      <div class="feat reveal" style="--d:2"><h3>Pensado para jugar</h3><p>Pantalla completa (F11), grupos, atajos en cada botón, controles táctiles, español e inglés y botón de actualizar en el menú.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="galeria">
+  <div class="wrap">
+    <h2 class="reveal">Galería</h2>
+    <div class="gallery reveal" id="gallery"></div>
+  </div>
+</section>
+
+<section id="instalar" class="alt">
+  <div class="wrap center">
+    <div class="reveal">
+      <h2>Empieza tu imperio</h2>
+      <p class="lead">1 USD en itch.io, un solo pago para PC y Android. Elige tu plataforma.</p>
+    </div>
+    <div class="tabs reveal" role="tablist" aria-label="Plataforma" id="tabs">
+      <span class="tab-ind" aria-hidden="true"></span>
+      <button class="tab" role="tab" id="tab-win" aria-controls="p-win" aria-selected="true">
+        <svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M0 1h3v3H0zM4 1h4v3H4zM0 5h3v3H0zM4 5h4v3H4z"/></svg>Windows
+      </button>
+      <button class="tab" role="tab" id="tab-android" aria-controls="p-android" aria-selected="false" tabindex="-1">
+        <svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M2 0h1v1h2V0h1v1h1v2H1V1h1zM1 4h6v3H6v1H5V7H3v1H2V7H1z"/></svg>Android
+      </button>
+    </div>
+
+    <div class="panel" id="p-win" role="tabpanel" aria-labelledby="tab-win">
+      <div class="steps">
+        <div><b>Cómpralo en itch.io</b><p>Un solo pago de 1 USD (o más, si quieres apoyar). Incluye PC y Android y todas las actualizaciones.</p></div>
+        <div><b>Descarga y descomprime</b><p>Baja el .zip de Windows desde tu biblioteca de itch.io (o con la app de itch) y abre PixelEmpire.exe.</p></div>
+        <div><b>Si Windows avisa</b><p>El juego no está firmado: pulsa <i>Más información → Ejecutar de todas formas</i>.</p></div>
+      </div>
+      <a class="btn dl" href="https://albano-bosquet.itch.io/pixel-empire">
+        <svg class="arrow" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M3 0h2v3h2v1H6v1H5v1H3V5H2V4H1V3h2zM0 7h8v1H0z"/></svg>
+        Comprar para Windows · 1 USD
+      </a>
+      <p class="req">Windows 10 u 11 de 64 bits</p>
+    </div>
+
+    <div class="panel" id="p-android" role="tabpanel" aria-labelledby="tab-android" hidden>
+      <div class="steps">
+        <div><b>Descarga el APK</b><p>Con la misma compra, descarga el APK desde itch.io en el móvil y ábrelo.</p></div>
+        <div><b>Permite la instalación</b><p>Android pedirá permiso para instalar apps de esta fuente: actívalo una vez.</p></div>
+        <div><b>Juega online</b><p>Multijugador → Crear partida online y comparte el código. Sin abrir puertos. Misma versión en todos los equipos.</p></div>
+      </div>
+      <a class="btn dl-apk" href="https://albano-bosquet.itch.io/pixel-empire">
+        <svg class="arrow" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M3 0h2v3h2v1H6v1H5v1H3V5H2V4H1V3h2zM0 7h8v1H0z"/></svg>
+        Comprar para Android · 1 USD
+      </a>
+      <p class="req">Android 7 o superior, 64 bits (ARM)</p>
+    </div>
+
+    <h3 class="keys-title reveal">Controles</h3>
+    <div class="keys reveal">
+      <div><span>Mover la cámara</span><span><kbd>WASD</kbd> o bordes</span></div>
+      <div><span>Seleccionar / ordenar</span><span>clic izquierdo / derecho</span></div>
+      <div><span>Grupos de unidades</span><span><kbd>Ctrl</kbd> + <kbd>0-9</kbd></span></div>
+      <div><span>Aldeano ocioso</span><span><kbd>.</kbd></span></div>
+      <div><span>Todo el ejército</span><span><kbd>Ctrl</kbd> + <kbd>A</kbd></span></div>
+      <div><span>Árbol tecnológico</span><span><kbd>F2</kbd></span></div>
+      <div><span>Guardado rápido</span><span><kbd>F5</kbd></span></div>
+      <div><span>Pantalla completa</span><span><kbd>F11</kbd></span></div>
+      <div><span>En el móvil</span><span>tocar: seleccionar u ordenar · arrastrar: cámara · pellizcar: zoom</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>Pixel Empire · creado con Godot 4 y <a href="https://claude.com/claude-code">Claude Code</a>. Arte y sonido generados por el propio proyecto.</div>
+    <a class="code-link" href="https://albano-bosquet.itch.io/pixel-empire">Pixel Empire en itch.io</a>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Captura ampliada">
+  <div class="backdrop"></div>
+  <figure><img alt=""><figcaption></figcaption></figure>
+  <button class="lb-btn lb-close" aria-label="Cerrar"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><path d="M0 0h2v1h1v1h2V1h1V0h2v2H7v1H6v2h1v1h1v2H6V7H5V6H3v1H2v1H0V6h1V5h1V3H1V2H0z"/></svg></button>
+  <button class="lb-btn lb-prev" aria-label="Anterior"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><path d="M4 0h2v2H5v1H4v2h1v1h1v2H4V7H3V6H2V5H1V3h1V2h1V1h1z"/></svg></button>
+  <button class="lb-btn lb-next" aria-label="Siguiente"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><path d="M2 0h2v1h1v1h1v1h1v2H6v1H5v1H4v1H2V6h1V5h1V3H3V2H2z"/></svg></button>
+</div>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+  /* ---------- Top bar: background once scrolled, sliding marker on the current section ---------- */
+  const top = $("#top");
+  const onScroll = () => top.classList.toggle("scrolled", scrollY > 40);
+  addEventListener("scroll", onScroll, { passive: true }); onScroll();
+
+  const navLinks = $$(".top nav a");
+  const pill = $(".nav-pill");
+  const movePill = a => {
+    if (!a) { pill.style.opacity = 0; return; }
+    pill.style.opacity = 1;
+    pill.style.width = a.offsetWidth - 24 + "px";
+    pill.style.transform = `translateX(${a.offsetLeft + 12}px)`;
+  };
+  const sections = navLinks.map(a => $(a.getAttribute("href")));
+  let spyCur;
+  const spy = () => {
+    const y = innerHeight * .35;
+    let cur = null;
+    sections.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top <= y && r.bottom > y) cur = navLinks[i]; });
+    if (cur === spyCur) return;
+    spyCur = cur;
+    navLinks.forEach(a => a.setAttribute("aria-current", a === cur));
+    movePill(cur);
+  };
+  addEventListener("scroll", spy, { passive: true }); spy();
+
+  /* ---------- Reveal on scroll ---------- */
+  const rev = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add("in"); rev.unobserve(e.target); }
+  }), { rootMargin: "0px 0px -8% 0px", threshold: .12 });
+  $$(".reveal").forEach(el => rev.observe(el));
+
+  /* ---------- Stats count up once ---------- */
+  const stats = $("#stats");
+  if (!reduce) {
+    const nums = $$("b[data-count]", stats);
+    const so = new IntersectionObserver(es => {
+      if (!es[0].isIntersecting) return;
+      so.disconnect();
+      if (stats.getBoundingClientRect().top < innerHeight * .5) return; // already in plain view on load: leave the numbers alone
+      nums.forEach((b, i) => {
+        const end = +b.dataset.count, t0 = performance.now() + i * 90, dur = 900;
+        const tick = now => {
+          const p = Math.min(1, Math.max(0, (now - t0) / dur));
+          b.textContent = Math.round(end * (1 - Math.pow(1 - p, 4)));
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+    }, { threshold: .6 });
+    so.observe(stats);
+  }
+
+  /* ---------- Ages (data from assets/data/ages.json, units_stats.json, buildings_stats.json) ---------- */
+  const F = "var(--food)", G = "var(--gold-res)", S = "var(--stone)";
+  const ages = [
+    { short: "Oscura", name: "Edad Oscura", blurb: "Un centro urbano, unos pocos aldeanos y todo por hacer.", cost: [],
+      units: ["Aldeano", "Explorador a caballo", "Milicia", "Espadachín", "Barco pesquero", "Barco de transporte"],
+      bld: ["Centro urbano", "Casa", "Molino", "Almacén", "Cuartel", "Establo", "Granja", "Campamento maderero", "Campamento minero", "Puesto de vigía", "Empalizada", "Puerto"] },
+    { short: "Feudal", name: "Edad Feudal", blurb: "Llegan los lanceros, los arqueros y el comercio.", cost: [[F, "500 comida"]], time: 130,
+      units: ["Lancero", "Arquero", "Hostigador", "Carro de comercio", "Galera de guerra"],
+      bld: ["Galería de tiro", "Herrería", "Torre de vigilancia", "Mercado", "Muralla de piedra", "Puerta"] },
+    { short: "Castillos", name: "Edad de los Castillos", blurb: "Caballeros, asedio y monjes. La edad más grande del juego.", cost: [[F, "800 comida"], [G, "200 oro"]], time: 160,
+      units: ["Caballero", "Catapulta", "Piquero", "Ballestero", "Arquero a caballo", "Caballería ligera", "Jinete de camello", "Ariete", "Mangonel", "Escorpión", "Trabuquete", "Petardero", "Monje", "Brulote", "Barco de demolición"],
+      bld: ["Castillo", "Taller de asedio", "Universidad", "Monasterio"] },
+    { short: "Imperial", name: "Edad Imperial", blurb: "Las últimas unidades medievales, la primera pólvora y la Maravilla.", cost: [[F, "1000 comida"], [G, "800 oro"]], time: 190,
+      units: ["Mandoblero", "Cañonero de mano", "Caballero de élite", "Bombarda", "Galeón cañonero"],
+      bld: ["Torre de bombardas", "Maravilla"] },
+    { short: "Pólvora", name: "Edad de la Pólvora", blurb: "Mosquetes y cañones cambian el campo de batalla.", cost: [[F, "1200 comida"], [G, "1000 oro"]], time: 200,
+      units: ["Trabucero", "Mosquetero", "Granadero", "Dragón", "Cañón de campaña", "Mortero"],
+      bld: ["Fundición de artillería"] },
+    { short: "Industrial", name: "Edad Industrial", blurb: "Fusileros, acorazados y los primeros aviones.", cost: [[F, "1500 comida"], [G, "1500 oro"], [S, "300 piedra"]], time: 220,
+      units: ["Fusilero", "Biplano de caza", "Biplano bombardero", "Globo de observación", "Acorazado"],
+      bld: ["Aeródromo", "Fuerte antiaéreo"] },
+    { short: "Militar", name: "Edad Militar", blurb: "Guerra moderna: infantería, blindados y reactores.", cost: [[F, "2000 comida"], [G, "2000 oro"], [S, "500 piedra"]], time: 240,
+      units: ["Soldado de infantería", "Ametrallador", "Soldado con bazuca", "Tanque ligero", "Tanque pesado", "Artillería autopropulsada", "Caza a reacción", "Bombardero a reacción"],
+      bld: ["Base militar", "Fábrica de tanques", "Base aérea"] },
+  ];
+  const track = $("#track"), fill = $(".fill", track), panel = $("#age-panel");
+  const ageBtns = ages.map((a, i) => {
+    const b = document.createElement("button");
+    b.className = "age"; b.role = "tab"; b.id = "age-" + i;
+    b.setAttribute("aria-controls", "age-panel");
+    b.innerHTML = `<span class="dot">${["I", "II", "III", "IV", "V", "VI", "VII"][i]}</span>${a.short}`;
+    b.onclick = () => selectAge(i, true);
+    track.appendChild(b);
+    return b;
+  });
+  const chips = (ul, list) => { ul.innerHTML = list.map((t, i) => `<li style="--i:${i}">${t}</li>`).join(""); ul.classList.add("stagger"); };
+  let ageIdx = -1, swapTimer;
+  function selectAge(i, user) {
+    if (i === ageIdx) return;
+    const first = ageIdx < 0; ageIdx = i;
+    ageBtns.forEach((b, j) => {
+      b.setAttribute("aria-selected", j === i); b.tabIndex = j === i ? 0 : -1;
+      b.classList.toggle("done", j < i);
+    });
+    panel.setAttribute("aria-labelledby", "age-" + i);
+    fill.style.transform = `scaleX(${i / 6})`;
+    if (user) ageBtns[i].scrollIntoView({ block: "nearest", inline: "nearest", behavior: reduce ? "auto" : "smooth" });
+    const a = ages[i], parts = $$(".swap", panel);
+    const fillPanel = () => {
+      $("#age-name").textContent = a.name;
+      $("#age-blurb").textContent = a.blurb;
+      $("#age-cost").innerHTML = a.cost.length
+        ? a.cost.map(([c, t]) => `<li style="--c:${c}">${t}</li>`).join("") + `<li style="--c:var(--line-2)">${a.time} s de investigación</li>`
+        : `<li style="--c:var(--muted)">Punto de partida</li>`;
+      chips($("#age-units"), a.units);
+      chips($("#age-bld"), a.bld);
+      parts.forEach(p => p.classList.remove("out"));
+    };
+    if (first) return;
+    clearTimeout(swapTimer);
+    parts.forEach(p => p.classList.add("out"));
+    swapTimer = setTimeout(fillPanel, 120);
+  }
+  track.addEventListener("keydown", e => {
+    const d = { ArrowRight: 1, ArrowLeft: -1, Home: -99, End: 99 }[e.key];
+    if (d === undefined) return;
+    e.preventDefault();
+    const n = Math.max(0, Math.min(6, ageIdx + d));
+    selectAge(n, true); ageBtns[n].focus();
+  });
+  selectAge(0, false);
+
+  /* ---------- Gallery + lightbox that grows out of the thumbnail ---------- */
+  const shots = [
+    ["media/ciudad_hud.jpg", "Una ciudad de la Edad Imperial en pleno trabajo"],
+    ["media/batalla.jpg", "Caballería e infantería contra piqueros en la Edad de los Castillos"],
+    ["media/guerra_moderna.jpg", "Ofensiva de la Edad Militar contra un fuerte antiaéreo"],
+    ["media/maravilla.jpg", "La Maravilla: mantenla en pie y ganas"],
+    ["media/naval.jpg", "Galeras y brulotes frente al puerto"],
+    ["media/industrial.jpg", "Edad Industrial: fusileros, cañones de campaña y biplanos"],
+    ["media/noche.jpg", "De noche: luces en las ventanas"],
+    ["media/atardecer.jpg", "La ciudad al atardecer"],
+    ["media/tecnologias.jpg", "Árbol tecnológico"],
+    ["media/batalla_final.jpg", "El choque de la caballería contra las picas"],
+    ["media/victoria.jpg", "Estadísticas al final de la partida"],
+    ["media/avance_moderno.jpg", "Tanques, infantería y reactores avanzan"],
+  ];
+  const gallery = $("#gallery"), box = $("#lightbox"), lbImg = $("img", box), lbCap = $("figcaption", box), backdrop = $(".backdrop", box);
+  const thumbs = shots.map(([src, cap], i) => {
+    const b = document.createElement("button");
+    b.setAttribute("aria-label", `Ampliar: ${cap}`);
+    b.innerHTML = `<img src="${src}" alt="${cap}" loading="lazy" width="1600" height="900"><span class="cap" aria-hidden="true">${cap}</span>`;
+    b.onclick = () => openLb(i);
+    gallery.appendChild(b);
+    return b;
+  });
+  let cur = 0, lastFocus = null, anim = null;
+  const setShot = i => {
+    cur = (i + shots.length) % shots.length;
+    lbImg.src = shots[cur][0]; lbImg.alt = shots[cur][1];
+    lbCap.innerHTML = `${shots[cur][1]}<span>${cur + 1} / ${shots.length}</span>`;
+  };
+  // FLIP: measure the thumbnail and the final image, animate the difference.
+  const flipFrom = (thumb, reverse) => {
+    const t = $("img", thumb).getBoundingClientRect(), f = lbImg.getBoundingClientRect();
+    if (!f.width || reduce) return null;
+    const from = `translate(${t.left - f.left}px, ${t.top - f.top}px) scale(${t.width / f.width}, ${t.height / f.height})`;
+    const kf = [{ transform: from, opacity: .6 }, { transform: "none", opacity: 1 }];
+    return lbImg.animate(reverse ? kf.reverse() : kf, reverse
+      ? { duration: 220, easing: "cubic-bezier(.23,1,.32,1)", fill: "forwards" }
+      : { duration: 420, easing: "cubic-bezier(.16,1,.3,1)" });
+  };
+  function openLb(i) {
+    lastFocus = document.activeElement;
+    clearTimeout(closeTimer); box.classList.remove("closing");
+    stepAnim && stepAnim.cancel();
+    setShot(i);
+    box.classList.add("open");
+    document.body.style.overflow = "hidden";
+    const go = () => { anim && anim.cancel(); anim = flipFrom(thumbs[cur], false); };
+    lbImg.complete ? go() : lbImg.addEventListener("load", go, { once: true });
+    $(".lb-close", box).focus({ preventScroll: true });
+  }
+  function closeLb() {
+    if (!box.classList.contains("open")) return;
+    const r = thumbs[cur].getBoundingClientRect();
+    const onScreen = r.bottom > 0 && r.top < innerHeight;
+    anim && anim.cancel();
+    anim = onScreen ? flipFrom(thumbs[cur], true) : null;
+    box.classList.remove("open");
+    box.classList.add("closing"); // stay visible while the image flies back
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => {
+      box.classList.remove("closing");
+      anim && anim.cancel(); anim = null;
+      document.body.style.overflow = "";
+    }, anim ? 240 : 0);
+    lastFocus && lastFocus.focus({ preventScroll: true });
+  }
+  let closeTimer, stepAnim;
+  function step(d) {
+    if (reduce) { setShot(cur + d); return; }
+    anim && anim.cancel(); anim = null;
+    stepAnim && stepAnim.cancel();
+    const out = lbImg.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: `translateX(${-d * 24}px)` }], { duration: 110, easing: "ease-in", fill: "forwards" });
+    stepAnim = out;
+    out.onfinish = () => {
+      setShot(cur + d);
+      const show = () => { out.cancel(); stepAnim = lbImg.animate([{ opacity: 0, transform: `translateX(${d * 24}px)` }, { opacity: 1, transform: "none" }], { duration: 260, easing: "cubic-bezier(.23,1,.32,1)" }); };
+      lbImg.complete ? show() : lbImg.addEventListener("load", show, { once: true });
+    };
+  }
+  backdrop.onclick = closeLb;
+  $(".lb-close", box).onclick = closeLb;
+  $(".lb-prev", box).onclick = () => step(-1);
+  $(".lb-next", box).onclick = () => step(1);
+  lbImg.onclick = () => step(1);
+  addEventListener("keydown", e => {
+    if (!box.classList.contains("open")) return;
+    if (e.key === "Escape") closeLb();
+    else if (e.key === "ArrowRight") step(1);
+    else if (e.key === "ArrowLeft") step(-1);
+    else if (e.key === "Tab") { // keep focus inside the dialog
+      const f = $$(".lb-btn", box), i = f.indexOf(document.activeElement);
+      e.preventDefault(); f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    }
+  });
+  let tx = null;
+  box.addEventListener("touchstart", e => { tx = e.touches[0].clientX; }, { passive: true });
+  box.addEventListener("touchend", e => {
+    if (tx === null) return;
+    const dx = e.changedTouches[0].clientX - tx; tx = null;
+    if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
+  });
+
+  /* ---------- Platform tabs (Android visitors start on the Android tab) ---------- */
+  const tabs = $$(".tab"), ind = $(".tab-ind");
+  const placeInd = t => { ind.style.width = t.offsetWidth + "px"; ind.style.transform = `translateX(${t.offsetLeft - 4}px)`; };
+  function selectTab(t, animate) {
+    tabs.forEach(x => {
+      const on = x === t;
+      x.setAttribute("aria-selected", on); x.tabIndex = on ? 0 : -1;
+      const p = $("#" + x.getAttribute("aria-controls"));
+      p.hidden = !on;
+      if (on && animate) { p.classList.remove("enter"); void p.offsetWidth; p.classList.add("enter"); }
+    });
+    placeInd(t);
+  }
+  tabs.forEach((t, i) => {
+    t.onclick = () => selectTab(t, true);
+    t.onkeydown = e => {
+      const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (!d) return;
+      const n = tabs[(i + d + tabs.length) % tabs.length]; selectTab(n, true); n.focus();
+    };
+  });
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  ind.style.transition = "none";
+  selectTab(isAndroid ? tabs[1] : tabs[0], false);
+  requestAnimationFrame(() => requestAnimationFrame(() => ind.style.transition = ""));
+  { // the visitor's platform goes first
+    const cta = $(".hero .cta");
+    cta.prepend($(`[data-os=${isAndroid ? "android" : "win"}]`, cta));
+  }
+  addEventListener("resize", () => {
+    placeInd($(".tab[aria-selected=true]"));
+    movePill($(".top nav a[aria-current=true]"));
+  });
+  document.fonts && document.fonts.ready.then(() => placeInd($(".tab[aria-selected=true]")));
+
+})();
+</script>
+</body>
+</html>
